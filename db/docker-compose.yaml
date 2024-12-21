@@ -1,0 +1,16 @@
+services:
+  backend_postgres_db:
+    image: postgres:16.2
+    container_name: mieszkanie_postgres_db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    ports:
+      - "61500:5432"
+    volumes:
+      - mieszkanie_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  mieszkanie_postgres_data:
+    driver: local
