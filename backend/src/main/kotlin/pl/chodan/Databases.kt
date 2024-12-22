@@ -41,26 +41,41 @@ object Person : Table() {
     val lastName = varchar("last_name", 255)
     val documentNumber = varchar("document_number", 255)
     val nationality = varchar("nationality", 255)
+    val status = customEnumeration(
+        name = "status",
+        sql = "VARCHAR(255)",
+        fromDb = { value -> PersonStatus.valueOf(value as String) },
+        toDb = { value -> value.name }
+    )
     override val primaryKey = PrimaryKey(id)
 }
 
-// Tabela kontraktów
+enum class PersonStatus {
+    RESIDENT, NON_RESIDENT
+}
+
 object Contract : Table() {
     val id = integer("id").autoIncrement()
     val personId = reference("person_id", Person.id)
     val roomId = (integer("room_id") references Room.id).nullable()
     val amount = decimal("amount", 10, 2)
-    val startDate = date("start_date")
-    val endDate = date("end_date")
+    val startDate = date("start_date").nullable()
+    val endDate = date("end_date").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
 object Payment : Table() {
     val id = integer("id").autoIncrement()
-    val contractId = reference("contract_id", Contract.id) // Odniesienie do kontraktu
-    val dueDate = date("due_date")                         // Termin płatności
-    val amount = decimal("amount", 10, 2)                 // Kwota do zapłaty
-    val status = varchar("status", 50)                    // Status płatności (np. "PENDING", "PAID", "LATE")
+    val contractId = reference("contract_id", Contract.id)
+    val dueDate = date("due_date").nullable()
+    val payedDate = date("payed_date").nullable()
+    val amount = decimal("amount", 10, 2)
+    val status = customEnumeration(
+        name = "status",
+        sql = "VARCHAR(255)",
+        fromDb = { value -> PaymentStatus.valueOf(value as String) },
+        toDb = { value -> value.name }
+    )
     override val primaryKey = PrimaryKey(id)
 }
 

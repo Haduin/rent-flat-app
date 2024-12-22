@@ -14,9 +14,14 @@ const NavigationComponent = () => {
             url: '/osoby'
         },
         {
-            label: 'Wpłaty',
+            label: 'Kontrakty',
             icon: 'pi pi-star',
-            url: '/wplaty'
+            url: '/kontakt'
+        },
+        {
+            label: 'Płatnosci',
+            icon: 'pi pi-star',
+            url: '/platnosci'
         },
         {
             label: 'Contact',

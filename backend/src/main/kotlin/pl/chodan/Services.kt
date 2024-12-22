@@ -5,7 +5,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.LocalDate
 
 // Service for Apartment
 class ApartmentService {
@@ -61,13 +60,14 @@ class RoomService {
 
 // Service for Person
 class PersonService {
-    suspend fun createPerson(firstName: String, lastName: String, documentNumber: String, nationality: String): Int =
+    suspend fun createPerson(createdPersonDTO: CreatedPersonDTO): Int =
         dbQuery {
             Person.insert {
-                it[Person.firstName] = firstName
-                it[Person.lastName] = lastName
-                it[Person.documentNumber] = documentNumber
-                it[Person.nationality] = nationality
+                it[firstName] = createdPersonDTO.firstName
+                it[lastName] = createdPersonDTO.lastName
+                it[documentNumber] = createdPersonDTO.documentNumber
+                it[nationality] = createdPersonDTO.nationality
+                it[status] = PersonStatus.NON_RESIDENT
             } get Person.id
         }
 
@@ -75,23 +75,29 @@ class PersonService {
         Person.selectAll().where { Person.id eq id }.singleOrNull()
     }
 
-    suspend fun getAllPersons(): List<ResultRow> = dbQuery {
-        Person.selectAll().toList()
+    suspend fun getAllPersons(): List<PersonDTO> = dbQuery {
+        Person.selectAll().toList().map {
+            PersonDTO(
+                it[Person.id],
+                it[Person.firstName],
+                it[Person.lastName],
+                it[Person.documentNumber],
+                it[Person.nationality],
+                it[Person.status].name
+            )
+        }
+
     }
 
     suspend fun updatePerson(
-        id: Int,
-        firstName: String,
-        lastName: String,
-        documentNumber: String,
-        nationality: String,
-        roomId: Int?
+        personToUpdate: UpdatePersonDTO
     ): Int = dbQuery {
-        Person.update({ Person.id eq id }) {
-            it[Person.firstName] = firstName
-            it[Person.lastName] = lastName
-            it[Person.documentNumber] = documentNumber
-            it[Person.nationality] = nationality
+        println(personToUpdate)
+        Person.update({ Person.id eq personToUpdate.id }) {
+            it[firstName] = personToUpdate.firstName
+            it[lastName] = personToUpdate.lastName
+            it[documentNumber] = personToUpdate.documentNumber
+            it[nationality] = personToUpdate.nationality
         }
     }
 
@@ -133,8 +139,21 @@ class ContractService {
 
 class PaymentService {
     // Pobierz wszystkie płatności
-    suspend fun getAllPayments(): List<ResultRow> = dbQuery {
-        Payment.selectAll().toList()
+    suspend fun getAllPayments(): List<PaymentDTO> = dbQuery {
+        Payment.selectAll().toList().map { resultRow ->
+            PaymentDTO(
+                id = resultRow[Payment.id],
+                contractId = resultRow[Payment.contractId],
+                dueDate = resultRow[Payment.dueDate]?.toString() ?: null, // Zamiana LocalDate na String
+                payedDate = resultRow[Payment.payedDate]?.toString() ?: null,
+                amount = resultRow[Payment.amount].toDouble(), // Zamiana BigDecimal na Double
+                status = resultRow[Payment.status]
+            )
+        }
+    }
+
+    suspend fun getAllPaymentsForCurrentMouth() {
+
     }
 
     // Pobierz płatności dla konkretnego kontraktu
@@ -143,46 +162,20 @@ class PaymentService {
     }
 
     // Pobierz wszystkie płatności z określonym statusem (np. "PENDING", "PAID")
-    suspend fun getPaymentsByStatus(status: String): List<ResultRow> = dbQuery {
+    suspend fun getPaymentsByStatus(status: PaymentStatus): List<ResultRow> = dbQuery {
         Payment.selectAll().where { Payment.status eq status }.toList()
     }
 
     // Aktualizuj status płatności
-    suspend fun updatePaymentStatus(paymentId: Int, newStatus: String): Boolean = dbQuery {
+    suspend fun updatePaymentStatus(paymentId: Int, newStatus: PaymentStatus): Boolean = dbQuery {
         Payment.update({ Payment.id eq paymentId }) {
-            it[Payment.status] = newStatus
+            it[status] = newStatus
         } > 0
     }
 
     // Usuń płatność
     suspend fun deletePayment(paymentId: Int): Boolean = dbQuery {
-        Payment.deleteWhere { Payment.id eq paymentId } > 0
-    }
-
-    suspend fun generatePaymentsForNextMonth() {
-        dbQuery {
-            val nextMonthDate = LocalDate.now().plusMonths(1).withDayOfMonth(1)
-
-            Contract.selectAll().forEach { contract ->
-                val contractId = contract[Contract.id]
-                val amount = contract[Contract.amount]
-
-                // Dodaj płatność tylko jeśli już nie istnieje płatność dla danego miesiąca
-                val existingPayment = Payment.selectAll().where {
-                    (Payment.contractId eq contractId) and
-                            (Payment.dueDate eq nextMonthDate)
-                }.singleOrNull()
-
-                if (existingPayment == null) {
-                    Payment.insert {
-                        it[Payment.contractId] = contractId
-                        it[Payment.dueDate] = nextMonthDate
-                        it[Payment.amount] = amount
-                        it[Payment.status] = "PENDING"
-                    }
-                }
-            }
-        }
+        Payment.deleteWhere { id eq paymentId } > 0
     }
 }
 
