@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {ProgressSpinner} from 'primereact/progressspinner';
@@ -10,7 +10,7 @@ import EditPersonDialog from "./EditPersonDialog.tsx";
 import {Checkbox} from "primereact/checkbox";
 
 const PersonTable: React.FC = () => {
-    
+
     const {
         persons,
         loading,
@@ -27,9 +27,9 @@ const PersonTable: React.FC = () => {
         showOnlyActivePeople, setShowOnlyActivePeople
     } = usePersonTable();
 
-    const showPeople = () => {
+    const showPeople = useCallback(() => {
         return showOnlyActivePeople ? persons.filter((person) => person.status === 'RESIDENT') : persons
-    }
+    }, [showOnlyActivePeople, persons]);
 
     return (
         <div className="rounded overflow-hidden shadow-lg card bg-light">

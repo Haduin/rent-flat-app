@@ -38,11 +38,11 @@ data class UpdatePersonDTO(
 @Serializable
 data class ContractDTO(
     val id: Int,
-    val personId: Int,
-    val roomId: Int,
-    val startDate: String,
-    val endDate: String,
-    val amount: Double
+    val personId: Int?,
+    val roomId: Int?,
+    val startDate: String?,
+    val endDate: String?,
+    val amount: Double?
 )
 
 @Serializable

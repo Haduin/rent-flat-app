@@ -120,8 +120,17 @@ class ContractService {
         Contract.selectAll().where { Contract.id eq id }.singleOrNull()
     }
 
-    suspend fun getAllContracts(): List<ResultRow> = dbQuery {
-        Contract.selectAll().toList()
+    suspend fun getAllContracts(): List<ContractDTO> = dbQuery {
+        Contract.selectAll().toList().map {
+            ContractDTO(
+                id = it[Contract.id],
+                personId = it[Contract.personId],
+                roomId = it[Contract.roomId],
+                startDate = it[Contract.startDate]?.toString(),
+                endDate = it[Contract.endDate]?.toString(),
+                amount = it[Contract.amount].toDouble(),
+            )
+        }
     }
 
     fun updateContract(id: Int, personId: Int, roomId: Int?, amount: Double): Int = transaction {

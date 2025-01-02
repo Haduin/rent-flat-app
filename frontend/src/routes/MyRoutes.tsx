@@ -4,6 +4,7 @@ import Dashboard from "../components/Dashboard.tsx";
 import PersonTable from "../components/person/PersonTable.tsx";
 import PaymentsView from "../components/PaymentsView.tsx";
 import {Test} from "../components/Test.tsx";
+import ContractsView from "../components/contracts/ContractsView.tsx";
 
 export const MyRoutes = () => {
     return (
@@ -11,6 +12,7 @@ export const MyRoutes = () => {
             <Route path="/" element={<NavigationComponent/>}>
                 <Route index path="osoby" element={<PersonTable/>}/>
                 <Route path="platnosci" element={<PaymentsView/>}/>
+                <Route path="kontakt" element={<ContractsView/>}/>
                 <Route path="dashboard" element={<Dashboard/>}/>
                 <Route path="test" element={<Test/>}/>
             </Route>
