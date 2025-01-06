@@ -6,13 +6,21 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.transactions.transaction
 
+object DatabaseFactory {
+    private val database =
+        Database.connect(
+            url = "jdbc:postgresql://localhost:61500/mydb",
+            user = "myuser",
+            password = "mypassword",
+            driver = "org.postgresql.Driver",
+        )
+
+
+    fun getDatabase() = database
+}
+
 fun configureDatabases() {
-    val database = Database.connect(
-        url = "jdbc:postgresql://localhost:61500/mydb",
-        user = "myuser",
-        password = "mypassword",
-        driver = "org.postgresql.Driver",
-    )
+    DatabaseFactory.getDatabase()
 
     transaction {
         SchemaUtils.create(Apartment, Room, Person, Contract, Payment)
@@ -57,7 +65,7 @@ enum class PersonStatus {
 object Contract : Table() {
     val id = integer("id").autoIncrement()
     val personId = reference("person_id", Person.id)
-    val roomId = (integer("room_id") references Room.id).nullable()
+    val roomId = (integer("room_id") references Room.id)
     val amount = decimal("amount", 10, 2)
     val startDate = date("start_date").nullable()
     val endDate = date("end_date").nullable()

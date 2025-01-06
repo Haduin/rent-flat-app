@@ -29,6 +29,9 @@ fun Application.configurePersonRouting() {
             get {
                 call.respond(personService.getAllPersons())
             }
+            get("/non-residents") {
+                call.respond(personService.getNonResidentPersons())
+            }
             post {
                 try {
                     val createPerson = call.receive<CreatedPersonDTO>()

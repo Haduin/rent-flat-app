@@ -19,9 +19,11 @@ class ApartmentService {
     }
 
     suspend fun getAllApartments(): List<ApartmentDTO> = dbQuery {
-        Apartment.selectAll().toList().map {
-            ApartmentDTO(it[Apartment.id], it[Apartment.name])
-        }
+        Apartment.selectAll()
+            .toList()
+            .map {
+                ApartmentDTO(it[Apartment.id], it[Apartment.name])
+            }
     }
 
     suspend fun deleteApartment(id: Int): Int = dbQuery {
@@ -38,12 +40,43 @@ class RoomService {
         } get Room.id
     }
 
-    suspend fun getRoomById(id: Int): ResultRow? = dbQuery {
-        Room.selectAll().where { Room.id eq id }.singleOrNull()
+    suspend fun getRoomById(id: Int): RoomDTO? = dbQuery {
+        Room.selectAll()
+            .where { Room.id eq id }
+            .map {
+                RoomDTO(
+                    it[Room.id],
+                    it[Room.name],
+                    it[Room.apartmentId],
+                )
+            }
+            .singleOrNull()
     }
 
-    suspend fun getAllRooms(): List<ResultRow> = dbQuery {
-        Room.selectAll().toList()
+
+    suspend fun getAllRooms(): List<RoomDTO> = dbQuery {
+        Room.selectAll()
+            .map {
+                RoomDTO(
+                    it[Room.id],
+                    it[Room.name],
+                    it[Room.apartmentId],
+                )
+            }.toList()
+    }
+
+    suspend fun getRoomsWithAparts() = dbQuery {
+        val sqlQuery =
+            "select  a.name as apartment_name, r.id as room_id, r.name as room_name from apartment a, room r where a.id = r.apartment_id"
+        transaction {
+            val result = mutableListOf<Triple<String, Long, String>>()
+            exec(sqlQuery) { rs ->
+                while (rs.next()) {
+                    result.add(Triple(rs.getString("apartment_name"), rs.getLong("room_id"), rs.getString("room_name")))
+                }
+            }
+            result
+        }
     }
 
     suspend fun updateRoom(id: Int, name: String, apartmentId: Int?): Int = dbQuery {
@@ -71,28 +104,56 @@ class PersonService {
             } get Person.id
         }
 
-    suspend fun getPersonById(id: Int): ResultRow? = dbQuery {
-        Person.selectAll().where { Person.id eq id }.singleOrNull()
+    suspend fun getPersonById(id: Int): PersonDTO? = dbQuery {
+        Person.selectAll()
+            .where { Person.id eq id }
+            .map {
+                PersonDTO(
+                    it[Person.id],
+                    it[Person.firstName],
+                    it[Person.lastName],
+                    it[Person.documentNumber],
+                    it[Person.nationality],
+                    it[Person.status].name
+                )
+            }
+            .singleOrNull()
     }
 
     suspend fun getAllPersons(): List<PersonDTO> = dbQuery {
-        Person.selectAll().toList().map {
-            PersonDTO(
-                it[Person.id],
-                it[Person.firstName],
-                it[Person.lastName],
-                it[Person.documentNumber],
-                it[Person.nationality],
-                it[Person.status].name
-            )
-        }
+        Person.selectAll()
+            .toList()
+            .map {
+                PersonDTO(
+                    it[Person.id],
+                    it[Person.firstName],
+                    it[Person.lastName],
+                    it[Person.documentNumber],
+                    it[Person.nationality],
+                    it[Person.status].name
+                )
+            }
+    }
 
+    suspend fun getNonResidentPersons(): List<PersonDTO> = dbQuery {
+        Person.selectAll()
+            .where { Person.status eq PersonStatus.NON_RESIDENT }
+            .toList()
+            .map {
+                PersonDTO(
+                    it[Person.id],
+                    it[Person.firstName],
+                    it[Person.lastName],
+                    it[Person.documentNumber],
+                    it[Person.nationality],
+                    it[Person.status].name
+                )
+            }
     }
 
     suspend fun updatePerson(
         personToUpdate: UpdatePersonDTO
     ): Int = dbQuery {
-        println(personToUpdate)
         Person.update({ Person.id eq personToUpdate.id }) {
             it[firstName] = personToUpdate.firstName
             it[lastName] = personToUpdate.lastName
@@ -108,7 +169,7 @@ class PersonService {
 
 // Service for Contract
 class ContractService {
-    suspend fun createContract(personId: Int, roomId: Int?, amount: Double): Int = dbQuery {
+    suspend fun createContract(personId: Int, roomId: Int, amount: Double): Int = dbQuery {
         Contract.insert {
             it[Contract.personId] = personId
             it[Contract.roomId] = roomId
@@ -121,19 +182,27 @@ class ContractService {
     }
 
     suspend fun getAllContracts(): List<ContractDTO> = dbQuery {
-        Contract.selectAll().toList().map {
+        val roomsAparts = RoomService().getRoomsWithAparts()
+        val persons = PersonService().getAllPersons()
+        Contract.selectAll().toList().map { contract ->
             ContractDTO(
-                id = it[Contract.id],
-                personId = it[Contract.personId],
-                roomId = it[Contract.roomId],
-                startDate = it[Contract.startDate]?.toString(),
-                endDate = it[Contract.endDate]?.toString(),
-                amount = it[Contract.amount].toDouble(),
+                id = contract[Contract.id],
+                person = persons.find { person -> person.id == contract[Contract.personId] },
+                room = roomsAparts.find { triple -> triple.second.toInt() == contract[Contract.roomId] }?.let {
+                    RoomWithApartmentDTO(
+                        it.second.toInt(),
+                        it.third,
+                        it.first
+                    )
+                },
+                startDate = contract[Contract.startDate]?.toString(),
+                endDate = contract[Contract.endDate]?.toString(),
+                amount = contract[Contract.amount].toDouble(),
             )
         }
     }
 
-    fun updateContract(id: Int, personId: Int, roomId: Int?, amount: Double): Int = transaction {
+    suspend fun updateContract(id: Int, personId: Int, roomId: Int, amount: Double): Int = dbQuery {
         Contract.update({ Contract.id eq id }) {
             it[Contract.personId] = personId
             it[Contract.roomId] = roomId
@@ -153,9 +222,9 @@ class PaymentService {
             PaymentDTO(
                 id = resultRow[Payment.id],
                 contractId = resultRow[Payment.contractId],
-                dueDate = resultRow[Payment.dueDate]?.toString() ?: null, // Zamiana LocalDate na String
+                dueDate = resultRow[Payment.dueDate]?.toString() ?: null,
                 payedDate = resultRow[Payment.payedDate]?.toString() ?: null,
-                amount = resultRow[Payment.amount].toDouble(), // Zamiana BigDecimal na Double
+                amount = resultRow[Payment.amount].toDouble(),
                 status = resultRow[Payment.status]
             )
         }
