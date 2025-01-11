@@ -20,7 +20,9 @@ const ContractsView = () => {
         closeAddDialog,
         openAddDialog,
         handleAddContract,
-        unassignedPersons
+        unassignedPersons,
+        unassignedRooms,
+        fetchUnassignedRooms
     } = useContractsView();
 
     return (
@@ -62,6 +64,8 @@ const ContractsView = () => {
                     <AddContractView isVisible={isAddContractDialogVisible}
                                      onSave={handleAddContract}
                                      unassignedPersons={unassignedPersons}
+                                     unassignedRooms={unassignedRooms}
+                                     fetchUnassignedRooms={fetchUnassignedRooms}
                                      onHide={closeAddDialog}/>
                     <ContractDetailsDialog isVisible={isDetailsDialogVisible}
                                            onHide={closeDetailsDialog}

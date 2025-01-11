@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDate
 
 // Service for Apartment
 class ApartmentService {
@@ -69,10 +70,42 @@ class RoomService {
         val sqlQuery =
             "select  a.name as apartment_name, r.id as room_id, r.name as room_name from apartment a, room r where a.id = r.apartment_id"
         transaction {
-            val result = mutableListOf<Triple<String, Long, String>>()
+            val result = mutableListOf<RoomWithApartmentDTO>()
             exec(sqlQuery) { rs ->
                 while (rs.next()) {
-                    result.add(Triple(rs.getString("apartment_name"), rs.getLong("room_id"), rs.getString("room_name")))
+                    result.add(
+                        RoomWithApartmentDTO(
+                            rs.getInt("room_id"),
+                            rs.getString("room_name"),
+                            rs.getString("apartment_name")
+                        )
+                    )
+                }
+            }
+            result
+        }
+    }
+
+    suspend fun fetchFreeRoomsBetweenDates(startDate: String, endDate: String): List<RoomWithApartmentDTO> = dbQuery {
+        val sql = "SELECT r.id, r.name as number, a.name as apartment " +
+                "FROM room r, apartment a " +
+                "WHERE r.apartment_id = a.id and r.id NOT IN ( " +
+                "    SELECT c.room_id " +
+                "    FROM contract c " +
+                "    WHERE c.start_date >= '$startDate' AND c.end_date <= '$endDate'" +
+                ");"
+
+        transaction {
+            val result = mutableListOf<RoomWithApartmentDTO>()
+            exec(sql) { rs ->
+                while (rs.next()) {
+                    result.add(
+                        RoomWithApartmentDTO(
+                            rs.getInt("id"),
+                            rs.getString("number"),
+                            rs.getString("apartment")
+                        )
+                    )
                 }
             }
             result
@@ -169,11 +202,14 @@ class PersonService {
 
 // Service for Contract
 class ContractService {
-    suspend fun createContract(personId: Int, roomId: Int, amount: Double): Int = dbQuery {
+    suspend fun createContract(newContractDTO: NewContractDTO): Int = dbQuery {
         Contract.insert {
-            it[Contract.personId] = personId
-            it[Contract.roomId] = roomId
-            it[Contract.amount] = amount.toBigDecimal()
+            it[personId] = newContractDTO.personId
+            it[roomId] = newContractDTO.roomId
+            it[amount] = newContractDTO.amount.toBigDecimal()
+            it[startDate] = LocalDate.parse(newContractDTO.startDate)
+            it[endDate] = LocalDate.parse(newContractDTO.endDate)
+            it[payedDate] = LocalDate.parse(newContractDTO.payedDate)
         } get Contract.id
     }
 
@@ -188,13 +224,7 @@ class ContractService {
             ContractDTO(
                 id = contract[Contract.id],
                 person = persons.find { person -> person.id == contract[Contract.personId] },
-                room = roomsAparts.find { triple -> triple.second.toInt() == contract[Contract.roomId] }?.let {
-                    RoomWithApartmentDTO(
-                        it.second.toInt(),
-                        it.third,
-                        it.first
-                    )
-                },
+                room = roomsAparts.find { rooms -> rooms.id == contract[Contract.roomId] },
                 startDate = contract[Contract.startDate]?.toString(),
                 endDate = contract[Contract.endDate]?.toString(),
                 amount = contract[Contract.amount].toDouble(),

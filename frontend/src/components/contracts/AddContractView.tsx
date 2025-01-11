@@ -6,23 +6,34 @@ import {useFormik} from "formik";
 import * as Yup from 'yup';
 import {Button} from "primereact/button";
 import {dateToString} from "../commons/dateFormatter.ts";
-import {NewContract, PersonDto} from "../commons/types.ts";
+import {NewContract, PersonDto, Room} from "../commons/types.ts";
 
 interface Props {
     isVisible: boolean;
     onHide: () => void;
     onSave: (newContract: NewContract) => void;
     unassignedPersons: PersonDto[];
+    unassignedRooms: Room[];
+    fetchUnassignedRooms: (startDate: string, endDate: string) => void;
 }
 
-const AddContractView = ({isVisible, onHide, onSave, unassignedPersons}: Props) => {
+
+const AddContractView = ({
+                             isVisible,
+                             onHide,
+                             onSave,
+                             unassignedPersons,
+                             unassignedRooms,
+                             fetchUnassignedRooms
+                         }: Props) => {
     const formik = useFormik({
         initialValues: {
             personId: '',
             roomId: '',
             dates: [] as Date[],
             amount: '',
-            deposit: ''
+            deposit: '',
+            payedDate: new Date(),
         },
         onSubmit: (values) => {
             const newContract: NewContract = {
@@ -31,19 +42,22 @@ const AddContractView = ({isVisible, onHide, onSave, unassignedPersons}: Props) 
                 startDate: dateToString(values.dates[0]),
                 endDate: dateToString(values.dates[1]),
                 amount: Number(values.amount),
-                deposit: Number(values.amount)
+                deposit: Number(values.amount),
+                payedDate: dateToString(values.payedDate)
             }
             onSave(newContract)
-            formik.resetForm();
+            // formik.resetForm();
         },
         validationSchema: Yup.object().shape({
-            personId: Yup.string().required('Osoba is required'),
-            roomId: Yup.string().required('Pokój is required'),
-            dates: Yup.array().required('Data is required'),
-            amount: Yup.number(),
-            deposit: Yup.number()
+            personId: Yup.string().required('Osoba musi być wymagana'),
+            roomId: Yup.string().required('Pokój jest wymagany'),
+            dates: Yup.array().required('Data kontraktu jest wymagana'),
+            amount: Yup.number().required('Kwota jest wymagana'),
+            deposit: Yup.number().required('Kaucja jest wymagana'),
+            payedDate: Yup.string().required('Data płatności jest wymagana'),
         })
     });
+
     return (
         <Dialog header="Dodaj nowy kontrakt"
                 closeOnEscape={true}
@@ -81,16 +95,19 @@ const AddContractView = ({isVisible, onHide, onSave, unassignedPersons}: Props) 
                     <label htmlFor="roomId" className="block text-sm font-medium text-gray-700">
                         Pokój
                     </label>
-                    <InputText
-                        id="roomId"
-                        name="roomId"
-                        value={formik.values.roomId}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`mt-1 block w-full rounded-md border ${
-                            formik.errors.roomId && formik.touched.roomId ? "border-red-500" : "border-gray-300"
-                        } shadow-sm focus:ring-indigo-500 focus:border-indigo-500`}
-                    />
+                    <Dropdown id="roomId" name="roomId" value={formik.values.roomId}
+                              className="w-full rounded-md border"
+                              onChange={(e) => {
+                                  formik.setFieldValue("roomId", e.value)
+                              }}
+                              options={formik.values.dates && unassignedRooms.map((room) => ({
+                                  label: `${room.apartment} ${room.number}`,
+                                  value: room.id
+                              }))}>
+                        {formik.values.dates && unassignedRooms.map((room) => (
+                            <option key={room.id} label={`${room.apartment} ${room.number}`}
+                                    value={room.id}/>))}
+                    </Dropdown>
                     {formik.errors.roomId && formik.touched.roomId && (
                         <p className="text-red-500 text-xs mt-1">{formik.errors.roomId}</p>
                     )}
@@ -100,15 +117,43 @@ const AddContractView = ({isVisible, onHide, onSave, unassignedPersons}: Props) 
                         Daty kontraktu
                     </label>
                     <Calendar value={formik.values.dates}
+                              locale="pl"
                               id="dates"
                               name="dates"
-                              onChange={(e) => formik.setFieldValue("dates", e.value as Date[])}
+                              className="w-full rounded-md border"
+                              onChange={(e) => {
+                                  const dates = e.value as Date[]
+                                  formik.setFieldValue("dates", dates)
+                                  fetchUnassignedRooms(
+                                      dateToString(dates[0]),
+                                      dateToString(dates[1]))
+                              }}
                               selectionMode="range"
                               readOnlyInput
-                              dateFormat="dd/mm/yy"
+                              dateFormat="yy-mm-dd"
                               hideOnRangeSelection/>
                     {formik.errors.dates && formik.touched.dates && (
                         <p className="text-red-500 text-xs mt-1">{formik.errors.dates}</p>
+                    )}
+                </div>
+
+                <div className="mb-4">
+                    <label htmlFor="payedDate" className="block text-sm font-medium text-gray-700">
+                        Czynsz płatny do
+                    </label>
+                    <Calendar value={formik.values.payedDate}
+                              locale="pl"
+                              id="payedDate"
+                              name="payedDate"
+                              className="w-full rounded-md border"
+                              onChange={(e) => {
+                                  formik.setFieldValue("payedDate", e.value as Date)
+                              }}
+                              readOnlyInput
+                              dateFormat="yy-mm-dd"
+                              hideOnRangeSelection/>
+                    {formik.errors.payedDate && formik.touched.payedDate && (
+                        <p className="text-red-500 text-xs mt-1">{formik.errors.payedDate}</p>
                     )}
                 </div>
 
@@ -148,7 +193,9 @@ const AddContractView = ({isVisible, onHide, onSave, unassignedPersons}: Props) 
                         <p className="text-red-500 text-xs mt-1">{formik.errors.deposit}</p>
                     )}
                 </div>
+                <div>
 
+                </div>
                 <div className="mt-4">
                     <Button
                         label="Wyślij"

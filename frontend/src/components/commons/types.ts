@@ -29,6 +29,7 @@ export interface NewContract {
     endDate?: string
     amount?: number,
     deposit?: number,
+    payedDate?: string
 }
 
 export interface PersonDto {

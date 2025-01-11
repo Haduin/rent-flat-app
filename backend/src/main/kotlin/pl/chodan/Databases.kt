@@ -67,8 +67,9 @@ object Contract : Table() {
     val personId = reference("person_id", Person.id)
     val roomId = (integer("room_id") references Room.id)
     val amount = decimal("amount", 10, 2)
-    val startDate = date("start_date").nullable()
-    val endDate = date("end_date").nullable()
+    val startDate = date("start_date")
+    val endDate = date("end_date")
+    val payedDate = date("payed_date")
     override val primaryKey = PrimaryKey(id)
 }
 

@@ -49,6 +49,17 @@ data class ContractDTO(
 )
 
 @Serializable
+data class NewContractDTO(
+    val personId: Int,
+    val roomId: Int,
+    val startDate: String,
+    val endDate: String,
+    val amount: Double,
+    val deposit: Double,
+    val payedDate: String
+)
+
+@Serializable
 data class PaymentDTO(
     val id: Int,               // ID płatności
     val contractId: Int,       // Klucz obcy do kontraktu

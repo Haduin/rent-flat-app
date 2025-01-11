@@ -21,6 +21,27 @@ fun Application.configureApartmentRouting() {
     }
 }
 
+fun Application.configureRoomRouting() {
+    val roomService = RoomService()
+    routing {
+        route("/rooms") {
+            get {
+                call.respond(roomService.getAllRooms())
+            }
+            get("/non-occupied") {
+                try {
+                    val startDate = call.request.queryParameters["startDate"].orEmpty()
+                    val endDate = call.request.queryParameters["endDate"].orEmpty()
+                    call.respond(roomService.fetchFreeRoomsBetweenDates(startDate, endDate))
+                } catch (ex: Exception) {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+
+            }
+        }
+    }
+}
+
 fun Application.configurePersonRouting() {
 
     val personService = PersonService()
@@ -72,6 +93,15 @@ fun Application.configureContractRouting() {
         route("/contracts") {
             get {
                 call.respond(contractService.getAllContracts())
+            }
+            post {
+                val newContract = call.receive<NewContractDTO>()
+                try {
+                    contractService.createContract(newContract)
+                    call.respond(HttpStatusCode.Created)
+                } catch (ex: Exception) {
+                    println(ex.message)
+                }
             }
         }
     }

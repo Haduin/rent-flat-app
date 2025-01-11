@@ -14,6 +14,7 @@ fun Application.module() {
     configureDatabases()
     configureApartmentRouting()
     configurePersonRouting()
+    configureRoomRouting()
     configureContractRouting()
     configurePaymentRouting()
     configueModules()
@@ -22,8 +23,8 @@ fun Application.module() {
 fun Application.configueModules() {
     install(CORS) {
         anyHost()
-        allowHeader(HttpHeaders.ContentType) // Pozwól na nagłówek Content-Type
-        allowHeader(HttpHeaders.Authorization) // Pozwól na nagłówek Authorization (opcjonalnie)
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Authorization)
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
