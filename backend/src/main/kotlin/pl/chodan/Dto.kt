@@ -1,6 +1,8 @@
 package pl.chodan
 
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 
 @Serializable
 data class ApartmentDTO(val id: Int, val name: String)
@@ -35,7 +37,8 @@ data class UpdatePersonDTO(
     val firstName: String,
     val lastName: String,
     val documentNumber: String,
-    val nationality: String
+    val nationality: String,
+    val status: String
 )
 
 @Serializable
@@ -45,7 +48,33 @@ data class ContractDTO(
     val room: RoomWithApartmentDTO?,
     val startDate: String?,
     val endDate: String?,
-    val amount: Double?
+    val amount: Double?,
+    val deposit: Double?
+)
+
+@Serializable
+data class ContractDB(
+    val id: Int,
+    val personId: Int,
+    val roomId: Int,
+    @Contextual
+    val amount: BigDecimal?,
+    @Contextual
+    val deposit: BigDecimal?,
+    val startDate: String?,
+    val endDate: String?
+)
+
+@Serializable
+data class RawContract(
+    val id: Int,
+    val personId: Int,
+    val roomId: Int,
+    val startDate: String,
+    val endDate: String,
+    val dueDate: String,
+    val amount: Double?,
+    val deposit: Double?
 )
 
 @Serializable
@@ -56,15 +85,47 @@ data class NewContractDTO(
     val endDate: String,
     val amount: Double,
     val deposit: Double,
-    val payedDate: String
+    val payedDate: Int
 )
 
 @Serializable
 data class PaymentDTO(
-    val id: Int,               // ID płatności
-    val contractId: Int,       // Klucz obcy do kontraktu
-    val dueDate: String?,    // Termin płatności
-    val payedDate: String?, // Data zapłaty (nullable, jeśli brak płatności)
-    val amount: Double,    // Kwota płatności
-    val status: PaymentStatus  // Status płatności
+    val id: Int,
+    val contractId: Int,
+    val payedDate: String?,
+    val scopeDate: String?,
+    val amount: Double,
+    val status: PaymentStatus
+)
+
+@Serializable
+data class PersonSmallDetailsDTO(
+    val id: Int,
+    val firstName: String,
+    val lastName: String,
+)
+
+@Serializable
+data class PaymentHistoryWithPersonDTO(
+    val id: Int,
+    val contractId: Int,
+    val person: PersonSmallDetailsDTO?,
+    val room: RoomWithApartmentDTO?,
+    val payedDate: String?,
+    val scopeDate: String?,
+    val amount: Double,
+    val status: PaymentStatus
+)
+
+@Serializable
+data class PaymentConfirmationDTO(
+    val paymentId: Int,
+    val paymentDate: String,
+    val payedAmount: Double,
+)
+
+@Serializable
+data class ApartmentAndRoomNumberDTO(
+    val apartmentName: String,
+    val roomName: String,
 )

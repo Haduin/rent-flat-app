@@ -8,9 +8,48 @@ services:
       POSTGRES_DB: mydb
     ports:
       - "61500:5432"
+    networks:
+      - keycloak_network
     volumes:
       - mieszkanie_postgres_data:/var/lib/postgresql/data
 
+  keycloak_postgres_db:
+    image: postgres:16.2
+    container_name: keycloak_postgres_db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+    networks:
+      - keycloak_network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.1
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak_postgres_db/mydb
+      KC_DB_USERNAME: myuser
+      KC_DB_PASSWORD: mypassword
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+    networks:
+      - keycloak_network
+    ports:
+      - "8081:8080"
+    depends_on:
+      - keycloak_postgres_db
+    command: start-dev
+
+networks:
+  keycloak_network:
+    driver: bridge
 volumes:
   mieszkanie_postgres_data:
+    driver: local
+  keycloak_postgres_data:
     driver: local

@@ -13,7 +13,6 @@ const usePersonTable = () => {
     const [showOnlyActivePeople, setShowOnlyActivePeople] = useState<boolean>(true)
 
     const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-    const [newPerson, setNewPerson] = useState<NewPerson | null>(null);
 
     const [isEditDialogVisible, setEditDialogVisible] = useState<boolean>(false);
     const [isNewPersonDialogVisible, setIsNewPersonDialogVisible] = useState<boolean>(false);
@@ -45,8 +44,8 @@ const usePersonTable = () => {
             try {
                 console.log(selectedPerson);
                 await apiClient.put(`/persons/${peronToUpdate.id}`, peronToUpdate)
-                showToast('success', 'Pomyślnie dodano nową osobę.')
-                fetchPersons()
+                showToast('success', 'Pomyślnie zaktualizowano dane osoby.')
+                await fetchPersons()
             } catch (error) {
                 console.error("Błąd podczas zapisywania zmian:", error);
                 showToast('error', 'nie pyko')
@@ -58,7 +57,6 @@ const usePersonTable = () => {
     };
 
     const handleAddNewPerson = () => {
-        setNewPerson({firstName: "", lastName: "", documentNumber: "", nationality: ""});
         setIsNewPersonDialogVisible(true);
     };
 
@@ -72,14 +70,12 @@ const usePersonTable = () => {
                 console.error("Błąd podczas dodawania nowej osoby:", error);
             } finally {
                 setIsNewPersonDialogVisible(false);
-                setNewPerson(null);
             }
         }
     };
 
     const deletePerson = (person: Person) => {
         try {
-            console.log(newPerson);
             apiClient.delete(`/persons/${person.id}`)
                 .then(() => fetchPersons())
                 .then(() => showToast('success', 'Pomyślnie usunięto rekord.'))
@@ -88,14 +84,13 @@ const usePersonTable = () => {
             showToast('error', 'Nie udało sie usunać rekordu.', error.message)
         } finally {
             setIsNewPersonDialogVisible(false);
-            setNewPerson(null);
         }
     }
 
     const handleDeletePerson = (person: Person) => {
         confirmDialog({
             message: <>
-                'Czy na pewno chcesz usunąć ten rekord?'
+                Czy na pewno chcesz usunąć ten rekord?
                 {person.firstName} {person.lastName}
             </>,
             header: 'Potwierdzenie usunięcia',

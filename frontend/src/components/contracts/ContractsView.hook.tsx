@@ -51,6 +51,7 @@ export const useContractsView = () => {
                 ...newContract
             })
             console.log(response);
+            await fetchContracts()
             showToast('success', 'Pomyślnie dodano nowy kontrakt.')
         } catch (error) {
             showToast('error', "Wystąpił błąd podczas dodawania kontraktu");

@@ -1,6 +1,6 @@
-export const dateToString = (date: Date): string => {
+export const dateToStringFullYearMouthDay = (date: Date): string => {
     const day = date.getDate();
-    const month = date.getMonth() + 1; // months are 0-based, so add 1 to get 1-based month number
+    const month = date.getMonth() + 1;
     const year = date.getFullYear();
     let dayString;
     if (day < 10) {
@@ -16,6 +16,18 @@ export const dateToString = (date: Date): string => {
             dayString = `${year}-${month}-${day}`;
         }
     }
-    console.log(dayString);
     return dayString;
 }
+export const dateToStringWithYearMonth = (date: Date): string => {
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    let dayString;
+
+    if (month < 10) {
+        dayString = `${year}-0${month}`;
+    } else {
+        dayString = `${year}-${month}`;
+    }
+    return dayString;
+}
+

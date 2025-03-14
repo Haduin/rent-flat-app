@@ -67,17 +67,18 @@ object Contract : Table() {
     val personId = reference("person_id", Person.id)
     val roomId = (integer("room_id") references Room.id)
     val amount = decimal("amount", 10, 2)
+    val deposit = decimal("deposit", 10, 2)
     val startDate = date("start_date")
     val endDate = date("end_date")
-    val payedDate = date("payed_date")
+    val payedTillDayOfMonth = varchar("payed_till_day_of_month", 2)
     override val primaryKey = PrimaryKey(id)
 }
 
 object Payment : Table() {
     val id = integer("id").autoIncrement()
     val contractId = reference("contract_id", Contract.id)
-    val dueDate = date("due_date").nullable()
     val payedDate = date("payed_date").nullable()
+    val scopeDate = varchar("scope_date", 7)
     val amount = decimal("amount", 10, 2)
     val status = customEnumeration(
         name = "status",

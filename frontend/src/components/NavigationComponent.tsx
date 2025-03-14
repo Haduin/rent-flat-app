@@ -9,6 +9,11 @@ const NavigationComponent = () => {
             url: '/'
         },
         {
+            label: 'Mieszkanie',
+            icon: 'pi pi-home',
+            url: '/mieszkanie'
+        },
+        {
             label: 'Osoby',
             icon: 'pi pi-star',
             url: '/osoby'

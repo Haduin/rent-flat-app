@@ -5,7 +5,7 @@ import {Toast} from "primereact/toast";
 
 export const Test = () => {
     const toast = useRef(null);
-// @ts-ignore
+
     const accept = () => {
         // @ts-ignore
         toast.current.show({severity: 'info', summary: 'Confirmed', detail: 'You have accepted', life: 3000});

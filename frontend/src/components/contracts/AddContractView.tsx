@@ -5,7 +5,7 @@ import {InputText} from "primereact/inputtext";
 import {useFormik} from "formik";
 import * as Yup from 'yup';
 import {Button} from "primereact/button";
-import {dateToString} from "../commons/dateFormatter.ts";
+import {dateToStringFullYearMouthDay} from "../commons/dateFormatter.ts";
 import {NewContract, PersonDto, Room} from "../commons/types.ts";
 
 interface Props {
@@ -33,20 +33,20 @@ const AddContractView = ({
             dates: [] as Date[],
             amount: '',
             deposit: '',
-            payedDate: new Date(),
+            payedDate: ''
         },
         onSubmit: (values) => {
             const newContract: NewContract = {
                 personId: Number(values.personId),
                 roomId: Number(values.roomId),
-                startDate: dateToString(values.dates[0]),
-                endDate: dateToString(values.dates[1]),
+                startDate: dateToStringFullYearMouthDay(values.dates[0]),
+                endDate: dateToStringFullYearMouthDay(values.dates[1]),
                 amount: Number(values.amount),
                 deposit: Number(values.amount),
-                payedDate: dateToString(values.payedDate)
+                payedDate: Number(values.payedDate),
             }
             onSave(newContract)
-            // formik.resetForm();
+            formik.resetForm();
         },
         validationSchema: Yup.object().shape({
             personId: Yup.string().required('Osoba musi być wymagana'),
@@ -65,7 +65,7 @@ const AddContractView = ({
                 className="card flex justify-content-center"
                 style={{width: '50vw'}}
                 onHide={() => {
-                    formik.resetForm();
+                    // formik.resetForm();
                     onHide();
                 }}>
 
@@ -125,14 +125,15 @@ const AddContractView = ({
                                   const dates = e.value as Date[]
                                   formik.setFieldValue("dates", dates)
                                   fetchUnassignedRooms(
-                                      dateToString(dates[0]),
-                                      dateToString(dates[1]))
+                                      dateToStringFullYearMouthDay(dates[0]),
+                                      dateToStringFullYearMouthDay(dates[1]))
                               }}
                               selectionMode="range"
                               readOnlyInput
                               dateFormat="yy-mm-dd"
                               hideOnRangeSelection/>
                     {formik.errors.dates && formik.touched.dates && (
+                        //@ts-ignore
                         <p className="text-red-500 text-xs mt-1">{formik.errors.dates}</p>
                     )}
                 </div>
@@ -141,18 +142,25 @@ const AddContractView = ({
                     <label htmlFor="payedDate" className="block text-sm font-medium text-gray-700">
                         Czynsz płatny do
                     </label>
-                    <Calendar value={formik.values.payedDate}
-                              locale="pl"
-                              id="payedDate"
-                              name="payedDate"
-                              className="w-full rounded-md border"
-                              onChange={(e) => {
-                                  formik.setFieldValue("payedDate", e.value as Date)
-                              }}
-                              readOnlyInput
-                              dateFormat="yy-mm-dd"
-                              hideOnRangeSelection/>
+                    <InputText
+                        value={formik.values.payedDate}
+                        onChange={(e) => formik.setFieldValue("payedDate", e.target.value)}
+                        className="w-full rounded-md border"
+                    />
+
+                    {/*<Calendar value={formik.values.payedDate}*/}
+                    {/*          locale="pl"*/}
+                    {/*          id="payedDate"*/}
+                    {/*          name="payedDate"*/}
+                    {/*          className="w-full rounded-md border"*/}
+                    {/*          onChange={(e) => {*/}
+                    {/*              formik.setFieldValue("payedDate", e.value as Date)*/}
+                    {/*          }}*/}
+                    {/*          readOnlyInput*/}
+                    {/*          dateFormat="yy-mm-dd"*/}
+                    {/*          hideOnRangeSelection/>*/}
                     {formik.errors.payedDate && formik.touched.payedDate && (
+                        //@ts-ignore
                         <p className="text-red-500 text-xs mt-1">{formik.errors.payedDate}</p>
                     )}
                 </div>
