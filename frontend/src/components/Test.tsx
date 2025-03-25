@@ -2,10 +2,12 @@ import {Button} from "primereact/button";
 import {useRef} from "react";
 import {ConfirmDialog, confirmDialog} from "primereact/confirmdialog";
 import {Toast} from "primereact/toast";
+import {useAuth} from "react-oidc-context";
 
 export const Test = () => {
     const toast = useRef(null);
-
+    const auth = useAuth();
+    console.log(auth)
     const accept = () => {
         // @ts-ignore
         toast.current.show({severity: 'info', summary: 'Confirmed', detail: 'You have accepted', life: 3000});

@@ -1,21 +1,31 @@
-import {StrictMode} from 'react'
-import {createRoot} from 'react-dom/client'
+import React from "react";
+import ReactDOM from 'react-dom/client'
+import {RouterProvider} from "react-router";
+import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {router} from "./router/router.tsx";
+import {OidcProvider} from "./oidc.tsx";
+
 import './index.css'
-import App from './App.tsx'
-import {BrowserRouter} from "react-router";
-import {PrimeReactProvider} from "primereact/api";
-
 import "primereact/resources/themes/lara-light-cyan/theme.css";
-import {ToastProvider} from "./components/commons/ToastProvider.tsx";
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
+import 'primeflex/primeflex.css';
 
-createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <BrowserRouter>
-            <PrimeReactProvider>
-                <ToastProvider>
-                    <App/>
-                </ToastProvider>
-            </PrimeReactProvider>
-        </BrowserRouter>
-    </StrictMode>
-)
+
+export const queryClient = new QueryClient()
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>
+        <OidcProvider
+            // fallback={<h1>Initializing OIDC...</h1>}
+        >
+            <QueryClientProvider client={queryClient}>
+                <RouterProvider router={router}/>
+            </QueryClientProvider>
+        </OidcProvider>
+    </React.StrictMode>
+);
+
+
+// KeycloakService.initKeycloak(renderApp)

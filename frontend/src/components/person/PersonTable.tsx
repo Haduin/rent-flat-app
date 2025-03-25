@@ -28,7 +28,7 @@ const PersonTable: React.FC = () => {
     } = usePersonTable();
 
     const showPeople = useCallback(() => {
-        return showOnlyActivePeople ? persons.filter((person) => person.status === 'RESIDENT') : persons
+        return showOnlyActivePeople ? persons?.filter((person) => person.status === 'RESIDENT') : persons
     }, [showOnlyActivePeople, persons]);
 
     return (
@@ -82,13 +82,13 @@ const PersonTable: React.FC = () => {
 
             <AddNewPersonDialog
                 visible={isNewPersonDialogVisible}
-                onSave={handleAddPerson}
+                onSave={handleAddPerson.mutate}
                 onHide={() => setIsNewPersonDialogVisible(false)}
             />
             {selectedPerson && <EditPersonDialog
                 person={selectedPerson}
                 visible={isEditDialogVisible}
-                onSave={handleEditPerson}
+                onSave={handleEditPerson.mutate}
                 onHide={() => setEditDialogVisible(false)}
             />}
 

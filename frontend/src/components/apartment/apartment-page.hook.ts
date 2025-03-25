@@ -1,22 +1,19 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {ApartmentWithRoomsNumber} from "./apartment.types.ts";
-import {apiClient} from "../../config/apiClient.ts";
+import {useQuery} from "@tanstack/react-query";
+import {api} from "../../api/api.ts";
 
 export const useApartmentPage = () => {
     const [apartments, setApartments] = useState<ApartmentWithRoomsNumber[]>([])
     const [loading, setLoading] = useState<boolean>(true);
 
-    const fetchApartments = async () => {
-        try {
-            setLoading(true);
-            const response = await apiClient.get<ApartmentWithRoomsNumber[]>('/apartments')
-            setApartments(response.data)
-        } catch (e) {
-            console.error(e)
-        } finally {
-            setLoading(false);
-        }
-    }
+
+    const {data, isLoading} = useQuery({
+        queryKey: ["apartments"],
+        queryFn: api.getApartments,
+    })
+
+    console.log(data)
 
     // const handleAddApartment = async (newApartment: ApartmentWithRoomsNumber) => {
     //     try {
@@ -31,9 +28,9 @@ export const useApartmentPage = () => {
     //         setLoading(false);
     //     }
     // }
-    useEffect(() => {
-        fetchApartments()
-    }, [])
+    // useEffect(() => {
+    //     fetchApartments()
+    // }, [])
 
     return {
         apartments, loading

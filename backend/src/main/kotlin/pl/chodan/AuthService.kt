@@ -27,9 +27,8 @@ suspend fun login(username: String, password: String): String? {
             )
         }
 
-    val responseText = response.bodyAsText() // Debugowanie
-    println("🔍 Odpowiedź Keycloak: $responseText") // Podgląd odpowiedzi
-
+    val responseText = response.bodyAsText()
+    println("🔍 Odpowiedź Keycloak: $responseText")
     return if (response.status == HttpStatusCode.OK) {
         val tokenResponse = Json.decodeFromString<TokenResponse>(responseText)
         tokenResponse.accessToken
@@ -50,5 +49,4 @@ data class TokenResponse(
     @SerialName("session_state") val sessionState: String? = null,
     @SerialName("scope") val scope: String? = null,
     @SerialName("not-before-policy") val notBeforePolicy: Int? = null
-    // dodaj inne pola, które mogą wystąpić w odpowiedzi
 )

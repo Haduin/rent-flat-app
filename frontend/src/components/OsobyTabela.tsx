@@ -1,5 +1,5 @@
-npm run // import React, {useEffect, useState} from "react";
 // import {Column} from "primereact/column";
+// import React, {useEffect, useState} from "react";
 // import {DataTable} from "primereact/datatable";
 //
 // import {Button} from 'primereact/button';

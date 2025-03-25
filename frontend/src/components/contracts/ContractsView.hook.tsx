@@ -1,17 +1,15 @@
-import {useEffect, useState} from 'react';
-import {Contract, NewContract, PersonDto, Room} from "../commons/types.ts";
-import {apiClient} from "../../config/apiClient.ts";
+import {useState} from 'react';
+import {Contract, PersonDto, Room} from "../commons/types.ts";
+import {queryClient} from "../../main.tsx";
 import {useToast} from "../commons/ToastProvider.tsx";
+import {useMutation, useQuery} from "@tanstack/react-query";
+import {api} from "../../api/api.ts";
 
 export const useContractsView = () => {
     const {showToast} = useToast()
-    const [loading, setLoading] = useState<boolean>(false)
     const [isDetailsDialogVisible, setIsDetailsDialogVisible] = useState<boolean>(false);
     const [isAddContractDialogVisible, setIsAddContractDialogVisible] = useState<boolean>(false);
-    const [contracts, setContracts] = useState<Contract[]>([]);
     const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-    const [unassignedPersons, setUnassignedPersons] = useState<PersonDto[]>([]);
-    const [unassignedRooms, setUnassignedRooms] = useState<Room[]>([]);
 
     const openDetailsDialog = (selectedContract: Contract) => {
         setIsDetailsDialogVisible(true);
@@ -31,59 +29,35 @@ export const useContractsView = () => {
         setIsAddContractDialogVisible(true);
     }
 
-    const fetchUnassignedRooms = async (startDate: string, endDate: string) => {
-        try {
-            const response = await apiClient.get<Room[]>('/rooms/non-occupied', {
-                params: {
-                    startDate: startDate,
-                    endDate: endDate
-                }
-            });
-            setUnassignedRooms(response.data);
-        } catch (e) {
-            console.error(e)
-        }
-    }
+    const {data: contracts = [], isLoading: loading} = useQuery<Contract[]>({
+        queryKey: ['contracts'],
+        queryFn: api.contractsApi.fetchContracts
+    });
 
-    const handleAddContract = async (newContract: NewContract) => {
-        try {
-            const response = await apiClient.post('/contracts', {
-                ...newContract
-            })
-            console.log(response);
-            await fetchContracts()
-            showToast('success', 'Pomyślnie dodano nowy kontrakt.')
-        } catch (error) {
+    const {data: unassignedPersons = []} = useQuery<PersonDto[]>({
+        queryKey: ['unassignedPersons'],
+        queryFn: api.contractsApi.fetchUnassignedPersons
+    });
+
+    const fetchUnassignedRooms = (startDate: string, endDate: string) => {
+        return useQuery<Room[]>({
+            queryKey: ['unassignedRooms', startDate, endDate],
+            queryFn: () => api.contractsApi.fetchUnassignedRooms(startDate, endDate),
+            enabled: !!startDate && !!endDate
+        });
+    };
+
+    const addContractMutation = useMutation({
+        mutationFn: api.contractsApi.addContract,
+        onSuccess: () => {
+            queryClient.invalidateQueries({queryKey: ['contracts']});
+            showToast('success', 'Pomyślnie dodano nowy kontrakt.');
+            setIsAddContractDialogVisible(false);
+        },
+        onError: () => {
             showToast('error', "Wystąpił błąd podczas dodawania kontraktu");
-        } finally {
-
         }
-    }
-
-    const fetchUnassignedPersons = async () => {
-        try {
-            const response = await apiClient.get<PersonDto[]>('/persons/non-residents');
-            setUnassignedPersons(response.data);
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
-    const fetchContracts = async () => {
-        try {
-            setLoading(true);
-            const response = await apiClient.get<Contract[]>('/contracts');
-            setContracts(response.data);
-        } catch (e) {
-            console.error(e)
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        Promise.all([fetchContracts(), fetchUnassignedPersons()])
-    }, [])
+    });
 
 
     return {
@@ -96,9 +70,6 @@ export const useContractsView = () => {
         isAddContractDialogVisible,
         closeAddDialog,
         openAddDialog,
-        handleAddContract,
-        unassignedPersons,
-        unassignedRooms,
         fetchUnassignedRooms
     }
 }

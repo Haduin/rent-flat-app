@@ -1,28 +1,34 @@
 package pl.chodan
 
+import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object DatabaseFactory {
-    private val database =
-        Database.connect(
-            url = "jdbc:postgresql://localhost:61500/mydb",
-            user = "myuser",
-            password = "mypassword",
-            driver = "org.postgresql.Driver",
-        )
 
+fun Application.configureDatabases() {
 
-    fun getDatabase() = database
-}
+    val url = environment.config.propertyOrNull("ktor.database.url")?.getString()
+        ?: error("Database URL is not configured in application.conf")
+    val user = environment.config.propertyOrNull("ktor.database.user")?.getString()
+        ?: error("Database user is not configured in application.conf")
+    val password = environment.config.propertyOrNull("ktor.database.password")?.getString()
+        ?: error("Database password is not configured in application.conf")
+    val driver = environment.config.propertyOrNull("ktor.database.driver")?.getString()
+        ?: error("Database driver is not configured in application.conf")
 
-fun configureDatabases() {
-    DatabaseFactory.getDatabase()
+    Database.connect(
+        url = url,
+        driver = driver,
+        user = user,
+        password = password
+    )
+
 
     transaction {
+//        SchemaUtils.setSchema(Schema("flat"))
         SchemaUtils.create(Apartment, Room, Person, Contract, Payment)
     }
 

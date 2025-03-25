@@ -1,75 +1,84 @@
 import {useToast} from "../commons/ToastProvider.tsx";
 import {useState} from "react";
-import {apiClient} from "../../config/apiClient.ts";
-import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../commons/dateFormatter.ts";
+import {dateToStringWithYearMonth} from "../commons/dateFormatter.ts";
 import {Payment, PaymentConfirmationDTO} from "../commons/types.ts";
+import {useMutation, useQuery} from "@tanstack/react-query";
+import {api} from "../../api/api.ts";
+import {queryClient} from "../../main.tsx";
 
 export const usePaymentsView = () => {
-    const {showToast} = useToast()
-    const [payments, setPayments] = useState<Payment[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
+    const {showToast} = useToast();
     const [dateSelected, setDateSelected] = useState<Date>();
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
     const [isConfirmationDialogVisible, setIsConfirmationDialogVisible] = useState<boolean>(false);
 
-    const fetchPayments = async (mouth: string) => {
-        try {
-            setLoading(true);
-            const response = await apiClient.get<Payment[]>(`/payments/${mouth}`);
-            setPayments(response.data);
-            console.log(response.data);
-        } catch (error) {
-            console.error("Błąd podczas pobierania danych płatności:", error);
-        } finally {
-            setLoading(false);
-        }
+    const {
+        data: payments,
+        isLoading: loading,
+    } = useQuery({
+        queryKey: ['payments', dateSelected ? dateToStringWithYearMonth(dateSelected) : ''],
+        queryFn: () => {
+            if (!dateSelected) return Promise.resolve([]);
+            return api.paymentsApi.getPayments(dateToStringWithYearMonth(dateSelected));
+        },
+        enabled: !!dateSelected
+    });
+
+    const handleDateSelectAndFetchPayments = (date: Date) => {
+        setDateSelected(date);
     };
-    const handleDateSelectAndFetchPayments = async (date: Date) => {
-        setDateSelected(date)
-        await fetchPayments(dateToStringWithYearMonth(date));
-    }
 
-    const handleGenerateNewMonthPayments = async (date: Date) => {
-        try {
-            setLoading(true);
-            await apiClient.post(`/contracts/generateMonthlyPayments`);
-            await fetchPayments(dateToStringWithYearMonth(date));
-        } catch (error) {
-            console.error("Błąd podczas pobierania danych płatności:", error);
-        } finally {
-            setLoading(false);
+    const handleGenerateNewMonthPayments = useMutation({
+        mutationFn: () => {
+            if (!dateSelected) throw new Error("Nie wybrano miesiąca");
+            return api.paymentsApi.generateMouthPayments(dateToStringWithYearMonth(dateSelected));
+        },
+        onSuccess: () => {
+            if (dateSelected) {
+                queryClient.invalidateQueries({
+                    queryKey: ['payments', dateToStringWithYearMonth(dateSelected)]
+                });
+                showToast('success', 'Pomyślnie wygenerowano płatności');
+            }
+        },
+        onError: (error) => {
+            console.error("Błąd podczas generowania płatności:", error);
+            showToast('error', 'Nie udało się wygenerować płatności');
         }
+    });
 
-    }
-
-    const handleConfirmPayment = async (date: Date, paymentId: number, amount: number) => {
-        const request: PaymentConfirmationDTO = {
-            paymentId: paymentId,
-            paymentDate: dateToStringFullYearMouthDay(date),
-            payedAmount: amount
+    const handleConfirmPayment = useMutation({
+        mutationFn: (request: PaymentConfirmationDTO) =>
+            api.paymentsApi.confirmPayment(request),
+        onSuccess: async () => {
+            if (dateSelected) {
+                await queryClient.invalidateQueries({
+                    queryKey: ['payments', dateToStringWithYearMonth(dateSelected)]
+                });
+                showToast('success', 'Pomyślnie potwierdzono płatność');
+                setIsConfirmationDialogVisible(false);
+                setSelectedPayment(null);
+            }
+        },
+        onError: (error: Error) => {
+            showToast('error', `Nie udało sie potwierdzić płatności: ${error.message}`);
         }
-        console.log(request);
-        await apiClient.post(`/payments/confirm`, request).then(() => {
-            showToast('success', "Pomyślnie potwierdzono płatność")
-        }).catch(error => {
-            showToast('error', `Nie udało sie potwierdzić płatności: ${error.message}`)
-        })
+    });
 
-    }
 
     const closeConfirmationDialog = () => {
         setIsConfirmationDialogVisible(false);
         setSelectedPayment(null);
-    }
+    };
 
     const openConfirmationDialog = (payment: Payment) => {
         setIsConfirmationDialogVisible(true);
         setSelectedPayment(payment);
-    }
+    };
 
     return {
-        loading,
         payments,
+        loading,
         dateSelected,
         selectedPayment,
         isConfirmationDialogVisible,
@@ -77,6 +86,6 @@ export const usePaymentsView = () => {
         openConfirmationDialog,
         closeConfirmationDialog,
         handleConfirmPayment,
-        handleGenerateNewMonthPayments
-    }
-}
+        handleGenerateNewMonthPayments,
+    };
+};

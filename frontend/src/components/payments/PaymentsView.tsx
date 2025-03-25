@@ -14,8 +14,8 @@ import {dateToStringWithYearMonth} from "../commons/dateFormatter.ts";
 const PaymentsView = () => {
 
     const {
-        loading,
         payments,
+        loading,
         dateSelected,
         selectedPayment,
         isConfirmationDialogVisible,
@@ -25,6 +25,7 @@ const PaymentsView = () => {
         handleConfirmPayment,
         handleGenerateNewMonthPayments
     } = usePaymentsView()
+
 
     return (
         <div className="card">
@@ -38,7 +39,7 @@ const PaymentsView = () => {
                           dateFormat="yy-mm"/>
                 {dateSelected && (
                     <Button
-                        onClick={() => handleGenerateNewMonthPayments(dateSelected)}
+                        onClick={() => handleGenerateNewMonthPayments.mutate}
                         label={`Wygeneruj płatności za ten miesiąc : ${dateToStringWithYearMonth(dateSelected)}`}/>
                 )}
             </div>
@@ -86,7 +87,13 @@ const PaymentsView = () => {
                     <ConfirmPaymentDialog
                         isVisible={isConfirmationDialogVisible}
                         onHide={closeConfirmationDialog}
-                        onConfirm={handleConfirmPayment}
+                        onConfirm={(date: Date, paymentId: number, amount: number) =>
+                            handleConfirmPayment.mutate({
+                                paymentId: paymentId,
+                                paymentDate: dateToStringWithYearMonth(date),
+                                payedAmount: amount
+                            })
+                        }
                         selectedPayment={selectedPayment}
                     />
                 </div>
