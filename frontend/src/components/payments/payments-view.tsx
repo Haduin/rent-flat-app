@@ -6,9 +6,9 @@ import {formatCurrency} from "../commons/currencyFormatter.ts";
 import {Payment, Status} from "../commons/types.ts";
 import StatusTag from "../commons/status-tag/status-tag.tsx";
 import {Button} from "primereact/button";
-import ConfirmPaymentDialog from "./ConfirmPaymentDialog.tsx";
-import {usePaymentsView} from "./PaymentsView.hook.ts";
-import {dateToStringWithYearMonth} from "../commons/dateFormatter.ts";
+import ConfirmPaymentDialog from "./confirm-payment-dialog.tsx";
+import {usePaymentsView} from "./payments-view.hook.ts";
+import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../commons/dateFormatter.ts";
 
 
 const PaymentsView = () => {
@@ -39,12 +39,12 @@ const PaymentsView = () => {
                           dateFormat="yy-mm"/>
                 {dateSelected && (
                     <Button
-                        onClick={() => handleGenerateNewMonthPayments.mutate}
+                        onClick={() => handleGenerateNewMonthPayments.mutate()}
                         label={`Wygeneruj płatności za ten miesiąc : ${dateToStringWithYearMonth(dateSelected)}`}/>
                 )}
             </div>
 
-            {loading ? (
+            {loading || handleGenerateNewMonthPayments.isPending || handleConfirmPayment.isPending ? (
                 <div className="flex justify-content-center">
                     <ProgressSpinner/>
                 </div>
@@ -87,12 +87,15 @@ const PaymentsView = () => {
                     <ConfirmPaymentDialog
                         isVisible={isConfirmationDialogVisible}
                         onHide={closeConfirmationDialog}
-                        onConfirm={(date: Date, paymentId: number, amount: number) =>
+                        onConfirm={async (date: Date, paymentId: number, amount: number) => {
+                            closeConfirmationDialog()
                             handleConfirmPayment.mutate({
                                 paymentId: paymentId,
-                                paymentDate: dateToStringWithYearMonth(date),
+                                paymentDate: dateToStringFullYearMouthDay(date),
                                 payedAmount: amount
                             })
+                        }
+
                         }
                         selectedPayment={selectedPayment}
                     />

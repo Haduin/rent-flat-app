@@ -1,5 +1,5 @@
-import { createReactOidc } from "oidc-spa/react";
-import { z } from "zod";
+import {createReactOidc} from "oidc-spa/react";
+import {z} from "zod";
 
 export const {
     OidcProvider,
@@ -24,8 +24,8 @@ export const {
     // NOTE: If you are using keycloak, the issuerUri should be formatted like this:
     // issuerUri: https://<YOUR_KEYCLOAK_DOMAIN><KC_RELATIVE_PATH>/realms/<REALM_NAME>
     // KC_RELATIVE_PATH is by default "" in modern keycloak, on older keycloak it used to be "/auth" by default.
-    issuerUri: import.meta.env.VITE_OIDC_ISSUER_URI,
-    clientId: import.meta.env.VITE_OIDC_CLIENT_ID,
+    issuerUri: import.meta.env.VITE_KEYCLOAK_URL,
+    clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
     __unsafe_clientSecret: import.meta.env.VITE_OIDC_CLIENT_SECRET || undefined,
     __unsafe_useIdTokenAsAccessToken: import.meta.env.VITE_OIDC_USE_ID_TOKEN_AS_ACCESS_TOKEN === "true",
     scopes: (import.meta.env.VITE_OIDC_SCOPE || undefined)?.split(" "),
@@ -69,12 +69,12 @@ export const {
 
     // This parameter is optional.
     // It allows you to pass extra query params before redirecting to the OIDC server.
-    extraQueryParams: ({ isSilent }) => ({
+    extraQueryParams: ({isSilent}) => ({
         audience: import.meta.env.VITE_OIDC_AUDIENCE || undefined,
         ui_locales: isSilent ? undefined : "en" // Here you would dynamically get the current language at the time of redirecting to the OIDC server
     }),
     // Remove this in your repo
-    debugLogs: true
+    debugLogs: false
 });
 
 // Using the mock adapter:

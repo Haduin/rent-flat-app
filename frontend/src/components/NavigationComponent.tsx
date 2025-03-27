@@ -21,17 +21,13 @@ const NavigationComponent = () => {
         },
         {
             label: 'Kontrakty',
-            icon: 'pi pi-star',
+            icon: 'pi pi-envelope',
             url: '/protected/kontakt'
         },
         {
             label: 'Płatnosci',
             icon: 'pi pi-star',
             url: '/protected/platnosci'
-        },
-        {
-            label: 'Contact',
-            icon: 'pi pi-envelope'
         }
     ];
     const nav = useNavigate();

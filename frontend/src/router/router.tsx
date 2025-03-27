@@ -3,15 +3,13 @@ import {createBrowserRouter} from "react-router";
 import {Layout} from "./Layout";
 import {getOidc} from "../oidc.tsx";
 
-// const ProtectedPage = lazy(() => import("../pages/ProtectedPage"));
 const PublicPage = lazy(() => import("../pages/PublicPage"));
 const NavigationComponent = lazy(() => import("../components/NavigationComponent"));
 const HomePage = lazy(() => import ("../components/home/home-page.tsx"))
 const ApartmentPage = lazy(() => import ("../components/apartment/apartment-page.tsx"))
-const PersonTable = lazy(() => import ("../components//person/PersonTable.tsx"))
-const PaymentsView = lazy(() => import ("../components/payments/PaymentsView.tsx"))
-const ContractsView = lazy(() => import ("../components/contracts/ContractsView.tsx"))
-const Dashboard = lazy(() => import ("../components/Dashboard.tsx"))
+const PersonTable = lazy(() => import ("../components/person/person-table.tsx"))
+const PaymentsView = lazy(() => import ("../components/payments/payments-view.tsx"))
+const ContractsView = lazy(() => import ("../components/contracts/contracts-view.tsx"))
 
 
 export const router = createBrowserRouter([
@@ -49,15 +47,7 @@ export const router = createBrowserRouter([
                         path: "/protected/kontakt",
                         element: <ContractsView/>,
                     },
-                    {
-                        path: "/protected/dashboard",
-                        element: (
-                            <Suspense>
-                                <Dashboard/>
-                            </Suspense>),
-                    },
                 ],
-
             },
             {
                 index: true,

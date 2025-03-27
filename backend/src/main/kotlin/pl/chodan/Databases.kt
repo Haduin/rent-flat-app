@@ -2,6 +2,7 @@ package pl.chodan
 
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.date
@@ -28,28 +29,28 @@ fun Application.configureDatabases() {
 
 
     transaction {
-//        SchemaUtils.setSchema(Schema("flat"))
+        val schema = Schema("flat")
+        SchemaUtils.createSchema(schema)
+        SchemaUtils.setSchema(schema)
         SchemaUtils.create(Apartment, Room, Person, Contract, Payment)
     }
 
 }
 
-object Apartment : Table() {
+object Apartment : Table("flat.apartment") {
     val id = integer("id").autoIncrement()
     val name = varchar("name", 255)
     override val primaryKey = PrimaryKey(id)
 }
 
-// Tabela pokoi
-object Room : Table() {
+object Room : Table("flat.room") {
     val id = integer("id").autoIncrement()
     val name = varchar("name", 255)
     val apartmentId = (integer("apartment_id") references Apartment.id).nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
-// Tabela osób
-object Person : Table() {
+object Person : Table("flat.person") {
     val id = integer("id").autoIncrement()
     val firstName = varchar("first_name", 255)
     val lastName = varchar("last_name", 255)
@@ -68,7 +69,7 @@ enum class PersonStatus {
     RESIDENT, NON_RESIDENT
 }
 
-object Contract : Table() {
+object Contract : Table("flat.contract") {
     val id = integer("id").autoIncrement()
     val personId = reference("person_id", Person.id)
     val roomId = (integer("room_id") references Room.id)
@@ -80,7 +81,7 @@ object Contract : Table() {
     override val primaryKey = PrimaryKey(id)
 }
 
-object Payment : Table() {
+object Payment : Table("flat.payment") {
     val id = integer("id").autoIncrement()
     val contractId = reference("contract_id", Contract.id)
     val payedDate = date("payed_date").nullable()

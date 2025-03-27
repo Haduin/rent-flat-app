@@ -31,15 +31,14 @@ export const usePaymentsView = () => {
     const handleGenerateNewMonthPayments = useMutation({
         mutationFn: () => {
             if (!dateSelected) throw new Error("Nie wybrano miesiąca");
-            return api.paymentsApi.generateMouthPayments(dateToStringWithYearMonth(dateSelected));
+            return api.contractsApi.generateMouthPayments();
         },
-        onSuccess: () => {
-            if (dateSelected) {
-                queryClient.invalidateQueries({
-                    queryKey: ['payments', dateToStringWithYearMonth(dateSelected)]
-                });
-                showToast('success', 'Pomyślnie wygenerowano płatności');
-            }
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['payments'],
+                refetchType: 'active'
+            });
+            showToast('success', 'Pomyślnie wygenerowano płatności');
         },
         onError: (error) => {
             console.error("Błąd podczas generowania płatności:", error);
@@ -48,23 +47,19 @@ export const usePaymentsView = () => {
     });
 
     const handleConfirmPayment = useMutation({
-        mutationFn: (request: PaymentConfirmationDTO) =>
+        mutationFn: async (request: PaymentConfirmationDTO) =>
             api.paymentsApi.confirmPayment(request),
         onSuccess: async () => {
-            if (dateSelected) {
-                await queryClient.invalidateQueries({
-                    queryKey: ['payments', dateToStringWithYearMonth(dateSelected)]
-                });
-                showToast('success', 'Pomyślnie potwierdzono płatność');
-                setIsConfirmationDialogVisible(false);
-                setSelectedPayment(null);
-            }
+            await queryClient.invalidateQueries({
+                queryKey: ['payments']
+            })
+            closeConfirmationDialog()
+            showToast('success', 'Pomyślnie potwierdzono płatność');
         },
         onError: (error: Error) => {
             showToast('error', `Nie udało sie potwierdzić płatności: ${error.message}`);
         }
     });
-
 
     const closeConfirmationDialog = () => {
         setIsConfirmationDialogVisible(false);

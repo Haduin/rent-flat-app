@@ -1,4 +1,4 @@
-import {NewPerson, Person} from "../components/person/PersonTable.types.ts";
+import {NewPerson, Person} from "../components/person/person-table.types.ts";
 import {axiosInstance} from "./api.ts";
 
 export const personsApi: PersonsApi = {

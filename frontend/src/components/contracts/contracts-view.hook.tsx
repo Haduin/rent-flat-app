@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Contract, PersonDto, Room} from "../commons/types.ts";
+import {Contract, PersonDto} from "../commons/types.ts";
 import {queryClient} from "../../main.tsx";
 import {useToast} from "../commons/ToastProvider.tsx";
 import {useMutation, useQuery} from "@tanstack/react-query";
@@ -10,6 +10,9 @@ export const useContractsView = () => {
     const [isDetailsDialogVisible, setIsDetailsDialogVisible] = useState<boolean>(false);
     const [isAddContractDialogVisible, setIsAddContractDialogVisible] = useState<boolean>(false);
     const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+
+
+    const [isEditContactModalOpen, setIsEditContactModalOpen] = useState<boolean>(false)
 
     const openDetailsDialog = (selectedContract: Contract) => {
         setIsDetailsDialogVisible(true);
@@ -29,6 +32,15 @@ export const useContractsView = () => {
         setIsAddContractDialogVisible(true);
     }
 
+
+    const handleOpenEditDialog = () => {
+        setIsEditContactModalOpen(true);
+    }
+
+    const handleCloseEditDialog = () => {
+        setIsEditContactModalOpen(false);
+    }
+
     const {data: contracts = [], isLoading: loading} = useQuery<Contract[]>({
         queryKey: ['contracts'],
         queryFn: api.contractsApi.fetchContracts
@@ -39,20 +51,12 @@ export const useContractsView = () => {
         queryFn: api.contractsApi.fetchUnassignedPersons
     });
 
-    const fetchUnassignedRooms = (startDate: string, endDate: string) => {
-        return useQuery<Room[]>({
-            queryKey: ['unassignedRooms', startDate, endDate],
-            queryFn: () => api.contractsApi.fetchUnassignedRooms(startDate, endDate),
-            enabled: !!startDate && !!endDate
-        });
-    };
-
     const addContractMutation = useMutation({
         mutationFn: api.contractsApi.addContract,
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['contracts']});
             showToast('success', 'Pomyślnie dodano nowy kontrakt.');
-            setIsAddContractDialogVisible(false);
+            closeAddDialog();
         },
         onError: () => {
             showToast('error', "Wystąpił błąd podczas dodawania kontraktu");
@@ -70,6 +74,11 @@ export const useContractsView = () => {
         isAddContractDialogVisible,
         closeAddDialog,
         openAddDialog,
-        fetchUnassignedRooms
+        unassignedPersons,
+        addContractMutation,
+
+        isEditContactModalOpen,
+        handleOpenEditDialog,
+        handleCloseEditDialog
     }
 }

@@ -1,5 +1,5 @@
-import {useState} from 'react';
-import {NewPerson, Person} from "./PersonTable.types.ts";
+import {useCallback, useState} from 'react';
+import {NewPerson, Person} from "./person-table.types.ts";
 import {confirmDialog} from "primereact/confirmdialog";
 import {useToast} from "../commons/ToastProvider.tsx";
 import {api} from "../../api/api.ts";
@@ -64,7 +64,8 @@ const usePersonTable = () => {
         }
     });
 
-    const handleDeletePerson = (person: Person) => {
+    const handleDeletePerson = useCallback((person: Person) => {
+
         confirmDialog({
             message: <>
                 Czy na pewno chcesz usunąć ten rekord?
@@ -78,7 +79,7 @@ const usePersonTable = () => {
                 deletePerson.mutate(person);
             }
         });
-    };
+    }, [deletePerson]);
 
 
     return {

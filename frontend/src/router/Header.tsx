@@ -1,4 +1,3 @@
-import {parseKeycloakIssuerUri} from "oidc-spa/tools/parseKeycloakIssuerUri";
 import {useOidc} from "../oidc.tsx";
 
 export function Header() {
@@ -48,7 +47,7 @@ export function Header() {
             {/*    </Link>*/}
             {/*</div>*/}
 
-            {isUserLoggedIn ? <LoggedInAuthButton/> : <NotLoggedInAuthButton/>}
+            {isUserLoggedIn ? <LoggedInAuthButton/> : <></>}
         </div>
     );
 }
@@ -65,47 +64,47 @@ function LoggedInAuthButton() {
     );
 }
 
-function NotLoggedInAuthButton() {
-    const {login, params} = useOidc({assert: "user not logged in"});
-
-    const isKeycloak = parseKeycloakIssuerUri(params.issuerUri) !== undefined;
-
-    const isAuth0 = params.issuerUri.includes("auth0");
-
-    return (
-        <div>
-            <button onClick={() => login()}>Login</button>
-            {" "}
-            {isKeycloak && (
-                <button
-                    onClick={() =>
-                        login({
-                            transformUrlBeforeRedirect: url => {
-                                const urlObj = new URL(url);
-
-                                urlObj.pathname = urlObj.pathname.replace(/\/auth$/, "/registrations");
-
-                                return urlObj.href;
-                            }
-                        })
-                    }
-                >
-                    Register
-                </button>
-            )}
-            {isAuth0 && (
-                <button
-                    onClick={() =>
-                        login({
-                            extraQueryParams: {
-                                screen_hint: "signup"
-                            }
-                        })
-                    }
-                >
-                    Register
-                </button>
-            )}
-        </div>
-    );
-}
+// function NotLoggedInAuthButton() {
+//     const {login, params} = useOidc({assert: "user not logged in"});
+//
+//     const isKeycloak = parseKeycloakIssuerUri(params.issuerUri) !== undefined;
+//
+//     const isAuth0 = params.issuerUri.includes("auth0");
+//
+//     return (
+//         <div>
+//             <button onClick={() => login()}>Login</button>
+//             {" "}
+//             {isKeycloak && (
+//                 <button
+//                     onClick={() =>
+//                         login({
+//                             transformUrlBeforeRedirect: url => {
+//                                 const urlObj = new URL(url);
+//
+//                                 urlObj.pathname = urlObj.pathname.replace(/\/auth$/, "/registrations");
+//
+//                                 return urlObj.href;
+//                             }
+//                         })
+//                     }
+//                 >
+//                     Register
+//                 </button>
+//             )}
+//             {isAuth0 && (
+//                 <button
+//                     onClick={() =>
+//                         login({
+//                             extraQueryParams: {
+//                                 screen_hint: "signup"
+//                             }
+//                         })
+//                     }
+//                 >
+//                     Register
+//                 </button>
+//             )}
+//         </div>
+//     );
+// }

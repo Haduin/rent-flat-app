@@ -3,17 +3,12 @@ ktor:
     modules:
       - pl.chodan.ApplicationKt.module
   deployment:
-    port: 8080
+    port: "$PORT:8080"
   database:
-    url: "jdbc:postgresql://psql01.mikr.us/db_s120"
-    user: "s120"
-    password: "6D4F_d6aa9f"
+    url: "$DATABASE_URL:jdbc:postgresql://localhost:61500/mydb"
+    user: "$DATABASE_USER:myuser"
+    password: "$DATABASE_PASSWORD:mypassword"
     driver: "org.postgresql.Driver"
-  #  database:
-  #    url: "jdbc:postgresql://38.242.141.27:6666/shared"
-  #    user: "admin"
-  #    password: "b!Eevwvo8Vn#7qd^"
-  #    driver: "org.postgresql.Driver"
   cors:
     allowedHosts:
       - "localhost:5173"
@@ -27,3 +22,4 @@ keycloak:
   clientId: mieszkanie_client_id
   realm: mieszkania_realm
   tokenPath: protocol/openid-connect/token
+

@@ -1,7 +1,7 @@
 const HomePage = () => {
     return (
-        <div className="bg-red-300">
-            <h1>Home</h1>
+        <div>
+            <h1>Tu bedzie podsumowanie całego mieszkania</h1>
         </div>
     );
 };

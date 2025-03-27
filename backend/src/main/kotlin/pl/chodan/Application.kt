@@ -9,9 +9,6 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
 import java.net.URL
@@ -85,15 +82,15 @@ fun Application.configureSecurity() {
             }
         }
     }
-    routing {
-        post("/login") {
-            val request = call.receive<LoginRequest>()
-            val token = login(request.username, request.password)
-            if (token != null) {
-                call.respond(mapOf("access_token" to token))
-            } else {
-                call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
-            }
-        }
-    }
+//    routing {
+//        post("/login") {
+//            val request = call.receive<LoginRequest>()
+//            val token = login(request.username, request.password)
+//            if (token != null) {
+//                call.respond(mapOf("access_token" to token))
+//            } else {
+//                call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
+//            }
+//        }
+//    }
 }

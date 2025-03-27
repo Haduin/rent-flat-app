@@ -1,50 +1,92 @@
-# React + TypeScript + Vite
+# Mieszkania - Aplikacja Zarządzania Nieruchomościami
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Opis Projektu
 
-Currently, two official plugins are available:
+Aplikacja webowa do kompleksowego zarządzania nieruchomościami, umożliwiająca obsługę umów najmu, płatności i
+podstawowych operacji związanych z wynajmem mieszkań.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Technologie
 
-## Expanding the ESLint configuration
+- Frontend:
+    - React
+    - TypeScript
+    - Vite
+    - PrimeReact
+    - React Router
+    - Keycloak (autoryzacja)
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- Narzędzia deweloperskie:
+    - ESLint
+    - Tailwind CSS
 
-- Configure the top-level `parserOptions` property like this:
+## Wymagania Wstępne
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+- Node.js
+- npm
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Instalacja
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+1. Sklonuj repozytorium
+2. Zainstaluj zależności:
+   ```bash
+   pnpm install
+   ```
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+3. Uruchom serwer deweloperski:
+   ```bash
+   pnpm run dev
+   ```
+
+## Główne Funkcje
+
+- Zarządzanie umowami najmu
+- Śledzenie płatności
+- Autentykacja użytkowników
+
+## Proces Releasowania Aplikacji
+
+### Budowanie Projektu
+
+1. Zbuduj projekt za pomocą pnpm:
+   ```bash
+   pnpm build
+   ```
+    - Polecenie generuje zoptymalizowane pliki produkcyjne w katalogu `dist/`
+
+### Budowanie Obrazu Docker
+
+2. Zbuduj obraz Docker:
+   ```bash
+   docker build -t haduin/mieszkania-frontend: {tag} .
+   ```
+
+### Publikacja Obrazu
+
+3. Zaloguj się do rejestru Docker (np. Docker Hub):
+   ```bash
+   docker login
+   ```
+
+4. Oznacz obraz tagiem repozytorium:
+   ```bash
+   docker tag mieszkania-frontend:v1.0.0 twoja-organizacja/mieszkania-frontend:v1.0.0
+   ```
+
+5. Wypchnij obraz do repozytorium:
+   ```bash
+   docker push twoja-organizacja/mieszkania-frontend:v1.0.0
+   ```
+
+### Wskazówki
+
+- Przed releasem zawsze:
+    - Zaktualizuj wersję w `package.json`
+    - Sprawdź konfigurację środowiska
+    - Zweryfikuj zmienne środowiskowe
+
+### Wersjonowanie
+
+Stosuj [Semantic Versioning](https://semver.org/):
+
+- `MAJOR.MINOR.PATCH`
+- Przykład: `1.0.0`, `1.1.2`, `2.0.0`
