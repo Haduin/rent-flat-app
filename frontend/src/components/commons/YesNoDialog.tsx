@@ -3,7 +3,7 @@ import {ConfirmDialog} from "primereact/confirmdialog";
 import {Button} from "primereact/button";
 
 
-const YesNoDialog = () => {
+export const YesNoDialog = () => {
     const [visible, setVisible] = useState(false);
 
     const showConfirm = () => {
@@ -11,12 +11,10 @@ const YesNoDialog = () => {
     };
 
     const accept = () => {
-        console.log('Zaakceptowano!');
         setVisible(false);
     };
 
     const reject = () => {
-        console.log('Odrzucono!');
         setVisible(false);
     };
 
@@ -38,4 +36,3 @@ const YesNoDialog = () => {
 };
 
 
-export default YesNoDialog;

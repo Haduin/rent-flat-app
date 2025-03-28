@@ -1,11 +1,10 @@
 import {ProgressSpinner} from "primereact/progressspinner";
 import {DataTable} from "primereact/datatable";
-import {useContractsView} from "./ContractsView.hook.tsx";
+import {useContractsView} from "./contracts-view.hook.tsx";
 import {Column} from "primereact/column";
 import {Button} from "primereact/button";
 import {Contract} from "../commons/types.ts";
-import ContractDetailsDialog from "./ContractDetailsDialog.tsx";
-import AddContractView from "./AddContractView.tsx";
+import AddContractView from "./add-contract-view.tsx";
 
 const ContractsView = () => {
 
@@ -13,16 +12,12 @@ const ContractsView = () => {
         contracts,
         loading,
         openDetailsDialog,
-        closeDetailsDialog,
-        isDetailsDialogVisible,
-        selectedContract,
         isAddContractDialogVisible,
         closeAddDialog,
         openAddDialog,
-        handleAddContract,
         unassignedPersons,
-        unassignedRooms,
-        fetchUnassignedRooms
+        addContractMutation,
+        handleOpenEditDialog,
     } = useContractsView();
 
     return (
@@ -56,20 +51,28 @@ const ContractsView = () => {
                                                 icon="pi pi-pencil"
                                                 onClick={() => openDetailsDialog(rowData)}
                                                 className="p-button-rounded p-button-sm"/>
+                                        <Button label="Edytuj"
+                                                severity="danger"
+                                                icon="pi pi-pencil"
+                                                onClick={() => handleOpenEditDialog()}
+                                                className="p-button-rounded p-button-sm"/>
                                     </div>
                                 )}
                         >
                         </Column>
                     </DataTable>
                     <AddContractView isVisible={isAddContractDialogVisible}
-                                     onSave={handleAddContract}
+                                     onSave={addContractMutation.mutate}
                                      unassignedPersons={unassignedPersons}
-                                     unassignedRooms={unassignedRooms}
-                                     fetchUnassignedRooms={fetchUnassignedRooms}
                                      onHide={closeAddDialog}/>
-                    <ContractDetailsDialog isVisible={isDetailsDialogVisible}
-                                           onHide={closeDetailsDialog}
-                                           selectedContract={selectedContract}/>
+                    {/*<EditContractModal*/}
+                    {/*    visible={isEditContactModalOpen}*/}
+                    {/*    onHide={handleCloseEditDialog}*/}
+                    {/*    selectedContract={selectedContract}*/}
+                    {/*/>*/}
+                    {/*<ContractDetailsDialog isVisible={isDetailsDialogVisible}*/}
+                    {/*                       onHide={closeDetailsDialog}*/}
+                    {/*                       selectedContract={selectedContract}/>*/}
                 </div>
             )}
         </div>

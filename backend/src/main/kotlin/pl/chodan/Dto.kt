@@ -129,3 +129,6 @@ data class ApartmentAndRoomNumberDTO(
     val apartmentName: String,
     val roomName: String,
 )
+
+@Serializable
+data class LoginRequest(val username: String, val password: String)

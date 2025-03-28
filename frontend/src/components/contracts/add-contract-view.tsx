@@ -7,14 +7,14 @@ import * as Yup from 'yup';
 import {Button} from "primereact/button";
 import {dateToStringFullYearMouthDay} from "../commons/dateFormatter.ts";
 import {NewContract, PersonDto, Room} from "../commons/types.ts";
+import {useQuery} from "@tanstack/react-query";
+import {api} from "../../api/api.ts";
 
 interface Props {
     isVisible: boolean;
     onHide: () => void;
     onSave: (newContract: NewContract) => void;
     unassignedPersons: PersonDto[];
-    unassignedRooms: Room[];
-    fetchUnassignedRooms: (startDate: string, endDate: string) => void;
 }
 
 
@@ -23,9 +23,9 @@ const AddContractView = ({
                              onHide,
                              onSave,
                              unassignedPersons,
-                             unassignedRooms,
-                             fetchUnassignedRooms
                          }: Props) => {
+
+
     const formik = useFormik({
         initialValues: {
             personId: '',
@@ -58,6 +58,16 @@ const AddContractView = ({
         })
     });
 
+
+    const {data: unassignedRooms, isLoading: roomsLoading} = useQuery<Room[]>({
+        queryKey: ['unassignedRooms', formik.values.dates[0], formik.values.dates[1]],
+        queryFn: () => api.contractsApi.fetchUnassignedRooms(
+            dateToStringFullYearMouthDay(formik.values.dates[0]),
+            dateToStringFullYearMouthDay(formik.values.dates[1])
+        ),
+        enabled: !!formik.values.dates[0] && !!formik.values.dates[0]
+    });
+
     return (
         <Dialog header="Dodaj nowy kontrakt"
                 closeOnEscape={true}
@@ -65,7 +75,7 @@ const AddContractView = ({
                 className="card flex justify-content-center"
                 style={{width: '50vw'}}
                 onHide={() => {
-                    // formik.resetForm();
+                    formik.resetForm();
                     onHide();
                 }}>
 
@@ -95,22 +105,27 @@ const AddContractView = ({
                     <label htmlFor="roomId" className="block text-sm font-medium text-gray-700">
                         Pokój
                     </label>
-                    <Dropdown id="roomId" name="roomId" value={formik.values.roomId}
-                              className="w-full rounded-md border"
-                              onChange={(e) => {
-                                  formik.setFieldValue("roomId", e.value)
-                              }}
-                              options={formik.values.dates && unassignedRooms.map((room) => ({
-                                  label: `${room.apartment} ${room.number}`,
-                                  value: room.id
-                              }))}>
-                        {formik.values.dates && unassignedRooms.map((room) => (
-                            <option key={room.id} label={`${room.apartment} ${room.number}`}
-                                    value={room.id}/>))}
-                    </Dropdown>
-                    {formik.errors.roomId && formik.touched.roomId && (
-                        <p className="text-red-500 text-xs mt-1">{formik.errors.roomId}</p>
+                    {!roomsLoading && unassignedRooms && (
+                        <div>
+                            <Dropdown id="roomId" name="roomId" value={formik.values.roomId}
+                                      className="w-full rounded-md border"
+                                      onChange={(e) => {
+                                          formik.setFieldValue("roomId", e.value)
+                                      }}
+                                      options={formik.values.dates && unassignedRooms.map((room) => ({
+                                          label: `${room.apartment} ${room.number}`,
+                                          value: room.id
+                                      }))}>
+                                {formik.values.dates && unassignedRooms.map((room) => (
+                                    <option key={room.id} label={`${room.apartment} ${room.number}`}
+                                            value={room.id}/>))}
+                            </Dropdown>
+                            {formik.errors.roomId && formik.touched.roomId && (
+                                <p className="text-red-500 text-xs mt-1">{formik.errors.roomId}</p>
+                            )}
+                        </div>
                     )}
+
                 </div>
                 <div className="mb-4">
                     <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
@@ -124,9 +139,6 @@ const AddContractView = ({
                               onChange={(e) => {
                                   const dates = e.value as Date[]
                                   formik.setFieldValue("dates", dates)
-                                  fetchUnassignedRooms(
-                                      dateToStringFullYearMouthDay(dates[0]),
-                                      dateToStringFullYearMouthDay(dates[1]))
                               }}
                               selectionMode="range"
                               readOnlyInput

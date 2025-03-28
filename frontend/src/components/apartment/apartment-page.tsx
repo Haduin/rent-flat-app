@@ -1,11 +1,15 @@
 import {Card} from 'primereact/card';
-import {useApartmentPage} from "./apartment-page.hook.ts";
-import {ProgressSpinner} from "primereact/progressspinner";
 import {Button} from "primereact/button";
+import {api} from "../../api/api.ts";
+import {useQuery} from "@tanstack/react-query";
+import {ProgressSpinner} from "primereact/progressspinner";
 
-export const ApartmentPage = () => {
+const ApartmentPage = () => {
 
-    const {apartments, loading} = useApartmentPage()
+    const {data, isLoading} = useQuery({
+        queryKey: ["apartments"],
+        queryFn: api.apartmentsApi.getApartments,
+    })
 
     return (
         <Card className="mt-2">
@@ -14,13 +18,13 @@ export const ApartmentPage = () => {
                 <Button label="Dodaj mieszkanie" raised/>
             </div>
 
-            {loading ? (
+            {isLoading ? (
                 <div className="flex justify-content-center">
                     <ProgressSpinner/>
                 </div>
             ) : (
                 <div className="flex flex-wrap gap-2 justify-content-center">
-                    {apartments.map((apartment, id) => (
+                    {data?.map((apartment, id) => (
                         <Card key={id} className="flex flex-col w-3">
                             <p>Mieszkanie: {apartment.apartmentName}</p>
                             <p>Ilość pokoi: {apartment.roomName}</p>
@@ -32,3 +36,4 @@ export const ApartmentPage = () => {
     );
 };
 
+export default ApartmentPage;

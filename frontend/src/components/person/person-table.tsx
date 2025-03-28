@@ -3,10 +3,10 @@ import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {ProgressSpinner} from 'primereact/progressspinner';
 import {Button} from "primereact/button";
-import usePersonTable from "./PersonTable.hook.tsx";
-import {Person} from "./PersonTable.types.ts";
-import AddNewPersonDialog from "./AddNewPersonDialog.tsx";
-import EditPersonDialog from "./EditPersonDialog.tsx";
+import usePersonTable from "./person-table.hook.tsx";
+import {Person} from "./person-table.types.ts";
+import AddNewPersonDialog from "./add-new-person-dialog.tsx";
+import EditPersonDialog from "./edit-person-dialog.tsx";
 import {Checkbox} from "primereact/checkbox";
 
 const PersonTable: React.FC = () => {
@@ -28,7 +28,7 @@ const PersonTable: React.FC = () => {
     } = usePersonTable();
 
     const showPeople = useCallback(() => {
-        return showOnlyActivePeople ? persons.filter((person) => person.status === 'RESIDENT') : persons
+        return showOnlyActivePeople ? persons?.filter((person) => person.status === 'RESIDENT') : persons
     }, [showOnlyActivePeople, persons]);
 
     return (

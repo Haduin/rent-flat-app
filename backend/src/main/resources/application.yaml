@@ -3,4 +3,19 @@ ktor:
     modules:
       - pl.chodan.ApplicationKt.module
   deployment:
-    port: 8080
+    port: "$PORT:8080"
+  database:
+    url: "$DATABASE_URL:jdbc:postgresql://localhost:61500/mydb"
+    user: "$DATABASE_USER:myuser"
+    password: "$DATABASE_PASSWORD:mypassword"
+    driver: "org.postgresql.Driver"
+  cors:
+    allowedHosts: "$HOSTS:localhost:8080, localhost:5173, localhost:8081"
+
+
+keycloak:
+  #  url: 'http://localhost:8081'
+  url: "$KEYCLOAK_URL:https://keycloak.chodan.fun"
+  clientId: mieszkanie_client_id
+  realm: mieszkania_realm
+  tokenPath: protocol/openid-connect/token

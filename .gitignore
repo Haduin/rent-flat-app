@@ -35,4 +35,9 @@ out/
 ### VS Code ###
 .vscode/
 
+
+
+/db/example.production.docker-compose.yaml
+/.env
+/frontend/dist
 /frontend/node_modules
