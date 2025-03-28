@@ -40,7 +40,7 @@ dependencies {
 
     implementation("io.ktor:ktor-server-html-builder:$ktor_version")
     implementation("io.ktor:ktor-server-cors:$ktor_version")
-    implementation("org.postgresql:postgresql:42.3.6")
+    implementation("org.postgresql:postgresql:42.7.2")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml-jvm")
@@ -48,18 +48,19 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
 
-ktor {
-    docker {
-        jreVersion.set(JavaVersion.VERSION_21)
-        externalRegistry.set(
-            io.ktor.plugin.features.DockerImageRegistry.dockerHub(
-                appName = provider { "flat-backend" },
-                username = providers.environmentVariable("DOCKER_HUB_USERNAME"),
-                password = providers.environmentVariable("DOCKER_HUB_PASSWORD")
-            )
-        )
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "pl.chodan.EngineMain" // Główna klasa twojej aplikacji
     }
-    fatJar {
-        archiveFileName.set("flat-backend.jar")
-    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from(configurations.runtimeClasspath.get().map {
+        if (it.isDirectory) it
+        else zipTree(it)
+    })
+}
+
+tasks.withType<Jar> {
+    archiveFileName.set("backend.jar")
 }

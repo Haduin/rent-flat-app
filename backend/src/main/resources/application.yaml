@@ -10,16 +10,12 @@ ktor:
     password: "$DATABASE_PASSWORD:mypassword"
     driver: "org.postgresql.Driver"
   cors:
-    allowedHosts:
-      - "localhost:5173"
-      - "localhost:8080"
-      - "localhost:8081"
+    allowedHosts: "$HOSTS:localhost:8080, localhost:5173, localhost:8081"
 
 
 keycloak:
   #  url: 'http://localhost:8081'
-  url: 'https://keycloak.chodan.fun'
+  url: "$KEYCLOAK_URL:https://keycloak.chodan.fun"
   clientId: mieszkanie_client_id
   realm: mieszkania_realm
   tokenPath: protocol/openid-connect/token
-

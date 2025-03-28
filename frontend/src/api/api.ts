@@ -14,12 +14,11 @@ type Api = {
 
 export const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
-    withCredentials: true, // Pozwól na wysyłanie ciasteczek (jeśli używasz cookie do trzymania tokena)
+    withCredentials: true,
 
-    headers: {                          // Nagłówki domyślne (opcjonalnie)
+    headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Access-Control-Allow-Origin': '*',
     },
 });
 

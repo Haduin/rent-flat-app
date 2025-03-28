@@ -24,7 +24,7 @@ fun Application.configureDatabases() {
         url = url,
         driver = driver,
         user = user,
-        password = password
+        password = password,
     )
 
 
@@ -32,6 +32,7 @@ fun Application.configureDatabases() {
         val schema = Schema("flat")
         SchemaUtils.createSchema(schema)
         SchemaUtils.setSchema(schema)
+//        exec("SET search_path TO flat;")
         SchemaUtils.create(Apartment, Room, Person, Contract, Payment)
     }
 

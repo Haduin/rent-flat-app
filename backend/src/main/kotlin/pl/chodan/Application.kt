@@ -29,13 +29,14 @@ fun Application.module() {
 }
 
 fun Application.configueModules() {
-    val allowedHosts = environment.config.property("ktor.cors.allowedHosts").getList()
+    
+    val allowedHosts = environment.config.property("ktor.cors.allowedHosts").getString().split(",").map { it.trim() }
+    allowedHosts.forEach { println(it) }
     install(CORS) {
-        allowedHosts.forEach { allowHost(it) }
-
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.AccessControlAllowOrigin)
+        allowHeader(HttpHeaders.AccessControlAllowHeaders)
 
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
@@ -46,6 +47,8 @@ fun Application.configueModules() {
         allowNonSimpleContentTypes = true
         allowCredentials = true
         allowSameOrigin = true
+
+        allowedHosts.forEach { allowHost(it, schemes = listOf("http")) }
 
 
     }
