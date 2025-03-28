@@ -29,7 +29,7 @@ fun Application.module() {
 }
 
 fun Application.configueModules() {
-    
+
     val allowedHosts = environment.config.property("ktor.cors.allowedHosts").getString().split(",").map { it.trim() }
     allowedHosts.forEach { println(it) }
     install(CORS) {
@@ -48,7 +48,7 @@ fun Application.configueModules() {
         allowCredentials = true
         allowSameOrigin = true
 
-        allowedHosts.forEach { allowHost(it, schemes = listOf("http")) }
+        allowedHosts.forEach { allowHost(it) }
 
 
     }
