@@ -69,6 +69,10 @@ export interface PaymentConfirmationDTO {
     payedAmount: number,
 }
 
+export interface UtilityDTO {
+
+}
+
 
 export const getStatusLabel = (status: Status): string => {
     return statusMap[status] || 'Nieznany';

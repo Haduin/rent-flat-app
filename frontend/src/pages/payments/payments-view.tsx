@@ -2,13 +2,13 @@ import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {ProgressSpinner} from 'primereact/progressspinner';
 import {Calendar} from "primereact/calendar";
-import {formatCurrency} from "../commons/currencyFormatter.ts";
-import {Payment, Status} from "../commons/types.ts";
-import StatusTag from "../commons/status-tag/status-tag.tsx";
+import {formatCurrency} from "../../components/commons/currencyFormatter.ts";
+import {Payment, Status} from "../../components/commons/types.ts";
+import StatusTag from "../../components/commons/status-tag/status-tag.tsx";
 import {Button} from "primereact/button";
 import ConfirmPaymentDialog from "./confirm-payment-dialog.tsx";
 import {usePaymentsView} from "./payments-view.hook.ts";
-import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../commons/dateFormatter.ts";
+import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../../components/commons/dateFormatter.ts";
 
 
 const PaymentsView = () => {

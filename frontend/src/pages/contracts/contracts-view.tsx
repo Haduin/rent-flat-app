@@ -3,7 +3,7 @@ import {DataTable} from "primereact/datatable";
 import {useContractsView} from "./contracts-view.hook.tsx";
 import {Column} from "primereact/column";
 import {Button} from "primereact/button";
-import {Contract} from "../commons/types.ts";
+import {Contract} from "../../components/commons/types.ts";
 import AddContractView from "./add-contract-view.tsx";
 
 const ContractsView = () => {

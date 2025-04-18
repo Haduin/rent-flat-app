@@ -7,7 +7,26 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+//class UtilityCostsService {
+//
+//
+//    suspend fun addCost(request: AddNewUtilityCostDTO) = dbQuery {
+//        UtilityCosts.insert {
+//            it[type] = request.type
+//            it[insertDate] = formatToFullTimestamp(request.insertDate)
+//            it[apartmentId] = request.apartmentId
+//            it[value] = request.amount.toBigDecimal()
+//        }
+//    }
+//
+//    suspend fun getAllCostsForApartment(apartmentId: Int) = dbQuery {
+//        UtilityCosts.selectAll().where { UtilityCosts.apartmentId eq apartmentId }.toList()
+//    }
+//
+//}
 
 // Service for Apartment(
 class ApartmentService {
@@ -23,7 +42,7 @@ class ApartmentService {
 
     suspend fun getAllApartmentsWithRoomDetails(): List<ApartmentAndRoomNumberDTO> = dbQuery {
         val sqlQuery: String = """
-            select a.name as apartment_name, count(r.name) as room_count from apartment a, room r
+            select a.name as apartment_name, count(r.name) as room_count from flat.apartment a, flat.room r
             where a.id = r.apartment_id
             group by a.name
         """.trimIndent()
@@ -85,7 +104,8 @@ class RoomService {
 
     suspend fun getRoomsWithAparts(): MutableList<RoomWithApartmentDTO> = dbQuery {
         val sqlQuery =
-            "select  a.name as apartment_name, r.id as room_id, r.name as room_name from apartment a, room r where a.id = r.apartment_id"
+            "select  a.name as apartment_name, r.id as room_id, r.name as room_name " +
+                    "from flat.apartment a, flat.room r where a.id = r.apartment_id"
         transaction {
             val result = mutableListOf<RoomWithApartmentDTO>()
             exec(sqlQuery) { rs ->
@@ -105,7 +125,7 @@ class RoomService {
 
     suspend fun fetchFreeRoomsBetweenDates(startDate: String, endDate: String): List<RoomWithApartmentDTO> = dbQuery {
         val sql = "SELECT r.id, r.name as number, a.name as apartment " +
-                "FROM room r, apartment a " +
+                "FROM flat.room r, flat.apartment a " +
                 "WHERE r.apartment_id = a.id and r.id NOT IN ( " +
                 "    SELECT c.room_id " +
                 "    FROM contract c " +
@@ -383,6 +403,15 @@ private suspend fun <T> dbQuery(block: suspend () -> T): T =
     newSuspendedTransaction(Dispatchers.IO) { block() }
 
 private fun LocalDate.toFormattedString() = this.format(DateTimeFormatter.ofPattern("yyyy-MM"))
+private fun formatToFullTimestamp(input: String, inputPattern: String = "yyyy-MM-dd"): String {
+    val parsedDate = LocalDateTime.parse("$input 00:00:00", DateTimeFormatter.ofPattern("$inputPattern HH:mm:ss"))
+    return parsedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+}
+
+private fun LocalDateTime.toFormattedString(pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
+    val formatter = DateTimeFormatter.ofPattern(pattern)
+    return this.format(formatter)
+}
 
 private fun String.toLocalDateWithFullPattern() = LocalDate.parse(this, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 private fun String.toLocalDateWithYearMonth() = LocalDate.parse(this, DateTimeFormatter.ofPattern("yyyy-MM"))

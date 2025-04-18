@@ -1,7 +1,7 @@
-import {useToast} from "../commons/ToastProvider.tsx";
+import {useToast} from "../../components/commons/ToastProvider.tsx";
 import {useState} from "react";
-import {dateToStringWithYearMonth} from "../commons/dateFormatter.ts";
-import {Payment, PaymentConfirmationDTO} from "../commons/types.ts";
+import {dateToStringWithYearMonth} from "../../components/commons/dateFormatter.ts";
+import {Payment, PaymentConfirmationDTO} from "../../components/commons/types.ts";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {api} from "../../api/api.ts";
 import {queryClient} from "../../main.tsx";

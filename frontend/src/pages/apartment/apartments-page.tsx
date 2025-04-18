@@ -3,8 +3,9 @@ import {Button} from "primereact/button";
 import {api} from "../../api/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {ProgressSpinner} from "primereact/progressspinner";
+import {Link} from "react-router";
 
-const ApartmentPage = () => {
+const ApartmentsPage = () => {
 
     const {data, isLoading} = useQuery({
         queryKey: ["apartments"],
@@ -28,6 +29,7 @@ const ApartmentPage = () => {
                         <Card key={id} className="flex flex-col w-3">
                             <p>Mieszkanie: {apartment.apartmentName}</p>
                             <p>Ilość pokoi: {apartment.roomName}</p>
+                            <Link to={`/protected/mieszkanie/${id}`}>Detale</Link>
                         </Card>
                     ))}
                 </div>
@@ -36,4 +38,4 @@ const ApartmentPage = () => {
     );
 };
 
-export default ApartmentPage;
+export default ApartmentsPage;

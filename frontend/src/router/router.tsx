@@ -2,14 +2,16 @@ import {lazy, Suspense} from "react";
 import {createBrowserRouter} from "react-router";
 import {Layout} from "./Layout";
 import {getOidc} from "../oidc.tsx";
+import ApartmentPage from "../pages/apartment/apartment-page.tsx";
+import {UtilityPage} from "../pages/utility/utility-page.tsx";
 
 const PublicPage = lazy(() => import("../pages/PublicPage"));
-const NavigationComponent = lazy(() => import("../components/NavigationComponent"));
-const HomePage = lazy(() => import ("../components/home/home-page.tsx"))
-const ApartmentPage = lazy(() => import ("../components/apartment/apartment-page.tsx"))
-const PersonTable = lazy(() => import ("../components/person/person-table.tsx"))
-const PaymentsView = lazy(() => import ("../components/payments/payments-view.tsx"))
-const ContractsView = lazy(() => import ("../components/contracts/contracts-view.tsx"))
+const NavigationComponent = lazy(() => import("../pages/NavigationComponent.tsx"));
+const HomePage = lazy(() => import ("../pages/home/home-page.tsx"))
+const ApartmentsPage = lazy(() => import ("../pages/apartment/apartments-page.tsx"))
+const PersonTable = lazy(() => import ("../pages/person/person-table.tsx"))
+const PaymentsView = lazy(() => import ("../pages/payments/payments-view.tsx"))
+const ContractsView = lazy(() => import ("../pages/contracts/contracts-view.tsx"))
 
 
 export const router = createBrowserRouter([
@@ -33,7 +35,11 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "/protected/mieszkanie",
-                        element: <ApartmentPage/>,
+                        element: <ApartmentsPage/>,
+                    },
+                    {
+                        path: "/protected/mieszkanie/:id",
+                        element: <ApartmentPage/>
                     },
                     {
                         path: "/protected/osoby",
@@ -44,8 +50,12 @@ export const router = createBrowserRouter([
                         element: <PaymentsView/>,
                     },
                     {
-                        path: "/protected/kontakt",
+                        path: "/protected/kontract",
                         element: <ContractsView/>,
+                    },
+                    {
+                        path: "/protected/koszta",
+                        element: <UtilityPage/>,
                     },
                 ],
             },

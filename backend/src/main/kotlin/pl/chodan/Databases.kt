@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.date
+import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
@@ -32,10 +33,29 @@ fun Application.configureDatabases() {
         val schema = Schema("flat")
         SchemaUtils.createSchema(schema)
         SchemaUtils.setSchema(schema)
-//        exec("SET search_path TO flat;")
-        SchemaUtils.create(Apartment, Room, Person, Contract, Payment)
+        SchemaUtils.create(Apartment, Room, Person, Contract, Payment, UtilityCosts)
     }
 
+}
+
+enum class UtilityType(name: String) {
+    WATER_COLD("ZIMNA"), WATER_HOT("CIEPŁA"), ELECTRICITY("PRĄD"), GAS("GAZ");
+}
+
+
+object UtilityCosts : Table("flat.utility_costs") {
+    val id = integer("id").autoIncrement()
+    val apartmentId = (integer("apartment_id") references Apartment.id).nullable()
+    val insertDate = timestamp("insert_date")
+    val value = decimal("value", 10, 2)
+    val type = customEnumeration(
+        name = "type",
+        sql = "VARCHAR(50)",
+        fromDb = { value -> UtilityType.valueOf(value as String) },
+        toDb = { value -> (value as UtilityType).name }
+    )
+
+    override val primaryKey = PrimaryKey(id)
 }
 
 object Apartment : Table("flat.apartment") {

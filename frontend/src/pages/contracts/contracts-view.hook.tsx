@@ -1,7 +1,7 @@
 import {useState} from 'react';
-import {Contract, PersonDto} from "../commons/types.ts";
+import {Contract, PersonDto} from "../../components/commons/types.ts";
 import {queryClient} from "../../main.tsx";
-import {useToast} from "../commons/ToastProvider.tsx";
+import {useToast} from "../../components/commons/ToastProvider.tsx";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {api} from "../../api/api.ts";
 

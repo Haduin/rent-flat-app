@@ -1,4 +1,4 @@
-import {ApartmentWithRoomsNumber} from "../components/apartment/apartment.types.ts";
+import {ApartmentWithRoomsNumber} from "../pages/apartment/apartment.types.ts";
 import {axiosInstance} from "./api.ts";
 
 export const apartmentsApi: ApartmentApi = {

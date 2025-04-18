@@ -131,4 +131,12 @@ data class ApartmentAndRoomNumberDTO(
 )
 
 @Serializable
+data class AddNewUtilityCostDTO(
+    val apartmentId: Int,
+    val type: UtilityType,
+    val amount: Double,
+    val insertDate: String,
+)
+
+@Serializable
 data class LoginRequest(val username: String, val password: String)
