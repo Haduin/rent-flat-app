@@ -20,6 +20,7 @@ export interface Contract {
     startDate?: string
     endDate?: string
     amount?: number
+    deposit?: number
 }
 
 export interface NewContract {

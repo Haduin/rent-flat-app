@@ -103,51 +103,66 @@ class RoomService {
     }
 
     suspend fun getRoomsWithAparts(): MutableList<RoomWithApartmentDTO> = dbQuery {
-        val sqlQuery =
-            "select  a.name as apartment_name, r.id as room_id, r.name as room_name " +
-                    "from flat.apartment a, flat.room r where a.id = r.apartment_id"
-        transaction {
-            val result = mutableListOf<RoomWithApartmentDTO>()
-            exec(sqlQuery) { rs ->
-                while (rs.next()) {
-                    result.add(
-                        RoomWithApartmentDTO(
-                            rs.getInt("room_id"),
-                            rs.getString("room_name"),
-                            rs.getString("apartment_name")
-                        )
-                    )
-                }
+        (Room innerJoin Apartment)
+            .select(
+                columns = listOf(
+                    Apartment.name.alias("apartment_name"),
+                    Room.id.alias("room_id"),
+                    Room.name.alias("room_name")
+                )
+            )
+            .map { row ->
+                RoomWithApartmentDTO(
+                    id = row[Room.id],
+                    number = row[Room.name],
+                    apartment = row[Apartment.name]
+                )
             }
-            result
-        }
+                as MutableList<RoomWithApartmentDTO>
+
+//        val sqlQuery =
+//            "select  a.name as apartment_name, r.id as room_id, r.name as room_name " +
+//                    "from flat.apartment a, flat.room r where a.id = r.apartment_id"
+//        transaction {
+//            val result = mutableListOf<RoomWithApartmentDTO>()
+//            exec(sqlQuery) { rs ->
+//                while (rs.next()) {
+//                    result.add(
+//                        RoomWithApartmentDTO(
+//                            rs.getInt("room_id"),
+//                            rs.getString("room_name"),
+//                            rs.getString("apartment_name")
+//                        )
+//                    )
+//                }
+//            }
+//            result
+//        }
     }
 
     suspend fun fetchFreeRoomsBetweenDates(startDate: String, endDate: String): List<RoomWithApartmentDTO> = dbQuery {
-        val sql = "SELECT r.id, r.name as number, a.name as apartment " +
-                "FROM flat.room r, flat.apartment a " +
-                "WHERE r.apartment_id = a.id and r.id NOT IN ( " +
-                "    SELECT c.room_id " +
-                "    FROM contract c " +
-                "    WHERE c.start_date >= '$startDate' AND c.end_date <= '$endDate'" +
-                ");"
-
-        transaction {
-            val result = mutableListOf<RoomWithApartmentDTO>()
-            exec(sql) { rs ->
-                while (rs.next()) {
-                    result.add(
-                        RoomWithApartmentDTO(
-                            rs.getInt("id"),
-                            rs.getString("number"),
-                            rs.getString("apartment")
-                        )
-                    )
-                }
+        (Room innerJoin Apartment)
+            .select(Room.id, Room.name, Apartment.name)
+            .where {
+                (Room.apartmentId eq Apartment.id).and(
+                    Room.id notInSubQuery (
+                            Contract
+                                .select(Contract.roomId)
+                                .where {
+                                    (Contract.startDate greaterEq LocalDate.parse(startDate)) and
+                                            (Contract.endDate lessEq LocalDate.parse(endDate))
+                                }
+                            ))
             }
-            result
-        }
+            .map {
+                RoomWithApartmentDTO(
+                    id = it[Room.id],
+                    number = it[Room.name],
+                    apartment = it[Apartment.name]
+                )
+            }
     }
+
 
     suspend fun updateRoom(id: Int, name: String, apartmentId: Int?): Int = dbQuery {
         Room.update({ Room.id eq id }) { room ->
@@ -262,7 +277,7 @@ class ContractService {
     }
 
     suspend fun createContract(newContractDTO: NewContractDTO): Int = dbQuery {
-        Person.update {
+        Person.update({ Person.id eq newContractDTO.personId }) {
             it[status] = PersonStatus.RESIDENT
         }
         Contract.insert {
@@ -339,7 +354,8 @@ class PaymentService {
     private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int) = dbQuery {
         Payment.selectAll()
             .where {
-                (Payment.contractId eq contractId) and ((Payment.status eq PaymentStatus.PENDING) or (Payment.status eq PaymentStatus.PAID))
+                (Payment.contractId eq contractId) and
+                        ((Payment.status eq PaymentStatus.PENDING) or (Payment.status eq PaymentStatus.PAID))
             }
             .singleOrNull() != null
 
@@ -365,8 +381,6 @@ class PaymentService {
         Payment.selectAll()
             .where { Payment.scopeDate eq mouth }
             .map { payments ->
-
-                val contractDB = ContractService().getContractById(payments[Payment.contractId])
                 ContractService().getContractById(payments[Payment.contractId])?.let {
                     val room = roomsAparts.find { room -> room.id == it.roomId }
                     val person = PersonService().getPersonById(it.personId)?.let { person ->
@@ -383,8 +397,8 @@ class PaymentService {
                         payedDate = payments[Payment.payedDate]?.toString() ?: null,
                         amount = payments[Payment.amount].toDouble(),
                         person = person,
-                        status = payments[Payment.status],
-                        room = room
+                        room = room,
+                        status = payments[Payment.status]
                     )
                 }
             }
@@ -399,9 +413,6 @@ class PaymentService {
     }
 }
 
-private suspend fun <T> dbQuery(block: suspend () -> T): T =
-    newSuspendedTransaction(Dispatchers.IO) { block() }
-
 private fun LocalDate.toFormattedString() = this.format(DateTimeFormatter.ofPattern("yyyy-MM"))
 private fun formatToFullTimestamp(input: String, inputPattern: String = "yyyy-MM-dd"): String {
     val parsedDate = LocalDateTime.parse("$input 00:00:00", DateTimeFormatter.ofPattern("$inputPattern HH:mm:ss"))
@@ -415,3 +426,6 @@ private fun LocalDateTime.toFormattedString(pattern: String = "yyyy-MM-dd HH:mm:
 
 private fun String.toLocalDateWithFullPattern() = LocalDate.parse(this, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 private fun String.toLocalDateWithYearMonth() = LocalDate.parse(this, DateTimeFormatter.ofPattern("yyyy-MM"))
+
+private suspend fun <T> dbQuery(block: suspend () -> T): T =
+    newSuspendedTransaction(Dispatchers.IO) { block() }

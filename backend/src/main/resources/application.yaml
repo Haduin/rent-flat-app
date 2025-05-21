@@ -14,8 +14,7 @@ ktor:
 
 
 keycloak:
-  #  url: 'http://localhost:8081'
-  url: "$KEYCLOAK_URL:https://keycloak.chodan.fun"
+  url: "$KEYCLOAK_URL:http://localhost:8081"
   clientId: mieszkanie_client_id
-  realm: mieszkania_realm
+  realm: mieszkanie_realm
   tokenPath: protocol/openid-connect/token

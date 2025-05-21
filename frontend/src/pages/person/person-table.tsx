@@ -1,15 +1,17 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useState} from 'react';
 import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {ProgressSpinner} from 'primereact/progressspinner';
 import {Button} from "primereact/button";
-import usePersonTable from "./person-table.hook.tsx";
+import {Checkbox} from "primereact/checkbox";
+import {InputText} from "primereact/inputtext";
 import {Person} from "./person-table.types.ts";
+import usePersonTable from "./person-table.hook.tsx";
 import AddNewPersonDialog from "./add-new-person-dialog.tsx";
 import EditPersonDialog from "./edit-person-dialog.tsx";
-import {Checkbox} from "primereact/checkbox";
 
 const PersonTable: React.FC = () => {
+    const [globalFilterValue, setGlobalFilterValue] = useState<string>('');
 
     const {
         persons,
@@ -31,51 +33,93 @@ const PersonTable: React.FC = () => {
         return showOnlyActivePeople ? persons?.filter((person) => person.status === 'RESIDENT') : persons
     }, [showOnlyActivePeople, persons]);
 
-    return (
-        <div className="rounded overflow-hidden shadow-lg card bg-light">
-            <div className="flex flex-wrap justify-content-center gap-3">
-                <div className="flex align-items-center">
-                    <Button label="Dodaj najemce" severity="secondary" onClick={handleAddNewPerson} rounded/>
-                    <Checkbox checked={showOnlyActivePeople}
-                              onChange={() => setShowOnlyActivePeople(!showOnlyActivePeople)}/>
-                    <label htmlFor="ingredient1" className="ml-2">Pokaż tylko aktualnych</label>
+    const renderHeader = () => {
+        return (
+            <div className="flex flex-wrap justify-content-between align-items-center">
+                <div className="flex align-items-center gap-2">
+                    <Button
+                        label="Dodaj najemce"
+                        severity="secondary"
+                        onClick={handleAddNewPerson}
+                        rounded
+                        icon="pi pi-plus"
+                        className="p-button-raised p-button-sm"
+                    />
+                    <div className="flex align-items-center ml-2">
+                        <Checkbox
+                            checked={showOnlyActivePeople}
+                            onChange={() => setShowOnlyActivePeople(!showOnlyActivePeople)}
+                            className="mr-1 p-checkbox-smaller"
+                        />
+                        <label className="ml-1 font-medium text-sm">Pokaż tylko aktualnych</label>
+                    </div>
+                </div>
+                <div className="p-input-icon-left">
+                    <i className="pi pi-search"/>
+                    <InputText
+                        value={globalFilterValue}
+                        onChange={(e) => setGlobalFilterValue(e.target.value)}
+                        placeholder="Wyszukaj..."
+                    />
                 </div>
             </div>
+        );
+    };
 
-
+    return (
+        <div className="rounded overflow-hidden shadow-lg card bg-light">
             {loading ? (
-                <div className="flex justify-content-center">
+                <div className="flex justify-content-center p-5">
                     <ProgressSpinner/>
                 </div>
             ) : (
-                <DataTable value={showPeople()} paginator rows={10} stripedRows>
-                    <Column field="id" header="ID" sortable style={{width: '5%'}}></Column>
-                    <Column field="firstName" header="Imię" sortable style={{width: '25%'}}></Column>
-                    <Column field="lastName" header="Nazwisko" sortable style={{width: '25%'}}></Column>
+                <DataTable
+                    value={showPeople()}
+                    paginator
+                    rowsPerPageOptions={[5, 10, 20, 50]}
+                    rows={10}
+                    stripedRows
+                    breakpoint="960px"
+                    emptyMessage="Brak danych do wyświetlenia"
+                    className="pt-2 rounded"
+                    globalFilter={globalFilterValue}
+                    header={renderHeader()}
+                    scrollable
+                    scrollHeight="calc(100vh - 220px)"
+                    resizableColumns
+                    columnResizeMode="fit"
+                >
+                    <Column field="id" header="ID" sortable headerClassName="bg-primary text-white"></Column>
+                    <Column field="firstName" header="Imię" sortable headerClassName="bg-primary text-white"></Column>
+                    <Column field="lastName" header="Nazwisko" sortable
+                            headerClassName="bg-primary text-white"></Column>
                     <Column field="documentNumber" header="Numer Dokumentu" sortable
-                            style={{width: '25%'}}></Column>
-                    <Column field="nationality" header="Narodowość" sortable style={{width: '20%'}}></Column>
+                            headerClassName="bg-primary text-white"></Column>
+                    <Column field="nationality" header="Narodowość" sortable
+                            headerClassName="bg-primary text-white"></Column>
                     <Column
                         header="Akcje"
+                        headerClassName="bg-primary text-white"
                         body={(rowData: Person) => (
-                            <div className="flex justify-content-center ">
+                            <div className="flex justify-content-center gap-2">
                                 <Button
-                                    label="Edytuj"
                                     icon="pi pi-pencil"
-                                    className="p-button-rounded p-button-sm"
+                                    className="p-button-rounded p-button-info p-button-outlined"
+                                    tooltip="Edytuj"
+                                    tooltipOptions={{position: 'top'}}
                                     onClick={() => openEditDialog(rowData)}
                                 />
                                 <Button
-                                    label="Usuń"
+                                    disabled
+                                    icon="pi pi-trash"
                                     severity="danger"
-                                    icon="pi pi-pencil"
-                                    className="p-button-rounded p-button-sm"
+                                    className="p-button-rounded p-button-outlined"
+                                    tooltip="Usuń"
+                                    tooltipOptions={{position: 'top'}}
                                     onClick={() => handleDeletePerson(rowData)}
                                 />
                             </div>
-
                         )}
-                        style={{width: '15%'}}
                     ></Column>
                 </DataTable>
             )}

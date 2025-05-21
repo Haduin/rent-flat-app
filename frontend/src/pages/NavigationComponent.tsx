@@ -72,16 +72,16 @@ const NavigationComponent = () => {
     }
 
     const end = (
-        <IconField iconPosition="right">
+        <IconField iconPosition="right" className="flex items-center gap-1">
             <InputIcon className="pi pi-sign-in">
             </InputIcon>
-            <Button label="Wyloguj się" onClick={handleLogout}/>
+            <Button label="Wyloguj się" onClick={handleLogout} className="p-button-sm"/>
         </IconField>
 
     );
     return (
         <>
-            <Menubar model={items2} end={end}/>
+            <Menubar className="top-0 sticky z-[999] p-menubar-smaller" model={items2} end={end}/>
             <Outlet/>
         </>
 
