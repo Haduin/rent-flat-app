@@ -15,6 +15,6 @@ ktor:
 
 keycloak:
   url: "$KEYCLOAK_URL:http://localhost:8081"
-  clientId: mieszkanie_client_id
-  realm: mieszkanie_realm
+  clientId: "$KEYCLOAK_CLIENT_ID:mieszkanie_client_id"
+  realm: "$KEYCLOAK_REALM:mieszkanie_realm"
   tokenPath: protocol/openid-connect/token
