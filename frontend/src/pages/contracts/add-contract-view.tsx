@@ -5,8 +5,8 @@ import {InputText} from "primereact/inputtext";
 import {useFormik} from "formik";
 import * as Yup from 'yup';
 import {Button} from "primereact/button";
-import {dateToStringFullYearMouthDay} from "../commons/dateFormatter.ts";
-import {NewContract, PersonDto, Room} from "../commons/types.ts";
+import {dateToStringFullYearMouthDay} from "../../components/commons/dateFormatter.ts";
+import {NewContract, PersonDto, Room} from "../../components/commons/types.ts";
 import {useQuery} from "@tanstack/react-query";
 import {api} from "../../api/api.ts";
 

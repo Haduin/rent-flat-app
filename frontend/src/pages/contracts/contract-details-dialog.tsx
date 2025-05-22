@@ -1,5 +1,5 @@
 import {Dialog} from "primereact/dialog";
-import {Contract} from "../commons/types.ts";
+import {Contract} from "../../components/commons/types.ts";
 
 interface Props {
     isVisible: boolean;

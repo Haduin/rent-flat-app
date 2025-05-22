@@ -1,5 +1,5 @@
 import {Dialog} from "primereact/dialog";
-import {Payment} from "../commons/types.ts";
+import {Payment} from "../../components/commons/types.ts";
 import {Form, Formik, FormikProps} from "formik";
 import {Calendar} from "primereact/calendar";
 import {InputText} from "primereact/inputtext";

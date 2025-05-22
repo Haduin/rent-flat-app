@@ -3,21 +3,30 @@ import {DataTable} from "primereact/datatable";
 import {useContractsView} from "./contracts-view.hook.tsx";
 import {Column} from "primereact/column";
 import {Button} from "primereact/button";
-import {Contract} from "../commons/types.ts";
+import {Contract} from "../../components/commons/types.ts";
 import AddContractView from "./add-contract-view.tsx";
+import ContractDetailsModal from "./contract-details-modal.tsx";
 
 const ContractsView = () => {
 
     const {
         contracts,
         loading,
-        openDetailsDialog,
         isAddContractDialogVisible,
         closeAddDialog,
         openAddDialog,
         unassignedPersons,
         addContractMutation,
+
+        isEditContactModalOpen,
         handleOpenEditDialog,
+        handleCloseEditDialog,
+        selectedContract,
+
+        // isDeleteDialogVisible,
+        // handleOpenDeleteDialog,
+        // handleCloseDeleteDialog,
+        // deleteContractMutation,
     } = useContractsView();
 
     return (
@@ -46,16 +55,16 @@ const ContractsView = () => {
                         <Column field="amount" header="Cena"></Column>
                         <Column header="Akcje"
                                 body={(rowData: Contract) => (
-                                    <div>
-                                        <Button label="Pokaż"
-                                                icon="pi pi-pencil"
-                                                onClick={() => openDetailsDialog(rowData)}
+                                    <div className="flex gap-2">
+                                        <Button label="Szczegóły"
+                                                icon="pi pi-eye"
+                                                onClick={() => handleOpenEditDialog(rowData)}
                                                 className="p-button-rounded p-button-sm"/>
-                                        <Button label="Edytuj"
-                                                severity="danger"
-                                                icon="pi pi-pencil"
-                                                onClick={() => handleOpenEditDialog()}
-                                                className="p-button-rounded p-button-sm"/>
+                                        {/*<Button label="Usuń"*/}
+                                        {/*        severity="danger"*/}
+                                        {/*        icon="pi pi-trash"*/}
+                                        {/*        onClick={() => handleOpenDeleteDialog(rowData)}*/}
+                                        {/*        className="p-button-rounded p-button-sm"/>*/}
                                     </div>
                                 )}
                         >
@@ -65,9 +74,15 @@ const ContractsView = () => {
                                      onSave={addContractMutation.mutate}
                                      unassignedPersons={unassignedPersons}
                                      onHide={closeAddDialog}/>
-                    {/*<EditContractModal*/}
-                    {/*    visible={isEditContactModalOpen}*/}
-                    {/*    onHide={handleCloseEditDialog}*/}
+                    <ContractDetailsModal
+                        visible={isEditContactModalOpen}
+                        onHide={handleCloseEditDialog}
+                        selectedContract={selectedContract}
+                    />
+                    {/*<DeleteContractDialog*/}
+                    {/*    isVisible={isDeleteDialogVisible}*/}
+                    {/*    onHide={handleCloseDeleteDialog}*/}
+                    {/*    onConfirm={deleteContractMutation.mutate}*/}
                     {/*    selectedContract={selectedContract}*/}
                     {/*/>*/}
                     {/*<ContractDetailsDialog isVisible={isDetailsDialogVisible}*/}

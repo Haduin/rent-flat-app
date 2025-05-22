@@ -1,7 +1,7 @@
 import {useCallback, useState} from 'react';
 import {NewPerson, Person} from "./person-table.types.ts";
 import {confirmDialog} from "primereact/confirmdialog";
-import {useToast} from "../commons/ToastProvider.tsx";
+import {useToast} from "../../components/commons/ToastProvider.tsx";
 import {api} from "../../api/api.ts";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {queryClient} from "../../main.tsx";

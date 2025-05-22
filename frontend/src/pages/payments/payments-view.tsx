@@ -2,13 +2,13 @@ import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {ProgressSpinner} from 'primereact/progressspinner';
 import {Calendar} from "primereact/calendar";
-import {formatCurrency} from "../commons/currencyFormatter.ts";
-import {Payment, Status} from "../commons/types.ts";
-import StatusTag from "../commons/status-tag/status-tag.tsx";
+import {formatCurrency} from "../../components/commons/currencyFormatter.ts";
+import {Payment, Status} from "../../components/commons/types.ts";
+import StatusTag from "../../components/commons/status-tag/status-tag.tsx";
 import {Button} from "primereact/button";
 import ConfirmPaymentDialog from "./confirm-payment-dialog.tsx";
 import {usePaymentsView} from "./payments-view.hook.ts";
-import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../commons/dateFormatter.ts";
+import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../../components/commons/dateFormatter.ts";
 
 
 const PaymentsView = () => {
@@ -29,10 +29,8 @@ const PaymentsView = () => {
 
     return (
         <div className="card">
-            <div className="text-black p-2">
-                <h2>Historia Płatności</h2>
-            </div>
-            <div className="flex justify-content-center">
+            <div className="text-black p-1">
+                <h3>Historia Płatności</h3>
                 <Calendar value={dateSelected}
                           onChange={(e) => handleDateSelectAndFetchPayments(e.value as Date)}
                           view="month"
@@ -49,25 +47,45 @@ const PaymentsView = () => {
                     <ProgressSpinner/>
                 </div>
             ) : (
-                <div>
-                    <DataTable value={payments} paginator rows={10} stripedRows>
+                <div className="p-2">
+                    <DataTable value={payments}
+                               paginator
+                               rowsPerPageOptions={[5, 10, 20, 50]}
+                               rows={10}
+                               stripedRows
+                               style={{width: '100%'}}
+                    >
                         {/*<Column field="id" header="ID" style={{width: '10%'}}></Column>*/}
                         <Column field="payerName" header="Płatnik" style={{width: '20%'}}
                                 body={(rowData: Payment) => `${rowData.person.firstName} ${rowData.person.lastName}`}>
                         </Column>
                         <Column
+                            sortable
                             field="amount"
                             header="Kwota"
                             body={(rowData: Payment) => formatCurrency(rowData.amount)}
+                            footer={payments && payments.length > 0 ? () => formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0)) : undefined}
+                            footerClassName="bg-green-100"
                             style={{width: '20%'}}
-                        ></Column>
+                        />
                         <Column
+                            sortable
+                            sortFunction={(event) => {
+                                const {data, order} = event;
+                                return [...data].sort((a, b) => {
+                                    const dateA = a.payedDate ? new Date(a.payedDate).getTime() : 0;
+                                    const dateB = b.payedDate ? new Date(b.payedDate).getTime() : 0;
+                                    return order === 1 ? dateA - dateB : dateB - dateA;
+                                });
+                            }}
+
                             field="date"
                             header="Data"
                             body={(rowData: Payment) => rowData.payedDate}
                             style={{width: '20%'}}
                         />
                         <Column
+                            sortable
                             field="status"
                             header="Status"
                             body={(rowData: Payment) => <StatusTag status={rowData.status}/>}

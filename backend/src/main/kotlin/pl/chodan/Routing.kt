@@ -9,6 +9,28 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+//fun Application.configureUtilityRouting() {
+//    val utilityService = UtilityCostsService()
+//
+//    routing {
+//        authenticate("auth-jwt") {
+//            route("/utility-costs") {
+//                get("/{apartmentId}") {
+//                    call.parameters["apartmentId"]?.toIntOrNull()?.let { id ->
+//                        call.respond(utilityService.getAllCostsForApartment(id))
+//                    } ?: call.respond(HttpStatusCode.BadRequest)
+//                }
+//                post {
+//                    val request = call.receive<AddNewUtilityCostDTO>()
+//                    utilityService.addCost(request)
+//                    call.respond(HttpStatusCode.Created)
+//                }
+//            }
+//        }
+//    }
+//
+//}
+
 fun Application.configureApartmentRouting() {
 
     val apartmentService = ApartmentService()

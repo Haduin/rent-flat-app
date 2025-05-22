@@ -11,6 +11,8 @@ export const contractsApi: ContractsApi = {
         }
     }).then(response => response.data),
     addContract: (newContract: NewContract) => axiosInstance.post('/contracts', newContract),
+    updateContract: (contractId: number, contract: NewContract) => axiosInstance.put(`/contracts/${contractId}`, contract),
+    deleteContract: (contractId: number) => axiosInstance.delete(`/contracts/${contractId}`),
     generateMouthPayments: () => axiosInstance.post('/contracts/generateMonthlyPayments')
 }
 
@@ -19,5 +21,7 @@ export type ContractsApi = {
     fetchUnassignedPersons: () => Promise<PersonDto[]>
     fetchUnassignedRooms: (startDate: string, endDate: string) => Promise<Room[]>,
     addContract: (newContract: NewContract) => Promise<void>
+    updateContract: (contractId: number, contract: NewContract) => Promise<void>
+    deleteContract: (contractId: number) => Promise<void>
     generateMouthPayments: () => Promise<void>
 };

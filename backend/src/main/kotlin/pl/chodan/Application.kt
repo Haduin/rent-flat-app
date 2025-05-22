@@ -21,6 +21,8 @@ fun Application.module() {
     configueModules()
     configureSecurity()
     configureDatabases()
+
+//    configureUtilityRouting()
     configureApartmentRouting()
     configurePersonRouting()
     configureRoomRouting()
