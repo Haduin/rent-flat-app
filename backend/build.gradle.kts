@@ -14,7 +14,6 @@ version = "0.0.1"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
-
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
@@ -53,7 +52,7 @@ dependencies {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "pl.chodan.EngineMain"
+        attributes["Main-Class"] = "io.ktor.server.netty.EngineMain"
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

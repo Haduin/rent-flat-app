@@ -32,6 +32,11 @@ fun Application.module() {
 
 fun Application.configueModules() {
 
+    println("KEYCLOAK URL ${environment.config.property("keycloak.url").getString()}")
+    println("KEYCLOAK CLIENT_ID ${environment.config.property("keycloak.clientId").getString()}")
+    println("KEYCLOAK REALM ${environment.config.property("keycloak.realm").getString()}")
+
+
     val allowedHosts = environment.config.property("ktor.cors.allowedHosts").getString().split(",").map { it.trim() }
     allowedHosts.forEach { println(it) }
     install(CORS) {
@@ -76,12 +81,20 @@ fun Application.configureSecurity() {
         jwt("auth-jwt") {
             verifier(
                 JwkProviderBuilder(URL("${keycloakAddress}/realms/${realm}/protocol/openid-connect/certs"))
-                    .build()
+                    .build(),
+                issuer = "${keycloakAddress}/realms/${realm}",
             )
             validate { credential ->
-                if (credential.payload.getClaim("preferred_username").asString() != null) {
-                    JWTPrincipal(credential.payload)
-                } else {
+                try {
+                    val username = credential.payload.getClaim("preferred_username").asString()
+                    if (username != null) {
+                        JWTPrincipal(credential.payload)
+                    } else {
+                        println("Brak preferred_username")
+                        null
+                    }
+                } catch (e: Exception) {
+                    println("Błąd przy walidacji tokena: ${e.message}")
                     null
                 }
             }

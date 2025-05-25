@@ -11,9 +11,6 @@ importers:
       '@react-buddy/ide-toolbox':
         specifier: ^2.4.0
         version: 2.4.0(react@18.3.1)
-      '@react-keycloak/web':
-        specifier: ^3.4.0
-        version: 3.4.0(keycloak-js@24.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
       '@reduxjs/toolkit':
         specifier: ^2.6.1
         version: 2.6.1(react@18.3.1)
@@ -29,9 +26,6 @@ importers:
       formik:
         specifier: ^2.4.6
         version: 2.4.6(react@18.3.1)
-      keycloak-js:
-        specifier: ^24.0.0
-        version: 24.0.5
       oidc-client-ts:
         specifier: ^3.2.0
         version: 3.2.0
@@ -375,22 +369,6 @@ packages:
     resolution: {integrity: sha512-TWHX6gwa0Gop7215uHhjFMbYLLdjM/b9rr0wYE3E0m7GNJ56gbPpbZiq86w9uI8zksl827acqGeT437MkuO64w==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0
-
-  '@react-keycloak/core@3.2.0':
-    resolution: {integrity: sha512-1yzU7gQzs+6E1v6hGqxy0Q+kpMHg9sEcke2yxZR29WoU8KNE8E50xS6UbI8N7rWsgyYw8r9W1cUPCOF48MYjzw==}
-    peerDependencies:
-      react: '>=16'
-
-  '@react-keycloak/web@3.4.0':
-    resolution: {integrity: sha512-yKKSCyqBtn7dt+VckYOW1IM5NW999pPkxDZOXqJ6dfXPXstYhOQCkTZqh8l7UL14PkpsoaHDh7hSJH8whah01g==}
-    peerDependencies:
-      keycloak-js: '>=9.0.2'
-      react: '>=16.8'
-      react-dom: '>=16.8'
-      typescript: '>=3.8'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
 
   '@reduxjs/toolkit@2.6.1':
     resolution: {integrity: sha512-SSlIqZNYhqm/oMkXbtofwZSt9lrncblzo6YcZ9zoX+zLngRBrCOjK4lNLdkNucJF58RHOWrD9txT3bT3piH7Zw==}
@@ -1194,9 +1172,6 @@ packages:
     resolution: {integrity: sha512-rg9zJN+G4n2nfJl5MW3BMygZX56zKPNVEYYqq7adpmMh4Jn2QNEwhvQlFy6jPVdcod7txZtKHWnyZiA3a0zP7A==}
     hasBin: true
 
-  js-sha256@0.11.0:
-    resolution: {integrity: sha512-6xNlKayMZvds9h1Y1VWc0fQHQ82BxTXizWPEtEeGvmOUYpBRy4gbWroHLpzowe6xiQhHpelCQiE7HEdznyBL9Q==}
-
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -1216,9 +1191,6 @@ packages:
   jwt-decode@4.0.0:
     resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
     engines: {node: '>=18'}
-
-  keycloak-js@24.0.5:
-    resolution: {integrity: sha512-VQOSn3j13DPB6OuavKAq+sRjDERhIKrXgBzekoHRstifPuyULILguugX6yxRUYFSpn3OMYUXmSX++tkdCupOjA==}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -1531,9 +1503,6 @@ packages:
 
   react-fast-compare@2.0.4:
     resolution: {integrity: sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==}
-
-  react-fast-compare@3.2.2:
-    resolution: {integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==}
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -2008,22 +1977,6 @@ snapshots:
   '@react-buddy/ide-toolbox@2.4.0(react@18.3.1)':
     dependencies:
       react: 18.3.1
-
-  '@react-keycloak/core@3.2.0(react@18.3.1)':
-    dependencies:
-      react: 18.3.1
-      react-fast-compare: 3.2.2
-
-  '@react-keycloak/web@3.4.0(keycloak-js@24.0.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)':
-    dependencies:
-      '@babel/runtime': 7.27.0
-      '@react-keycloak/core': 3.2.0(react@18.3.1)
-      hoist-non-react-statics: 3.3.2
-      keycloak-js: 24.0.5
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-    optionalDependencies:
-      typescript: 5.6.3
 
   '@reduxjs/toolkit@2.6.1(react@18.3.1)':
     dependencies:
@@ -2795,8 +2748,6 @@ snapshots:
 
   jiti@2.4.2: {}
 
-  js-sha256@0.11.0: {}
-
   js-tokens@4.0.0: {}
 
   js-yaml@4.1.0:
@@ -2810,11 +2761,6 @@ snapshots:
   json-stable-stringify-without-jsonify@1.0.1: {}
 
   jwt-decode@4.0.0: {}
-
-  keycloak-js@24.0.5:
-    dependencies:
-      js-sha256: 0.11.0
-      jwt-decode: 4.0.0
 
   keyv@4.5.4:
     dependencies:
@@ -3061,8 +3007,6 @@ snapshots:
       scheduler: 0.23.2
 
   react-fast-compare@2.0.4: {}
-
-  react-fast-compare@3.2.2: {}
 
   react-is@16.13.1: {}
 
