@@ -8,6 +8,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import pl.chodan.ultis.DateValidator
+import pl.chodan.ultis.ValidationResult
 
 //fun Application.configureUtilityRouting() {
 //    val utilityService = UtilityCostsService()
@@ -122,8 +124,33 @@ fun Application.configureContractRouting() {
                 get {
                     call.respond(contractService.getAllContractsWithRoomAndPersonDetails())
                 }
-                post("/generateMonthlyPayments") {
-                    call.respond(HttpStatusCode.Created, contractService.generateNewPaymentsForActiveContracts())
+                post("/generateMonthlyPayments/{month}") {
+                    val monthParam = call.parameters["month"]
+
+                    when (val validationResult = DateValidator.instance.validateMonthParameter(monthParam)) {
+                        is ValidationResult.Error -> {
+                            call.respond(
+                                HttpStatusCode.BadRequest,
+                                mapOf("error" to validationResult.message)
+                            )
+                            return@post
+                        }
+
+                        is ValidationResult.Success -> {
+                            try {
+                                call.respond(
+                                    HttpStatusCode.Created,
+                                    contractService.generateNewPaymentsForActiveContracts(validationResult.value)
+                                )
+                            } catch (e: Exception) {
+                                call.respond(
+                                    HttpStatusCode.InternalServerError,
+                                    mapOf("error" to "Failed to generate payments: ${e.message}")
+                                )
+                            }
+                        }
+                    }
+
                 }
                 post {
                     val newContract = call.receive<NewContractDTO>()

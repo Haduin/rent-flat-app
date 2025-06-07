@@ -255,7 +255,7 @@ class PersonService {
 // Service for Contract
 class ContractService {
 
-    suspend fun generateNewPaymentsForActiveContracts() = dbQuery {
+    suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = dbQuery {
         // znajdz kontrakt miedzy datami start i end date
         // następnie wygeneruj nowy payment
         Contract.selectAll()
@@ -272,7 +272,7 @@ class ContractService {
                     deposit = row[Contract.deposit].toDouble(),
                 )
             }
-            .forEach { contract -> PaymentService().createPayments(contract) }
+            .forEach { contract -> PaymentService().createPayments(contract, yearMonth) }
 
     }
 
@@ -338,28 +338,30 @@ class ContractService {
 
 class PaymentService {
 
-    suspend fun createPayments(contract: RawContract) = dbQuery {
-        checkIfPendingPaymentExistsForContract(contract.id)
-            .takeUnless { it }?.let {
-                Payment.insert {
-                    it[contractId] = contract.id
-                    it[amount] = contract.amount?.toBigDecimal() ?: BigDecimal.ZERO
-                    it[payedDate] = null
-                    it[scopeDate] = LocalDate.now().toFormattedString()
-                    it[status] = PaymentStatus.PENDING
-                }
-            }
+    suspend fun createPayments(contract: RawContract, yearMonth: String) = dbQuery {
+        val paymentExists = checkIfPendingPaymentExistsForContract(contract.id, yearMonth)
+        if (!paymentExists) {
+            val paymentId = Payment.insert {
+                it[contractId] = contract.id
+                it[amount] = contract.amount?.toBigDecimal() ?: BigDecimal.ZERO
+                it[payedDate] = null
+                it[scopeDate] = yearMonth
+                it[status] = PaymentStatus.PENDING
+            } get Payment.id
+
+            println("✅ Utworzono nową płatność - ID: $paymentId, Kontrakt: ${contract.id}, Okres: $yearMonth, Kwota: ${contract.amount}")
+        } else {
+            println("ℹ️ Płatność już istnieje dla kontraktu ${contract.id} w okresie $yearMonth - pomijam")
+        }
+
     }
 
-    private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int) = dbQuery {
+    private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int, yearMonth: String): Boolean = dbQuery {
         Payment.selectAll()
             .where {
-                (Payment.contractId eq contractId) and
-                        ((Payment.status eq PaymentStatus.PENDING) or (Payment.status eq PaymentStatus.PAID))
+                (Payment.contractId eq contractId) and (Payment.scopeDate eq yearMonth)
             }
             .singleOrNull() != null
-
-
     }
 
     suspend fun getAllPayments(): List<PaymentDTO> = dbQuery {

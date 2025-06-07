@@ -13,7 +13,7 @@ export const contractsApi: ContractsApi = {
     addContract: (newContract: NewContract) => axiosInstance.post('/contracts', newContract),
     updateContract: (contractId: number, contract: NewContract) => axiosInstance.put(`/contracts/${contractId}`, contract),
     deleteContract: (contractId: number) => axiosInstance.delete(`/contracts/${contractId}`),
-    generateMouthPayments: () => axiosInstance.post('/contracts/generateMonthlyPayments')
+    generateMouthPayments: (yearMonth: string) => axiosInstance.post(`/contracts/generateMonthlyPayments/${yearMonth}`)
 }
 
 export type ContractsApi = {
@@ -23,5 +23,5 @@ export type ContractsApi = {
     addContract: (newContract: NewContract) => Promise<void>
     updateContract: (contractId: number, contract: NewContract) => Promise<void>
     deleteContract: (contractId: number) => Promise<void>
-    generateMouthPayments: () => Promise<void>
+    generateMouthPayments: (yearMonth: string) => Promise<void>
 };

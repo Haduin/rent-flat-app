@@ -31,7 +31,7 @@ export const usePaymentsView = () => {
     const handleGenerateNewMonthPayments = useMutation({
         mutationFn: () => {
             if (!dateSelected) throw new Error("Nie wybrano miesiąca");
-            return api.contractsApi.generateMouthPayments();
+            return api.contractsApi.generateMouthPayments(dateToStringWithYearMonth(dateSelected));
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
