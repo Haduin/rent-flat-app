@@ -3,6 +3,8 @@ package pl.chodan
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.util.UUID
 
 @Serializable
 data class ApartmentDTO(val id: Int, val name: String)
@@ -140,3 +142,30 @@ data class AddNewUtilityCostDTO(
 
 @Serializable
 data class LoginRequest(val username: String, val password: String)
+
+@Serializable
+data class Event<T>(
+    val eventId: String = UUID.randomUUID().toString(),
+    val timestamp: String,
+    val data: T
+)
+
+// Example of a payload class that can be used with Event<T>
+@Serializable
+data class PaymentEventPayload(
+    val paymentId: Int,
+    val amount: Double,
+    val status: String
+)
+
+@Serializable
+data class PaymentConfirmationEvent(
+    val eventId: String,
+    val eventType: String,
+    val timestamp: String,
+    val paymentId: Int,
+    val paymentDate: String,
+    val payedAmount: Double,
+    val contractId: Int,
+    val status: String
+)

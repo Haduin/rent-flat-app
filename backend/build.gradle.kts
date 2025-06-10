@@ -45,6 +45,11 @@ dependencies {
     implementation("io.ktor:ktor-server-config-yaml-jvm")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 
+    // Kafka dependencies
+    implementation("org.apache.kafka:kafka-clients:3.6.1")
+    implementation("org.slf4j:slf4j-api:2.0.9")
+    implementation("org.slf4j:slf4j-simple:2.0.9")
+
 
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

@@ -10,12 +10,15 @@ import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.net.URL
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
+
+private val logger = LoggerFactory.getLogger("pl.chodan.Application")
 
 fun Application.module() {
     configueModules()
@@ -32,10 +35,9 @@ fun Application.module() {
 
 fun Application.configueModules() {
 
-    println("KEYCLOAK URL ${environment.config.property("keycloak.url").getString()}")
-    println("KEYCLOAK CLIENT_ID ${environment.config.property("keycloak.clientId").getString()}")
-    println("KEYCLOAK REALM ${environment.config.property("keycloak.realm").getString()}")
-
+    logger.info("KEYCLOAK URL ${environment.config.property("keycloak.url").getString()}")
+    logger.info("KEYCLOAK CLIENT_ID ${environment.config.property("keycloak.clientId").getString()}")
+    logger.info("KEYCLOAK REALM ${environment.config.property("keycloak.realm").getString()}")
 
     val allowedHosts = environment.config.property("ktor.cors.allowedHosts").getString().split(",").map { it.trim() }
     allowedHosts.forEach { println(it) }
@@ -44,7 +46,6 @@ fun Application.configueModules() {
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.AccessControlAllowOrigin)
         allowHeader(HttpHeaders.AccessControlAllowHeaders)
-
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
@@ -90,11 +91,11 @@ fun Application.configureSecurity() {
                     if (username != null) {
                         JWTPrincipal(credential.payload)
                     } else {
-                        println("Brak preferred_username")
+                        logger.warn("Brak preferred_username")
                         null
                     }
                 } catch (e: Exception) {
-                    println("Błąd przy walidacji tokena: ${e.message}")
+                    logger.error("Błąd przy walidacji tokena: ${e.message}")
                     null
                 }
             }

@@ -1,0 +1,17 @@
+### Pobierz token dostępu
+POST http://localhost:8081/realms/mieszkanie_realm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=mieszkanie_client_id
+    &grant_type=password
+    &username=myuser
+    &password=mypassword
+
+### Pobierz token dostępu (bardziej czytelna wersja)
+POST http://localhost:8081/realms/master/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=admin-cli
+    &grant_type=password
+    &username=admin
+    &password=admin
