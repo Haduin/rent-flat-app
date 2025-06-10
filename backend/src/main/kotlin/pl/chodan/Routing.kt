@@ -8,6 +8,11 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import pl.chodan.services.ApartmentService
+import pl.chodan.services.ContractService
+import pl.chodan.services.PaymentService
+import pl.chodan.services.PersonService
+import pl.chodan.services.RoomService
 
 //fun Application.configureUtilityRouting() {
 //    val utilityService = UtilityCostsService()

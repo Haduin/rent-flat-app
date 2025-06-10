@@ -1,20 +1,11 @@
 package pl.chodan.services
 
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
-import pl.chodan.CreatedPersonDTO
-import pl.chodan.Person
-import pl.chodan.Person.documentNumber
-import pl.chodan.Person.firstName
-import pl.chodan.Person.lastName
-import pl.chodan.Person.nationality
-import pl.chodan.Person.status
-import pl.chodan.PersonDTO
-import pl.chodan.PersonStatus
-import pl.chodan.UpdatePersonDTO
-import pl.chodan.dbQuery
+import pl.chodan.*
 
 class PersonService {
     suspend fun createPerson(createdPersonDTO: CreatedPersonDTO): Int =

@@ -1,24 +1,9 @@
 package pl.chodan.services
 
-import org.jetbrains.exposed.sql.ISqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
-import pl.chodan.ContractService
-import pl.chodan.Payment
-import pl.chodan.PaymentConfirmationDTO
-import pl.chodan.PaymentDTO
-import pl.chodan.PaymentHistoryWithPersonDTO
-import pl.chodan.PaymentStatus
-import pl.chodan.PersonService
-import pl.chodan.PersonSmallDetailsDTO
-import pl.chodan.RawContract
-import pl.chodan.RoomService
+import org.jetbrains.exposed.sql.*
+import pl.chodan.*
 import pl.chodan.commons.toFormattedString
 import pl.chodan.commons.toLocalDateWithFullPattern
-import pl.chodan.dbQuery
 import java.math.BigDecimal
 import java.time.LocalDate
 
