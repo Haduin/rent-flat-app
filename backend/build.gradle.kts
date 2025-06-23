@@ -44,7 +44,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml-jvm")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
-
+    
+    implementation("jakarta.mail:jakarta.mail-api:2.1.3")
 
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
