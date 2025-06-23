@@ -1,9 +1,9 @@
 import {Dialog} from "primereact/dialog";
-import {Contract} from "../../components/commons/types.ts";
+import {ContractDto} from "../../components/commons/types.ts";
 
 interface Props {
     isVisible: boolean;
-    selectedContract: Contract | null
+    selectedContract: ContractDto | null
     onHide: () => void;
 }
 

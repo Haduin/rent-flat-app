@@ -1,19 +1,22 @@
-import {useState} from 'react';
-import {Contract, PersonDto} from "../../components/commons/types.ts";
+import {useCallback, useState} from 'react';
+import {ContractDto, DeleteContractDTO, PersonDto} from "../../components/commons/types.ts";
 import {queryClient} from "../../main.tsx";
 import {useToast} from "../../components/commons/ToastProvider.tsx";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {api} from "../../api/api.ts";
+import {useModal} from "../../hooks/use-modal";
 
 export const useContractsView = () => {
     const {showToast} = useToast()
-    const [isDetailsDialogVisible, setIsDetailsDialogVisible] = useState<boolean>(false);
-    const [isAddContractDialogVisible, setIsAddContractDialogVisible] = useState<boolean>(false);
-    const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-    const [isEditContactModalOpen, setIsEditContactModalOpen] = useState<boolean>(false);
-    const [isDeleteDialogVisible, setIsDeleteDialogVisible] = useState<boolean>(false);
+    const [selectedContract, setSelectedContract] = useState<ContractDto | null>(null);
+    const [showOnlyActiveContracts, setShowOnlyActiveContracts] = useState<boolean>(true);
 
-    const openDetailsDialog = (selectedContract: Contract) => {
+    const {isOpen: isAddContractDialogVisible, setOpen: setIsAddContractDialogVisible} = useModal()
+    const {isOpen: isDetailsDialogVisible, setOpen: setIsDetailsDialogVisible} = useModal()
+    const {isOpen: isEditContactModalOpen, setOpen: setIsEditContactModalOpen} = useModal()
+    const {isOpen: isDeleteDialogVisible, setOpen: setIsDeleteDialogVisible} = useModal()
+
+    const openDetailsDialog = (selectedContract: ContractDto) => {
         setIsDetailsDialogVisible(true);
         setSelectedContract(selectedContract);
     }
@@ -31,7 +34,7 @@ export const useContractsView = () => {
         setIsAddContractDialogVisible(true);
     }
 
-    const handleOpenEditDialog = (contract: Contract) => {
+    const handleOpenEditDialog = (contract: ContractDto) => {
         setSelectedContract(contract);
         setIsEditContactModalOpen(true);
     }
@@ -41,7 +44,7 @@ export const useContractsView = () => {
         setSelectedContract(null);
     }
 
-    const handleOpenDeleteDialog = (contract: Contract) => {
+    const handleOpenDeleteDialog = (contract: ContractDto) => {
         setSelectedContract(contract);
         setIsDeleteDialogVisible(true);
     }
@@ -51,7 +54,7 @@ export const useContractsView = () => {
         setSelectedContract(null);
     }
 
-    const {data: contracts = [], isLoading: loading} = useQuery<Contract[]>({
+    const {data: contracts = [], isLoading: loading} = useQuery<ContractDto[]>({
         queryKey: ['contracts'],
         queryFn: api.contractsApi.fetchContracts
     });
@@ -74,7 +77,7 @@ export const useContractsView = () => {
     });
 
     const updateContractMutation = useMutation({
-        mutationFn: ({contractId, contract}: {contractId: number, contract: any}) => 
+        mutationFn: ({contractId, contract}: { contractId: number, contract: any }) =>
             api.contractsApi.updateContract(contractId, contract),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['contracts']});
@@ -87,16 +90,24 @@ export const useContractsView = () => {
     });
 
     const deleteContractMutation = useMutation({
-        mutationFn: (contractId: number) => api.contractsApi.deleteContract(contractId),
+        mutationFn: ({contractId, details}: {
+            contractId: number,
+            details: DeleteContractDTO
+        }) => api.contractsApi.deleteContract(contractId, details),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['contracts']});
-            showToast('success', 'Pomyślnie usunięto kontrakt.');
+            showToast('success', 'Pomyślnie zamknięto kontrakt.');
             handleCloseDeleteDialog();
         },
         onError: () => {
-            showToast('error', "Wystąpił błąd podczas usuwania kontraktu");
+            showToast('error', "Wystąpił błąd podczas zamykania kontraktu");
         }
     });
+
+
+    const showContracts = useCallback(() => {
+        return showOnlyActiveContracts ? contracts?.filter((contract) => contract.status === 'ACTIVE') : contracts
+    }, [showOnlyActiveContracts, contracts])
 
     return {
         contracts,
@@ -119,6 +130,8 @@ export const useContractsView = () => {
         isDeleteDialogVisible,
         handleOpenDeleteDialog,
         handleCloseDeleteDialog,
-        deleteContractMutation
+        deleteContractMutation,
+        showOnlyActiveContracts, setShowOnlyActiveContracts,
+        showContracts
     }
 }

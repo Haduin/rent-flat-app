@@ -1,7 +1,7 @@
 FROM gradle:8.5-jdk21 AS build
 WORKDIR /app
 COPY . /app/
-RUN gradle clean jar
+RUN gradle clean jar --no-daemon --info
 
 FROM openjdk:21-slim
 WORKDIR /app

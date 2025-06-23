@@ -63,8 +63,10 @@ const PaymentsView = () => {
                             sortable
                             field="amount"
                             header="Kwota"
-                            body={(rowData: Payment) => formatCurrency(rowData.amount)}
-                            footer={payments && payments.length > 0 ? () => formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0)) : undefined}
+                            body={(rowData: Payment) => rowData.status === Status.CANCELLED ?
+                                <span className="line-through">{rowData.amount}</span> :
+                                <div>{rowData.amount}</div>}
+                            footer={payments && payments.length > 0 ? () => formatCurrency(payments.filter(payment => payment.status !== Status.CANCELLED).reduce((sum, payment) => sum + payment.amount, 0)) : undefined}
                             footerClassName="bg-green-100"
                             style={{width: '20%'}}
                         />
@@ -92,7 +94,7 @@ const PaymentsView = () => {
                         />
                         <Column header="Akcje"
                                 body={(rowData: Payment) =>
-                                    rowData.status !== Status.PAID ? (
+                                    (rowData.status !== Status.PAID && rowData.status !== Status.CANCELLED) ? (
                                         <Button label="Potwierdz"
                                                 icon="pi pi-pencil"
                                                 onClick={() => openConfirmationDialog(rowData)}

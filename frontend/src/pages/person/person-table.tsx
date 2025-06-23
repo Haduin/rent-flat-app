@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useState} from 'react';
 import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {ProgressSpinner} from 'primereact/progressspinner';
@@ -14,7 +14,6 @@ const PersonTable: React.FC = () => {
     const [globalFilterValue, setGlobalFilterValue] = useState<string>('');
 
     const {
-        persons,
         loading,
         selectedPerson,
         isEditDialogVisible,
@@ -26,12 +25,9 @@ const PersonTable: React.FC = () => {
         setIsNewPersonDialogVisible,
         setEditDialogVisible,
         handleDeletePerson,
-        showOnlyActivePeople, setShowOnlyActivePeople
+        showOnlyActivePeople, setShowOnlyActivePeople,
+        showPeople,
     } = usePersonTable();
-
-    const showPeople = useCallback(() => {
-        return showOnlyActivePeople ? persons?.filter((person) => person.status === 'RESIDENT') : persons
-    }, [showOnlyActivePeople, persons]);
 
     const renderHeader = () => {
         return (

@@ -161,6 +161,10 @@ fun Application.configureContractRouting() {
                         println(ex.message)
                     }
                 }
+                delete("/{id}") {
+                    val deleteDetails = call.receive<DeleteContractDTO>()
+                    contractService.deleteContract(deleteDetails)
+                }
             }
         }
     }
@@ -187,7 +191,6 @@ fun Application.configurePaymentRouting() {
                         PaymentService().confirmPayment(request)
                         call.respond(HttpStatusCode.OK, mapOf("message" to "Payment confirmed successfully"))
                     } catch (e: Exception) {
-                        println(e.message)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             mapOf("error" to "Failed to confirm payment: ${e.message}")

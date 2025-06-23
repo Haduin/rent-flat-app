@@ -48,8 +48,13 @@ data class ContractDTO(
     val room: RoomWithApartmentDTO?,
     val startDate: String?,
     val endDate: String?,
+    val terminationDate: String?,
+    val payedTillDayOfMonth: String?,
     val amount: Double?,
-    val deposit: Double?
+    val deposit: Double?,
+    val depositReturned: Boolean?,
+    val description: String?,
+    val status: String,
 )
 
 @Serializable
@@ -86,6 +91,15 @@ data class NewContractDTO(
     val amount: Double,
     val deposit: Double,
     val payedDate: Int
+)
+
+@Serializable
+data class DeleteContractDTO(
+    val contractId: Int,
+    val terminationDate: String,
+    val depositReturned: Boolean?,
+    val positiveCancel: Boolean?,
+    val description: String?,
 )
 
 @Serializable

@@ -1,11 +1,12 @@
 import {Dialog} from "primereact/dialog";
 import {Button} from "primereact/button";
-import {Contract} from "../../components/commons/types.ts";
+import {ContractDto} from "../../components/commons/types.ts";
+import {mapContractStatus} from "../../commons/mappers.ts";
 
 interface ContractDetailsModalProps {
     visible: boolean;
     onHide: () => void;
-    selectedContract: Contract | null;
+    selectedContract: ContractDto | null;
 }
 
 const ContractDetailsModal = ({
@@ -64,6 +65,31 @@ const ContractDetailsModal = ({
                                     <dt className="text-sm font-medium text-gray-500">Kaucja</dt>
                                     <dd className="text-sm text-gray-900 col-span-2">{selectedContract.deposit} zł</dd>
                                 </div>
+                                <div className="py-3 grid grid-cols-3">
+                                    <dt className="text-sm font-medium text-gray-500">Status</dt>
+                                    <dd className="text-sm text-gray-900 col-span-2">
+                                        {mapContractStatus(selectedContract.status) || 'Brak danych'}
+                                    </dd>
+                                </div>
+                                <div className="py-3 grid grid-cols-3">
+                                    <dt className="text-sm font-medium text-gray-500">Data zakończenia umowy</dt>
+                                    <dd className="text-sm text-gray-900 col-span-2">
+                                        {selectedContract.terminationDate || 'Brak danych'}
+                                    </dd>
+                                </div>
+                                <div className="py-3 grid grid-cols-3">
+                                    <dt className="text-sm font-medium text-gray-500">Data wpłaty</dt>
+                                    <dd className="text-sm text-gray-900 col-span-2">
+                                        {selectedContract.payedDate || 'Brak danych'}
+                                    </dd>
+                                </div>
+                                <div className="py-3 grid grid-cols-3">
+                                    <dt className="text-sm font-medium text-gray-500">Opis</dt>
+                                    <dd className="text-sm text-gray-900 col-span-2">
+                                        {selectedContract.description || 'Brak danych'}
+                                    </dd>
+                                </div>
+
                             </dl>
                         </div>
                     </div>

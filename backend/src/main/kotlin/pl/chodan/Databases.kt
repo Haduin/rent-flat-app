@@ -52,7 +52,7 @@ object UtilityCosts : Table("flat.utility_costs") {
         name = "type",
         sql = "VARCHAR(50)",
         fromDb = { value -> UtilityType.valueOf(value as String) },
-        toDb = { value -> (value as UtilityType).name }
+        toDb = { value -> value.name }
     )
 
     override val primaryKey = PrimaryKey(id)
@@ -77,6 +77,7 @@ object Person : Table("flat.person") {
     val lastName = varchar("last_name", 255)
     val documentNumber = varchar("document_number", 255)
     val nationality = varchar("nationality", 255)
+    val email = varchar("email", 255).nullable()
     val status = customEnumeration(
         name = "status",
         sql = "VARCHAR(255)",
@@ -96,10 +97,23 @@ object Contract : Table("flat.contract") {
     val roomId = (integer("room_id") references Room.id)
     val amount = decimal("amount", 10, 2)
     val deposit = decimal("deposit", 10, 2)
+    val depositReturned = bool("deposit_returned").nullable().default(null)
     val startDate = date("start_date")
     val endDate = date("end_date")
+    val terminationDate = date("termination_date").nullable()
+    val description = varchar("description", 255).nullable()
+    val status = customEnumeration(
+        name = "status",
+        sql = "VARCHAR(255)",
+        fromDb = { value -> ContractStatus.valueOf(value as String) },
+        toDb = { value -> value.name }
+    )
     val payedTillDayOfMonth = varchar("payed_till_day_of_month", 2)
     override val primaryKey = PrimaryKey(id)
+}
+
+enum class ContractStatus {
+    ACTIVE, TERMINATED
 }
 
 object Payment : Table("flat.payment") {
@@ -118,5 +132,5 @@ object Payment : Table("flat.payment") {
 }
 
 enum class PaymentStatus {
-    PENDING, PAID, LATE
+    PENDING, PAID, LATE, CANCELLED
 }

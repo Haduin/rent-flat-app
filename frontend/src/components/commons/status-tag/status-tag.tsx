@@ -11,11 +11,12 @@ const StatusTag = ({status}: StatusTagProps) => {
 
 const getTagSeverity = (status: Status): "warning" | "success" | "danger" | "info" | "secondary" | "contrast" | null => {
     switch (status) {
+        case Status.LATE:
         case Status.PENDING:
             return 'warning';
         case Status.PAID:
             return 'success';
-        case Status.LATE:
+        case Status.CANCELLED:
             return 'danger';
         default:
             return 'info';

@@ -82,6 +82,10 @@ const usePersonTable = () => {
     }, [deletePerson]);
 
 
+    const showPeople = useCallback(() => {
+        return showOnlyActivePeople ? persons?.filter((person) => person.status === 'RESIDENT') : persons
+    }, [showOnlyActivePeople, persons]);
+
     return {
         persons,
         loading,
@@ -95,7 +99,8 @@ const usePersonTable = () => {
         setIsNewPersonDialogVisible,
         setEditDialogVisible,
         handleDeletePerson,
-        showOnlyActivePeople, setShowOnlyActivePeople
+        showOnlyActivePeople, setShowOnlyActivePeople,
+        showPeople,
     }
 };
 

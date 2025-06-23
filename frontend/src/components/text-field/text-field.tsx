@@ -12,7 +12,7 @@ interface TextFieldProps {
 export const TextField: React.FC<TextFieldProps> = ({name, label, disabled, formik}) => {
     return (
         <div className="field">
-            <label htmlFor={label}>{label}</label>
+            <label className="mr-2" htmlFor={label}>{label}</label>
             <InputText
                 disabled={disabled}
                 id={name}
@@ -20,7 +20,7 @@ export const TextField: React.FC<TextFieldProps> = ({name, label, disabled, form
                 value={formik.values[name]}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={formik.touched[name] && formik.errors[name] ? 'p-invalid' : ''}
+                className={formik.touched[name] && formik.errors[name] ? 'p-invalid' : 'w-full'}
             />
             {formik.touched[name] && formik.errors[name] && (
                 //@ts-ignore

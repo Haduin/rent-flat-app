@@ -10,6 +10,7 @@ import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.net.URL
 
@@ -75,7 +76,7 @@ fun Application.configureSecurity() {
     val keycloakAddress = environment.config.property("keycloak.url").getString()
     val clientId = environment.config.property("keycloak.clientId").getString()
     val realm = environment.config.property("keycloak.realm").getString()
-
+    val logger = LoggerFactory.getLogger(Application::class.java)
 
     install(Authentication) {
         jwt("auth-jwt") {
@@ -90,11 +91,11 @@ fun Application.configureSecurity() {
                     if (username != null) {
                         JWTPrincipal(credential.payload)
                     } else {
-                        println("Brak preferred_username")
+                        logger.warn("Brak preferred_username w tokenie")
                         null
                     }
                 } catch (e: Exception) {
-                    println("Błąd przy walidacji tokena: ${e.message}")
+                    logger.warn("Błąd walidacji tokenu ${e.message}")
                     null
                 }
             }

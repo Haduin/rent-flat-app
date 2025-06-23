@@ -1,4 +1,4 @@
-import {Contract, NewContract, PersonDto, Room} from "../components/commons/types.ts";
+import {ContractDto, DeleteContractDTO, NewContract, PersonDto, Room} from "../components/commons/types.ts";
 import {axiosInstance} from "./api.ts";
 
 export const contractsApi: ContractsApi = {
@@ -12,16 +12,16 @@ export const contractsApi: ContractsApi = {
     }).then(response => response.data),
     addContract: (newContract: NewContract) => axiosInstance.post('/contracts', newContract),
     updateContract: (contractId: number, contract: NewContract) => axiosInstance.put(`/contracts/${contractId}`, contract),
-    deleteContract: (contractId: number) => axiosInstance.delete(`/contracts/${contractId}`),
+    deleteContract: (contractId: number, details: DeleteContractDTO) => axiosInstance.delete(`/contracts/${contractId}`, {data: details}),
     generateMouthPayments: (yearMonth: string) => axiosInstance.post(`/contracts/generateMonthlyPayments/${yearMonth}`)
 }
 
 export type ContractsApi = {
-    fetchContracts: () => Promise<Contract[]>
+    fetchContracts: () => Promise<ContractDto[]>
     fetchUnassignedPersons: () => Promise<PersonDto[]>
     fetchUnassignedRooms: (startDate: string, endDate: string) => Promise<Room[]>,
     addContract: (newContract: NewContract) => Promise<void>
     updateContract: (contractId: number, contract: NewContract) => Promise<void>
-    deleteContract: (contractId: number) => Promise<void>
+    deleteContract: (contractId: number, details: DeleteContractDTO) => Promise<void>
     generateMouthPayments: (yearMonth: string) => Promise<void>
 };

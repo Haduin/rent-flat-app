@@ -228,7 +228,6 @@ const AddContractView = ({
 
         </Dialog>
     )
-        ;
 };
 
 export default AddContractView;

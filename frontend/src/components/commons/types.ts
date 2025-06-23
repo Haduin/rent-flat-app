@@ -13,14 +13,26 @@ export interface Room {
     apartment: string;
 }
 
-export interface Contract {
+export interface ContractDto {
     id: number
     person?: Person
     room?: Room
     startDate?: string
     endDate?: string
+    terminationDate: string
+    payedDate?: string
+    status: ContractStatus
+    description?: string
     amount?: number
     deposit?: number
+}
+
+export interface DeleteContractDTO {
+    contractId?: number,
+    terminationDate?: string
+    depositReturned?: boolean
+    positiveCancel?: boolean
+    description?: string
 }
 
 export interface NewContract {
@@ -46,12 +58,19 @@ export enum Status {
     PENDING = 'PENDING',
     PAID = 'PAID',
     LATE = 'LATE',
+    CANCELLED = 'CANCELLED',
+}
+
+export enum ContractStatus {
+    ACTIVE = 'ACTIVE',
+    TERMINATED = 'TERMINATED',
 }
 
 export const statusMap: Record<Status, string> = {
     [Status.PENDING]: 'Oczekujące',
     [Status.PAID]: 'Zapłacono',
     [Status.LATE]: 'Spóźnione',
+    [Status.CANCELLED]: 'Anulowano',
 };
 
 export interface Payment {
