@@ -14,7 +14,6 @@ interface DisableContractModalProps {
     selectedContract: ContractDto | null
     onHide: () => void;
     onConfirm: UseMutationResult<void, Error, {
-        contractId: number
         details: DeleteContractDTO
     }>
 }
@@ -25,8 +24,8 @@ const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: D
         initialValues: {
             description: '',
             terminationDate: new Date(),
-            depositReturned: true,
-            positiveCancel: true,
+            depositReturned: false,
+            positiveCancel: false,
         },
         validationSchema: Yup.object().shape({
             description: Yup.string(),
@@ -36,7 +35,6 @@ const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: D
         }),
         onSubmit: (values) => {
             onConfirm.mutate({
-                contractId: selectedContract?.id!!,
                 details: {
                     contractId: selectedContract?.id!!,
                     depositReturned: values.depositReturned,
