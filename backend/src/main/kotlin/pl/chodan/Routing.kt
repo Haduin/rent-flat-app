@@ -162,9 +162,28 @@ fun Application.configureContractRouting() {
                     }
                 }
                 delete("/{id}") {
-                    val deleteDetails = call.receive<DeleteContractDTO>()
-                    contractService.deleteContract(deleteDetails)
+                    val contractId = call.parameters["id"]?.toIntOrNull()
+                    val details = call.receive<DeleteContractDTO>()
+
+                    when (val result = contractService.deleteContract(details)) {
+                        is ContractDeleteResult.Success -> {
+                            call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zakończony")
+                        }
+
+                        is ContractDeleteResult.PaymentUpdateError -> {
+                            call.respond(HttpStatusCode.InternalServerError, result.message)
+                        }
+
+                        is ContractDeleteResult.ContractUpdateError -> {
+                            call.respond(HttpStatusCode.InternalServerError, result.message)
+                        }
+
+                        ContractDeleteResult.NotFound -> {
+                            call.respond(HttpStatusCode.NotFound, "Nie znaleziono kontraktu")
+                        }
+                    }
                 }
+
             }
         }
     }

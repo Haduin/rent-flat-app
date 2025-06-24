@@ -130,20 +130,21 @@ class RoomService {
     }
 
     suspend fun fetchFreeRoomsBetweenDates(startDate: String, endDate: String): List<RoomWithApartmentDTO> = dbQuery {
-        (Room innerJoin Apartment).select(Room.id, Room.name, Apartment.name).where {
-            (Room.apartmentId eq Apartment.id).and(Room.id notInSubQuery (Contract.select(Contract.roomId).where {
-                ((Contract.startDate greaterEq LocalDate.parse(startDate)) and
-                        (Contract.endDate lessEq LocalDate.parse(endDate)) and
-                        (Contract.status eq ContractStatus.ACTIVE)) or
-                        ((Contract.startDate greaterEq LocalDate.parse(startDate)) and (Contract.terminationDate lessEq LocalDate.parse(
-                            endDate
-                        )))
-            }))
-        }.map {
-            RoomWithApartmentDTO(
-                id = it[Room.id], number = it[Room.name], apartment = it[Apartment.name]
-            )
-        }
+        (Room innerJoin Apartment).select(Room.id, Room.name, Apartment.name)
+            .where {
+                (Room.apartmentId eq Apartment.id)
+                    .and(Room.id notInSubQuery (Contract.select(Contract.roomId).where {
+                        (Contract.startDate greaterEq LocalDate.parse(startDate) and
+                                (Contract.endDate lessEq LocalDate.parse(endDate)) and
+                                (Contract.status eq ContractStatus.ACTIVE)) or
+                                (Contract.startDate greaterEq LocalDate.parse(startDate) and
+                                        (Contract.terminationDate lessEq LocalDate.parse(endDate)))
+                    }))
+            }.map {
+                RoomWithApartmentDTO(
+                    id = it[Room.id], number = it[Room.name], apartment = it[Apartment.name]
+                )
+            }
     }
 }
 
@@ -186,16 +187,18 @@ class PersonService {
     }
 
     suspend fun getNonResidentPersons(): List<PersonDTO> = dbQuery {
-        Person.selectAll().where { Person.status eq PersonStatus.NON_RESIDENT }.toList().map {
-            PersonDTO(
-                it[Person.id],
-                it[Person.firstName],
-                it[Person.lastName],
-                it[Person.documentNumber],
-                it[Person.nationality],
-                it[Person.status].name
-            )
-        }
+        Person.selectAll()
+            .where { Person.status eq PersonStatus.NON_RESIDENT }
+            .toList().map {
+                PersonDTO(
+                    it[Person.id],
+                    it[Person.firstName],
+                    it[Person.lastName],
+                    it[Person.documentNumber],
+                    it[Person.nationality],
+                    it[Person.status].name
+                )
+            }
     }
 
     suspend fun updatePerson(
@@ -216,11 +219,14 @@ class PersonService {
 
 // Service for Contract
 class ContractService {
+    private val logger = LoggerFactory.getLogger(ContractService::class.java)
 
     suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = dbQuery {
         // znajdz kontrakt miedzy datami start i end date
         // następnie wygeneruj nowy payment
-        Contract.selectAll().where { (Contract.endDate greater LocalDate.now()) }.map { row ->
+        Contract.selectAll().where {
+            (Contract.endDate greater LocalDate.now()) and (Contract.status eq ContractStatus.ACTIVE)
+        }.map { row ->
             RawContract(
                 id = row[Contract.id],
                 personId = row[Contract.personId],
@@ -277,7 +283,7 @@ class ContractService {
                 amount = contract[Contract.amount].toDouble(),
                 deposit = contract[Contract.deposit].toDouble(),
                 status = contract[Contract.status].name,
-                terminationDate = contract[Contract.terminationDate]?.toString() ?: null,
+                terminationDate = contract[Contract.terminationDate]?.toString(),
                 payedTillDayOfMonth = contract[Contract.payedTillDayOfMonth],
                 depositReturned = contract[Contract.depositReturned],
                 description = contract[Contract.description],
@@ -285,25 +291,57 @@ class ContractService {
         }
     }
 
-    suspend fun deleteContract(details: DeleteContractDTO): Int = dbQuery {
+    suspend fun deleteContract(details: DeleteContractDTO): ContractDeleteResult = dbQuery {
+        try {
+            Contract.selectAll().where { Contract.id eq details.contractId }
+                .singleOrNull() ?: return@dbQuery ContractDeleteResult.NotFound
 
-        Payment.update({
-            (Payment.contractId eq details.contractId) and
-                    (Payment.status eq PaymentStatus.PENDING)
-        }) {
-            it[status] = PaymentStatus.CANCELLED
-            it[payedDate] = details.terminationDate.toLocalDateWithFullPattern()
+            val updatedPayments = Payment.update({
+                (Payment.contractId eq details.contractId) and
+                        (Payment.status eq PaymentStatus.PENDING)
+            }) {
+                it[status] = PaymentStatus.CANCELLED
+                it[payedDate] = details.terminationDate.toLocalDateWithFullPattern()
+            }
+
+            if (updatedPayments < 0) {
+                return@dbQuery ContractDeleteResult.PaymentUpdateError(
+                    "Błąd podczas aktualizacji płatności dla kontraktu ${details.contractId}"
+                )
+            }
+
+            val updatedContract = Contract.update({ Contract.id eq details.contractId }) {
+                it[Contract.terminationDate] = details.terminationDate.toLocalDateWithFullPattern()
+                it[Contract.status] = ContractStatus.TERMINATED
+                it[Contract.depositReturned] = details.depositReturned
+                it[Contract.description] = details.description
+            }
+
+            when (updatedContract) {
+                1 -> ContractDeleteResult.Success(details.contractId)
+                0 -> ContractDeleteResult.ContractUpdateError("Nie znaleziono kontraktu do aktualizacji")
+
+                else -> ContractDeleteResult.ContractUpdateError(
+                    "Nieoczekiwana liczba zaktualizowanych kontraktów: $updatedContract"
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("Błąd podczas usuwania kontraktu: ${e.message}", e)
+            ContractDeleteResult.ContractUpdateError(
+                "Wystąpił błąd podczas usuwania kontraktu: ${e.message}"
+            )
         }
-
-        Contract.update({ Contract.id eq details.contractId }) {
-            it[Contract.terminationDate] = details.terminationDate.toLocalDateWithFullPattern()
-            it[Contract.status] = ContractStatus.TERMINATED
-            it[Contract.depositReturned] = details.depositReturned
-            it[Contract.description] = details.description
-        }
-
     }
+
 }
+
+sealed class ContractDeleteResult {
+    data class Success(val contractId: Int) : ContractDeleteResult()
+    data class PaymentUpdateError(val message: String) : ContractDeleteResult()
+    data class ContractUpdateError(val message: String) : ContractDeleteResult()
+    data object NotFound : ContractDeleteResult()
+}
+
 
 class PaymentService {
 

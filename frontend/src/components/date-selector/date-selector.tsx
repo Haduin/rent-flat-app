@@ -1,15 +1,17 @@
 import {Calendar, CalendarSelectionMode} from "primereact/calendar";
 import {FormikProps} from "formik";
 import {addLocale} from "primereact/api";
+import React from "react";
 
 addLocale('pl', {
     firstDayOfWeek: 1,
-    dayNames: ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'],
-    dayNamesShort: ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nie'],
-    dayNamesMin: ['P', 'W', 'Ś', 'C', 'P', 'S', 'N'],
+    dayNames: ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'],
+    dayNamesShort: ['Ndz', 'Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob'],
+    dayNamesMin: ['N', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'],
     monthNames: ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'],
     monthNamesShort: ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'],
     today: 'Dzisiaj',
+    dateFormat: 'yy-mm-dd',
     clear: 'Wyczyść'
 });
 
