@@ -220,7 +220,16 @@ class ContractService {
     suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = dbQuery {
         // znajdz kontrakt miedzy datami start i end date
         // następnie wygeneruj nowy payment
-        Contract.selectAll().where { (Contract.endDate greater LocalDate.now()) }.map { row ->
+
+        val startDate = LocalDate.parse("$yearMonth-01")
+        val endDate = startDate.plusMonths(1).minusDays(1)
+
+        Contract.selectAll().where {
+            (Contract.startDate lessEq endDate) and
+                    (Contract.endDate greaterEq startDate) and
+                    (Contract.status eq ContractStatus.ACTIVE)
+
+        }.map { row ->
             RawContract(
                 id = row[Contract.id],
                 personId = row[Contract.personId],
@@ -246,6 +255,7 @@ class ContractService {
             it[startDate] = LocalDate.parse(newContractDTO.startDate)
             it[endDate] = LocalDate.parse(newContractDTO.endDate)
             it[deposit] = newContractDTO.deposit.toBigDecimal()
+            it[status] = ContractStatus.ACTIVE
             it[payedTillDayOfMonth] = newContractDTO.payedDate.toString()
         } get Contract.id
     }
