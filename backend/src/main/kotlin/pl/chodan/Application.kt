@@ -12,6 +12,7 @@ import io.ktor.server.plugins.cors.routing.*
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import pl.chodan.routing.*
 import java.net.URL
 
 fun main(args: Array<String>) {

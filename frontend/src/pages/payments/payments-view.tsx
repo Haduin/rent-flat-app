@@ -66,7 +66,8 @@ const PaymentsView = () => {
                             body={(rowData: Payment) => rowData.status === Status.CANCELLED ?
                                 <span className="line-through">{rowData.amount}</span> :
                                 <div>{rowData.amount}</div>}
-                            footer={payments && payments.length > 0 ? () => formatCurrency(payments.filter(payment => payment.status !== Status.CANCELLED).reduce((sum, payment) => sum + payment.amount, 0)) : undefined}
+                            footer={payments && payments.length > 0 ? () => formatCurrency(payments.filter(payment => payment.status !== Status.CANCELLED)
+                                .reduce((sum, payment) => sum + payment.amount, 0)) : undefined}
                             footerClassName="bg-green-100"
                             style={{width: '20%'}}
                         />

@@ -90,10 +90,9 @@ export const useContractsView = () => {
     });
 
     const deleteContractMutation = useMutation({
-        mutationFn: ({contractId, details}: {
-            contractId: number,
+        mutationFn: ({details}: {
             details: DeleteContractDTO
-        }) => api.contractsApi.deleteContract(contractId, details),
+        }) => api.contractsApi.deleteContract(details),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['contracts']});
             showToast('success', 'Pomyślnie zamknięto kontrakt.');
