@@ -3,10 +3,11 @@ package pl.chodan.services
 import org.jetbrains.exposed.sql.*
 import org.slf4j.LoggerFactory
 import pl.chodan.*
+import pl.chodan.database.*
 import java.time.LocalDate
 
 class ContractService {
-    private val logger = LoggerFactory.getLogger(pl.chodan.services.ContractService::class.java)
+    private val logger = LoggerFactory.getLogger(ContractService::class.java)
 
     suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = dbQuery {
         // znajdz kontrakt miedzy datami start i end date
@@ -124,9 +125,9 @@ class ContractService {
             }
 
             if (updatedPayments < 0) {
-                return@dbQuery ContractDeleteResult.PaymentUpdateError(
-                    "Błąd podczas aktualizacji płatności dla kontraktu ${details.contractId}"
-                )
+                val message = "Błąd podczas aktualizacji płatności dla kontraktu ${details.contractId}"
+                logger.info(message)
+                return@dbQuery ContractDeleteResult.PaymentUpdateError(message)
             }
 
             val updatedContract = Contract.update({ Contract.id eq details.contractId }) {

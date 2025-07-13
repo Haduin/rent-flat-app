@@ -5,7 +5,12 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
-import pl.chodan.*
+import pl.chodan.CreatedPersonDTO
+import pl.chodan.PersonDTO
+import pl.chodan.UpdatePersonDTO
+import pl.chodan.database.Person
+import pl.chodan.database.PersonStatus
+import pl.chodan.dbQuery
 
 class PersonService {
     suspend fun createPerson(createdPersonDTO: CreatedPersonDTO): Int = dbQuery {

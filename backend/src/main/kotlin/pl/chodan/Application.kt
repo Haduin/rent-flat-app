@@ -6,41 +6,43 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.engine.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.response.*
 import kotlinx.serialization.json.Json
+import org.koin.core.context.startKoin
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import pl.chodan.context.KtorUserDetailsPrincipal
+import pl.chodan.context.UserDetails
+import pl.chodan.database.configureDatabases
 import pl.chodan.routing.*
 import java.net.URL
 
-fun main(args: Array<String>) {
-    io.ktor.server.netty.EngineMain.main(args)
+fun main() {
+    embeddedServer(io.ktor.server.netty.Netty, port = 8080, host = "0.0.0.0", module = Application::module)
 }
 
 fun Application.module() {
-    configueModules()
-    configureSecurity()
-    configureDatabases()
+    startKoin {
+        configueModules()
+        configureSecurity()
+        configureDatabases()
 
 //    configureUtilityRouting()
-    configureApartmentRouting()
-    configurePersonRouting()
-    configureRoomRouting()
-    configureContractRouting()
-    configurePaymentRouting()
+        configureApartmentRouting()
+        configurePersonRouting()
+        configureRoomRouting()
+        configureContractRouting()
+        configurePaymentRouting()
+    }
 }
 
 fun Application.configueModules() {
 
-    println("KEYCLOAK URL ${environment.config.property("keycloak.url").getString()}")
-    println("KEYCLOAK CLIENT_ID ${environment.config.property("keycloak.clientId").getString()}")
-    println("KEYCLOAK REALM ${environment.config.property("keycloak.realm").getString()}")
-
-
     val allowedHosts = environment.config.property("ktor.cors.allowedHosts").getString().split(",").map { it.trim() }
-    allowedHosts.forEach { println(it) }
     install(CORS) {
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
@@ -70,7 +72,6 @@ fun Application.configueModules() {
         level = Level.INFO
     }
 
-
 }
 
 fun Application.configureSecurity() {
@@ -89,28 +90,34 @@ fun Application.configureSecurity() {
             validate { credential ->
                 try {
                     val username = credential.payload.getClaim("preferred_username").asString()
+                    val email = credential.payload.getClaim("email")?.asString()
+                    val roles = credential.payload.getClaim("realm_access")?.asMap()?.get("roles") as? List<String>
+                        ?: emptyList()
+
                     if (username != null) {
-                        JWTPrincipal(credential.payload)
+                        val userDetails = UserDetails(
+                            username = username,
+                            email = email,
+                            roles = roles,
+                            isAuthenticated = true
+                        )
+                        KtorUserDetailsPrincipal(userDetails)
                     } else {
-                        logger.warn("Brak preferred_username w tokenie")
+                        logger.warn("Brak preferred_username w tokenie JWT dla '${credential.payload.subject}'")
                         null
                     }
                 } catch (e: Exception) {
-                    logger.warn("Błąd walidacji tokenu ${e.message}")
+                    logger.error(
+                        "Błąd walidacji tokenu JWT: ${e.message}",
+                        e
+                    )
                     null
                 }
             }
+
+            challenge { defaultScheme, realm ->
+                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+            }
         }
     }
-//    routing {
-//        post("/login") {
-//            val request = call.receive<LoginRequest>()
-//            val token = login(request.username, request.password)
-//            if (token != null) {
-//                call.respond(mapOf("access_token" to token))
-//            } else {
-//                call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
-//            }
-//        }
-//    }
 }

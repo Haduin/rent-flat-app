@@ -53,6 +53,7 @@ fun Application.configureContractRouting() {
                     val newContract = call.receive<NewContractDTO>()
                     try {
                         contractService.createContract(newContract)
+
                         call.respond(HttpStatusCode.Created)
                     } catch (ex: Exception) {
                         println(ex.message)
@@ -63,6 +64,7 @@ fun Application.configureContractRouting() {
 
                     when (val result = contractService.deleteContract(details)) {
                         is ContractDeleteResult.Success -> {
+                            
                             call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zakończony")
                         }
 

@@ -1,4 +1,3 @@
-import {ContractDto, DeleteContractDTO} from "../../components/commons/types.ts";
 import {Dialog} from "primereact/dialog";
 import {useFormik} from "formik";
 import * as Yup from 'yup';
@@ -7,20 +6,12 @@ import {CheckboxField} from "../../components/checkbox/checkbox.tsx";
 import {DateSelector} from "../../components/date-selector/date-selector.tsx";
 import {Button} from "primereact/button";
 import {dateToStringFullYearMouthDay} from "../../components/commons/dateFormatter.ts";
-import {UseMutationResult} from "@tanstack/react-query";
+import {DeleteContractFormikValues, DisableContractModalProps} from "./contract.types.ts";
 
-interface DisableContractModalProps {
-    isVisible: boolean;
-    selectedContract: ContractDto | null
-    onHide: () => void;
-    onConfirm: UseMutationResult<void, Error, {
-        details: DeleteContractDTO
-    }>
-}
 
 const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: DisableContractModalProps) => {
 
-    const formik = useFormik({
+    const formik = useFormik<DeleteContractFormikValues>({
         initialValues: {
             description: '',
             terminationDate: new Date(),

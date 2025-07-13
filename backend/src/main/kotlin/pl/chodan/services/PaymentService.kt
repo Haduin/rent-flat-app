@@ -6,6 +6,8 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.slf4j.LoggerFactory
 import pl.chodan.*
+import pl.chodan.database.Payment
+import pl.chodan.database.PaymentStatus
 import java.math.BigDecimal
 
 class PaymentService {

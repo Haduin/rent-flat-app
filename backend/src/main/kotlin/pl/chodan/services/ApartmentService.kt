@@ -1,13 +1,10 @@
 package pl.chodan.services
 
-import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
-import pl.chodan.Apartment
 import pl.chodan.ApartmentAndRoomNumberDTO
+import pl.chodan.database.Apartment
+import pl.chodan.database.Room
 import pl.chodan.dbQuery
 
 class ApartmentService {
@@ -22,26 +19,19 @@ class ApartmentService {
     }
 
     suspend fun getAllApartmentsWithRoomDetails(): List<ApartmentAndRoomNumberDTO> = dbQuery {
-        val sqlQuery: String = """
-            select a.name as apartment_name, count(r.name) as room_count from flat.apartment a, flat.room r
-            where a.id = r.apartment_id
-            group by a.name
-        """.trimIndent()
-
-        transaction {
-            val result = mutableListOf<ApartmentAndRoomNumberDTO>()
-            exec(sqlQuery) { rs ->
-                while (rs.next()) {
-                    result.add(
-                        ApartmentAndRoomNumberDTO(
-                            rs.getString("apartment_name"), rs.getString("room_count")
-                        )
-                    )
-                }
+        (Apartment innerJoin Room)
+            .select(
+                Apartment.name, Room.id.count()
+            )
+            .groupBy(Apartment.name)
+            .map {
+                ApartmentAndRoomNumberDTO(
+                    apartmentName = it[Apartment.name],
+                    roomName = it[Room.id.count()].toString(),
+                )
             }
-            result
-        }
     }
+
 
     suspend fun deleteApartment(id: Int): Int = dbQuery {
         Apartment.deleteWhere { Apartment.id eq id }

@@ -41,8 +41,7 @@ export const usePaymentsView = () => {
             showToast('success', 'Pomyślnie wygenerowano płatności');
         },
         onError: (error) => {
-            console.error("Błąd podczas generowania płatności:", error);
-            showToast('error', 'Nie udało się wygenerować płatności');
+            showToast('error', `Nie udało się wygenerować płatności ${error.message}`);
         }
     });
 
@@ -71,9 +70,10 @@ export const usePaymentsView = () => {
         setSelectedPayment(payment);
     };
 
+
     return {
         payments,
-        loading,
+        loading: loading || handleGenerateNewMonthPayments.isPending || handleConfirmPayment.isPending,
         dateSelected,
         selectedPayment,
         isConfirmationDialogVisible,

@@ -2,6 +2,8 @@ package pl.chodan
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import pl.chodan.database.PaymentStatus
+import pl.chodan.database.UtilityType
 import java.math.BigDecimal
 
 @Serializable

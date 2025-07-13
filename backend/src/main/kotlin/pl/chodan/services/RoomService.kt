@@ -1,7 +1,13 @@
 package pl.chodan.services
 
 import org.jetbrains.exposed.sql.*
-import pl.chodan.*
+import pl.chodan.RoomDTO
+import pl.chodan.RoomWithApartmentDTO
+import pl.chodan.database.Apartment
+import pl.chodan.database.Contract
+import pl.chodan.database.ContractStatus
+import pl.chodan.database.Room
+import pl.chodan.dbQuery
 import java.time.LocalDate
 
 class RoomService {
