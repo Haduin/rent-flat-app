@@ -41,9 +41,12 @@ importers:
       primeicons:
         specifier: ^7.0.0
         version: 7.0.0
+      primelocale:
+        specifier: ^2.1.4
+        version: 2.1.4
       primereact:
-        specifier: ^10.8.5
-        version: 10.9.3(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^10.9.6
+        version: 10.9.6(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1483,8 +1486,12 @@ packages:
   primeicons@7.0.0:
     resolution: {integrity: sha512-jK3Et9UzwzTsd6tzl2RmwrVY/b8raJ3QZLzoDACj+oTJ0oX7L9Hy+XnVwgo4QVKlKpnP/Ur13SXV/pVh4LzaDw==}
 
-  primereact@10.9.3:
-    resolution: {integrity: sha512-mvIVw4Ap5HfEviWdnPFY14h9Bf8k4rTMkq7swHsJhNfgyH88osrdbjuDQ66mPwjPgI6DwqN2jMo4zxNNxe7nGQ==}
+  primelocale@2.1.4:
+    resolution: {integrity: sha512-4nzWKVX4d7qiaZEVebQd8+/EFArUt1TMYpLbNCTbOWF2Q6xjEEUM6Stz7DRvqp707Y4HQuaGPIlEEud+IjrA3A==}
+    engines: {node: '>=18.0.0', npm: '>=8.6.0'}
+
+  primereact@10.9.6:
+    resolution: {integrity: sha512-0Jjz/KzfUURSHaPTXJwjL2Dc7CDPnbO17MivyJz7T5smGAMLY5d+IqpQhV61R22G/rDmhMh3+32LCNva2M8fRw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@types/react': ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -2999,7 +3006,9 @@ snapshots:
 
   primeicons@7.0.0: {}
 
-  primereact@10.9.3(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  primelocale@2.1.4: {}
+
+  primereact@10.9.6(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@types/react-transition-group': 4.4.12(@types/react@18.3.20)
       react: 18.3.1
