@@ -48,6 +48,12 @@ dependencies {
 
     implementation("io.insert-koin:koin-ktor:$koin_ktor")
     implementation("io.insert-koin:koin-logger-slf4j:$koin_ktor")
+    implementation("io.insert-koin:koin-ktor:$koin_ktor")
+    testImplementation("io.ktor:ktor-server-test-host:${ktor_version}")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:${kotlin_version}")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    testImplementation("org.testcontainers:postgresql:1.21.3")
+    testImplementation("io.insert-koin:koin-test:$koin_ktor")
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("io.ktor:ktor-server-test-host:${ktor_version}")
