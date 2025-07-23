@@ -1,24 +1,25 @@
 package pl.chodan.services
 
 import org.jetbrains.exposed.sql.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import pl.chodan.RoomDTO
 import pl.chodan.RoomWithApartmentDTO
-import pl.chodan.database.Apartment
-import pl.chodan.database.Contract
-import pl.chodan.database.ContractStatus
-import pl.chodan.database.Room
-import pl.chodan.dbQuery
+import pl.chodan.database.*
 import java.time.LocalDate
 
-class RoomService {
-    suspend fun createRoom(name: String, apartmentId: Int?): Int = dbQuery {
+class RoomService : KoinComponent {
+
+    private val databaseProvider by inject<DatabaseProviderContract>()
+
+    suspend fun createRoom(name: String, apartmentId: Int?): Int = databaseProvider.dbQuery {
         Room.insert {
             it[Room.name] = name
             it[Room.apartmentId] = apartmentId
         } get Room.id
     }
 
-    suspend fun getRoomById(id: Int): RoomDTO? = dbQuery {
+    suspend fun getRoomById(id: Int): RoomDTO? = databaseProvider.dbQuery {
         Room.selectAll().where { Room.id eq id }.map {
             RoomDTO(
                 it[Room.id],
@@ -28,7 +29,7 @@ class RoomService {
         }.singleOrNull()
     }
 
-    suspend fun getAllRooms(): List<RoomDTO> = dbQuery {
+    suspend fun getAllRooms(): List<RoomDTO> = databaseProvider.dbQuery {
         Room.selectAll().map {
             RoomDTO(
                 it[Room.id],
@@ -38,7 +39,7 @@ class RoomService {
         }.toList()
     }
 
-    suspend fun getRoomsWithAparts(): MutableList<RoomWithApartmentDTO> = dbQuery {
+    suspend fun getRoomsWithAparts(): MutableList<RoomWithApartmentDTO> = databaseProvider.dbQuery {
         (Room innerJoin Apartment).select(
             columns = listOf(
                 Apartment.name.alias("apartment_name"), Room.id.alias("room_id"), Room.name.alias("room_name")
@@ -69,21 +70,22 @@ class RoomService {
 //        }
     }
 
-    suspend fun fetchFreeRoomsBetweenDates(startDate: String, endDate: String): List<RoomWithApartmentDTO> = dbQuery {
-        (Room innerJoin Apartment).select(Room.id, Room.name, Apartment.name)
-            .where {
-                (Room.apartmentId eq Apartment.id)
-                    .and(Room.id notInSubQuery (Contract.select(Contract.roomId).where {
-                        (Contract.startDate greaterEq LocalDate.parse(startDate) and
-                                (Contract.endDate lessEq LocalDate.parse(endDate)) and
-                                (Contract.status eq ContractStatus.ACTIVE)) or
-                                (Contract.startDate greaterEq LocalDate.parse(startDate) and
-                                        (Contract.terminationDate lessEq LocalDate.parse(endDate)))
-                    }))
-            }.map {
-                RoomWithApartmentDTO(
-                    id = it[Room.id], number = it[Room.name], apartment = it[Apartment.name]
-                )
-            }
-    }
+    suspend fun fetchFreeRoomsBetweenDates(startDate: String, endDate: String): List<RoomWithApartmentDTO> =
+        databaseProvider.dbQuery {
+            (Room innerJoin Apartment).select(Room.id, Room.name, Apartment.name)
+                .where {
+                    (Room.apartmentId eq Apartment.id)
+                        .and(Room.id notInSubQuery (Contract.select(Contract.roomId).where {
+                            (Contract.startDate greaterEq LocalDate.parse(startDate) and
+                                    (Contract.endDate lessEq LocalDate.parse(endDate)) and
+                                    (Contract.status eq ContractStatus.ACTIVE)) or
+                                    (Contract.startDate greaterEq LocalDate.parse(startDate) and
+                                            (Contract.terminationDate lessEq LocalDate.parse(endDate)))
+                        }))
+                }.map {
+                    RoomWithApartmentDTO(
+                        id = it[Room.id], number = it[Room.name], apartment = it[Apartment.name]
+                    )
+                }
+        }
 }

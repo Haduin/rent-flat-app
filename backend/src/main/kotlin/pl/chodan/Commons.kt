@@ -1,7 +1,5 @@
 package pl.chodan
 
-import kotlinx.coroutines.Dispatchers
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -21,7 +19,7 @@ fun LocalDateTime.toFormattedString(pattern: String = "yyyy-MM-dd HH:mm:ss"): St
 fun String.toLocalDateWithFullPattern() = LocalDate.parse(this, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 fun String.toLocalDateWithYearMonth() = LocalDate.parse(this, DateTimeFormatter.ofPattern("yyyy-MM"))
 
-suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) {
-//    addLogger(StdOutSqlLogger)
-    block()
-}
+//suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) {
+////    addLogger(StdOutSqlLogger)
+//    block()
+//}

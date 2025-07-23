@@ -6,11 +6,12 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import pl.chodan.PaymentConfirmationDTO
 import pl.chodan.services.PaymentService
 
 fun Application.configurePaymentRouting() {
-    val paymentService = PaymentService()
+    val paymentService by inject<PaymentService>()
     routing {
         authenticate("auth-jwt") {
             route("/payments") {

@@ -5,15 +5,19 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import pl.chodan.CreatedPersonDTO
 import pl.chodan.PersonDTO
 import pl.chodan.UpdatePersonDTO
+import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.Person
 import pl.chodan.database.PersonStatus
-import pl.chodan.dbQuery
 
-class PersonService {
-    suspend fun createPerson(createdPersonDTO: CreatedPersonDTO): Int = dbQuery {
+class PersonService : KoinComponent {
+    private val databaseProvider by inject<DatabaseProviderContract>()
+
+    suspend fun createPerson(createdPersonDTO: CreatedPersonDTO): Int = databaseProvider.dbQuery {
         Person.insert {
             it[firstName] = createdPersonDTO.firstName
             it[lastName] = createdPersonDTO.lastName
@@ -23,7 +27,7 @@ class PersonService {
         } get Person.id
     }
 
-    suspend fun getPersonById(id: Int): PersonDTO? = dbQuery {
+    suspend fun getPersonById(id: Int): PersonDTO? = databaseProvider.dbQuery {
         Person.selectAll().where { Person.id eq id }.map {
             PersonDTO(
                 it[Person.id],
@@ -36,7 +40,7 @@ class PersonService {
         }.singleOrNull()
     }
 
-    suspend fun getAllPersons(): List<PersonDTO> = dbQuery {
+    suspend fun getAllPersons(): List<PersonDTO> = databaseProvider.dbQuery {
         Person.selectAll().toList().map {
             PersonDTO(
                 it[Person.id],
@@ -49,7 +53,7 @@ class PersonService {
         }
     }
 
-    suspend fun getNonResidentPersons(): List<PersonDTO> = dbQuery {
+    suspend fun getNonResidentPersons(): List<PersonDTO> = databaseProvider.dbQuery {
         Person.selectAll()
             .where { Person.status eq PersonStatus.NON_RESIDENT }
             .toList().map {
@@ -66,7 +70,7 @@ class PersonService {
 
     suspend fun updatePerson(
         personToUpdate: UpdatePersonDTO
-    ): Int = dbQuery {
+    ): Int = databaseProvider.dbQuery {
         Person.update({ Person.id eq personToUpdate.id }) {
             it[firstName] = personToUpdate.firstName
             it[lastName] = personToUpdate.lastName
@@ -75,7 +79,7 @@ class PersonService {
         }
     }
 
-    suspend fun deletePerson(id: Int): Int = dbQuery {
+    suspend fun deletePerson(id: Int): Int = databaseProvider.dbQuery {
         Person.deleteWhere { Person.id eq id }
     }
 }

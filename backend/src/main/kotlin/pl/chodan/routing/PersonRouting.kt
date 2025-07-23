@@ -7,13 +7,14 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import pl.chodan.CreatedPersonDTO
 import pl.chodan.UpdatePersonDTO
 import pl.chodan.services.PersonService
 
 fun Application.configurePersonRouting() {
 
-    val personService = PersonService()
+    val personService by inject<PersonService>()
     routing {
         authenticate("auth-jwt") {
             route("/persons") {
@@ -35,8 +36,10 @@ fun Application.configurePersonRouting() {
                     }
                 }
                 delete("/{id}") {
-                    call.parameters["id"]?.toIntOrNull()?.let { id -> personService.deletePerson(id) }
-                    call.respond(HttpStatusCode.OK)
+                    call.parameters["id"]?.toIntOrNull()?.let { id ->
+                        personService.deletePerson(id)
+                        call.respond(HttpStatusCode.OK)
+                    }
                 }
                 put("/{id}") {
                     call.parameters["id"]?.toIntOrNull()?.let {

@@ -4,17 +4,21 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 import pl.chodan.*
+import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.Payment
 import pl.chodan.database.PaymentStatus
 import java.math.BigDecimal
+import kotlin.getValue
 
-class PaymentService {
-
+class PaymentService : KoinComponent {
+    private val databaseProvider by inject<DatabaseProviderContract>()
     private val logger = LoggerFactory.getLogger(PaymentService::class.java)
 
-    suspend fun createPayments(contract: RawContract, yearMonth: String) = dbQuery {
+    suspend fun createPayments(contract: RawContract, yearMonth: String) = databaseProvider.dbQuery {
         val paymentExists = checkIfPendingPaymentExistsForContract(contract.id, yearMonth)
         if (!paymentExists) {
             val paymentId = Payment.insert {
@@ -32,13 +36,14 @@ class PaymentService {
 
     }
 
-    private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int, yearMonth: String): Boolean = dbQuery {
-        Payment.selectAll().where {
-            (Payment.contractId eq contractId) and (Payment.scopeDate eq yearMonth)
-        }.singleOrNull() != null
-    }
+    private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int, yearMonth: String): Boolean =
+        databaseProvider.dbQuery {
+            Payment.selectAll().where {
+                (Payment.contractId eq contractId) and (Payment.scopeDate eq yearMonth)
+            }.singleOrNull() != null
+        }
 
-    suspend fun getAllPayments(): List<PaymentDTO> = dbQuery {
+    suspend fun getAllPayments(): List<PaymentDTO> = databaseProvider.dbQuery {
         Payment.selectAll().toList().map { resultRow ->
             PaymentDTO(
                 id = resultRow[Payment.id],
@@ -51,7 +56,7 @@ class PaymentService {
         }
     }
 
-    suspend fun getPaymentsForMouth(mouth: String) = dbQuery {
+    suspend fun getPaymentsForMouth(mouth: String) = databaseProvider.dbQuery {
         //todo tutaj duzo zapytań bedzie leciało wiec pozniej refaktor tego
         val roomsAparts = RoomService().getRoomsWithAparts()
         Payment.selectAll().where { Payment.scopeDate eq mouth }.map { payments ->
@@ -76,7 +81,7 @@ class PaymentService {
         }
     }
 
-    suspend fun confirmPayment(paymentDto: PaymentConfirmationDTO) = dbQuery {
+    suspend fun confirmPayment(paymentDto: PaymentConfirmationDTO) = databaseProvider.dbQuery {
         Payment.update({ Payment.id eq paymentDto.paymentId }) {
             it[status] = PaymentStatus.PAID
             it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
@@ -84,7 +89,7 @@ class PaymentService {
         }
     }
 
-    suspend fun deletePayment(paymentDto: PaymentConfirmationDTO) = dbQuery {
+    suspend fun deletePayment(paymentDto: PaymentConfirmationDTO) = databaseProvider.dbQuery {
         Payment.update({ Payment.id eq paymentDto.paymentId }) {
             it[status] = PaymentStatus.CANCELLED
             it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
