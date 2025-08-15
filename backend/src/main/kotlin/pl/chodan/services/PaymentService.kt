@@ -8,11 +8,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 import pl.chodan.*
-import pl.chodan.database.DatabaseProviderContract
-import pl.chodan.database.Payment
-import pl.chodan.database.PaymentStatus
+import pl.chodan.database.*
 import java.math.BigDecimal
-import kotlin.getValue
 
 class PaymentService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
@@ -94,6 +91,70 @@ class PaymentService : KoinComponent {
             it[status] = PaymentStatus.CANCELLED
             it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
             it[amount] = BigDecimal.valueOf(paymentDto.payedAmount)
+        }
+    }
+
+    suspend fun getPaymentSummariesByPerson(): List<PaymentSummaryDTO> = databaseProvider.dbQuery {
+        // Get all persons
+        val persons = Person.selectAll().toList()
+
+        // For each person, calculate payment summaries
+        persons.map { personRow ->
+            val personId = personRow[Person.id]
+            val firstName = personRow[Person.firstName]
+            val lastName = personRow[Person.lastName]
+
+            // Get all contracts for this person
+            val contractIds = Contract.selectAll()
+                .where { Contract.personId eq personId }
+                .map { it[Contract.id] }
+
+            // If no contracts, return zero values
+            if (contractIds.isEmpty()) {
+                return@map PaymentSummaryDTO(
+                    personId = personId,
+                    firstName = firstName,
+                    lastName = lastName,
+                    totalPaid = 0.0,
+                    totalPending = 0.0,
+                    totalLate = 0.0,
+                    totalCancelled = 0.0,
+                    paymentCount = 0
+                )
+            }
+
+            // Get all payments for these contracts
+            val payments = Payment.selectAll()
+                .where { Payment.contractId inList contractIds }
+                .toList()
+
+            // Calculate totals by status
+            val totalPaid = payments
+                .filter { it[Payment.status] == PaymentStatus.PAID }
+                .sumOf { it[Payment.amount].toDouble() }
+
+            val totalPending = payments
+                .filter { it[Payment.status] == PaymentStatus.PENDING }
+                .sumOf { it[Payment.amount].toDouble() }
+
+            val totalLate = payments
+                .filter { it[Payment.status] == PaymentStatus.LATE }
+                .sumOf { it[Payment.amount].toDouble() }
+
+            val totalCancelled = payments
+                .filter { it[Payment.status] == PaymentStatus.CANCELLED }
+                .sumOf { it[Payment.amount].toDouble() }
+
+            PaymentSummaryDTO(
+                personId = personId,
+                firstName = firstName,
+                lastName = lastName,
+                totalPaid = totalPaid,
+                totalPending = totalPending,
+                totalLate = totalLate,
+                totalCancelled = totalCancelled,
+                paymentCount = payments.size
+            )
         }
     }
 }

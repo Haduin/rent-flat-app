@@ -20,7 +20,7 @@ const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: D
         },
         validationSchema: Yup.object().shape({
             description: Yup.string(),
-            terminationDate: Yup.date(),
+            terminationDate: Yup.date().nullable().required("Data zakończenia jest wymagana"),
             depositReturned: Yup.boolean(),
             positiveCancel: Yup.boolean(),
         }),
@@ -46,7 +46,12 @@ const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: D
     >
         <form onSubmit={formik.handleSubmit}>
             <div className="m-4">
-                <DateSelector name="terminationDate" label="Data zakończenia kontraktu" formik={formik}/>
+                <DateSelector name="terminationDate" label="Data zakończenia kontraktu" formik={formik}
+                              onChange={(selectedDate) => {
+                                  formik.setFieldValue("terminationDate", selectedDate);
+                              }}
+                />
+
                 <TextField name="description" label="Opis" formik={formik}/>
                 <div className="flex justify-content-between">
                     <CheckboxField name="depositReturned" label="Kaucja zwrócona" formik={formik}/>

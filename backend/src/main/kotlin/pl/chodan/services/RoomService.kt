@@ -1,6 +1,9 @@
 package pl.chodan.services
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import pl.chodan.RoomDTO
@@ -78,9 +81,7 @@ class RoomService : KoinComponent {
                         .and(Room.id notInSubQuery (Contract.select(Contract.roomId).where {
                             (Contract.startDate greaterEq LocalDate.parse(startDate) and
                                     (Contract.endDate lessEq LocalDate.parse(endDate)) and
-                                    (Contract.status eq ContractStatus.ACTIVE)) or
-                                    (Contract.startDate greaterEq LocalDate.parse(startDate) and
-                                            (Contract.terminationDate lessEq LocalDate.parse(endDate)))
+                                    (Contract.status eq ContractStatus.ACTIVE))
                         }))
                 }.map {
                     RoomWithApartmentDTO(

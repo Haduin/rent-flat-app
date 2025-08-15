@@ -37,8 +37,19 @@ fun Application.configurePaymentRouting() {
                         )
                     }
                 }
+
+                get("/summary") {
+                    try {
+                        val summaries = paymentService.getPaymentSummariesByPerson()
+                        call.respond(summaries)
+                    } catch (e: Exception) {
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            mapOf("error" to "Failed to get payment summaries: ${e.message}")
+                        )
+                    }
+                }
             }
         }
     }
 }
-

@@ -93,6 +93,16 @@ export interface UtilityDTO {
 
 }
 
+export interface PaymentSummary {
+    personId: number;
+    firstName: string;
+    lastName: string;
+    totalPaid: number;
+    totalPending: number;
+    totalLate: number;
+    totalCancelled: number;
+    paymentCount: number;
+}
 
 export const getStatusLabel = (status: Status): string => {
     return statusMap[status] || 'Nieznany';

@@ -1,9 +1,9 @@
 import {Dialog} from "primereact/dialog";
 import {Payment} from "../../components/commons/types.ts";
 import {Form, Formik, FormikProps} from "formik";
-import {Calendar} from "primereact/calendar";
 import {InputText} from "primereact/inputtext";
 import {Button} from "primereact/button";
+import {DateSelector} from "../../components/date-selector/date-selector.tsx";
 
 interface ConfirmPaymentDialogProps {
     isVisible: boolean;
@@ -17,8 +17,13 @@ const ConfirmPaymentDialog = ({isVisible, onHide, selectedPayment, onConfirm}: C
     return (
         <Dialog header="Potwierdz wpłatne najemcy"
                 visible={isVisible}
-                style={{width: '50vw'}}
                 className="card flex justify-content-center"
+                style={{
+                    width: '50vw',
+                    maxWidth: '100%',
+                    height: 'auto'
+                }}
+                breakpoints={{'960px': '100vw'}}
                 onHide={() => {
                     if (!isVisible) return;
                     onHide()
@@ -53,23 +58,11 @@ const ConfirmPaymentDialog = ({isVisible, onHide, selectedPayment, onConfirm}: C
                                 disabled={true}
                             />
                         </div>
-                        <div className="mb-4">
-                            <label htmlFor="date" className="block text-sm font-medium text-gray-700">
-                                Data wpłaty
-                            </label>
-                            <Calendar value={formik.values.date}
-                                      locale="pl"
-                                      id="dates"
-                                      name="dates"
-                                      className="w-full rounded-md border"
-                                      onChange={(e) => {
-                                          const date = e.value as Date
-                                          formik.setFieldValue("date", date)
+                        <DateSelector name="dates" label="Data wpłaty" formik={formik}
+                                      onChange={(selectedDate) => {
+                                          formik.setFieldValue("dates", selectedDate);
                                       }}
-                                      readOnlyInput
-                                      dateFormat="yy-mm-dd"
-                                      hideOnRangeSelection/>
-                        </div>
+                        />
                         <div className="mb-4">
                             <label htmlFor="payedAmount" className="block text-sm font-medium text-gray-700">
                                 Kwota

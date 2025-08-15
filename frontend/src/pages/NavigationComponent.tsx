@@ -38,7 +38,18 @@ const NavigationComponent = () => {
         {
             label: 'Płatnosci',
             icon: 'pi pi-credit-card',
-            url: '/protected/platnosci',
+            items: [
+                {
+                    label: 'Historia płatności',
+                    icon: 'pi pi-list',
+                    url: '/protected/platnosci',
+                },
+                {
+                    label: 'Podsumowanie płatności',
+                    icon: 'pi pi-chart-bar',
+                    url: '/protected/platnosci/podsumowanie',
+                }
+            ]
         }
     ];
     const nav = useNavigate();
