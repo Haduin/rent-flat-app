@@ -4,15 +4,18 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 import pl.chodan.*
+import pl.chodan.database.*
 import java.math.BigDecimal
 
-class PaymentService {
-
+class PaymentService : KoinComponent {
+    private val databaseProvider by inject<DatabaseProviderContract>()
     private val logger = LoggerFactory.getLogger(PaymentService::class.java)
 
-    suspend fun createPayments(contract: RawContract, yearMonth: String) = dbQuery {
+    suspend fun createPayments(contract: RawContract, yearMonth: String) = databaseProvider.dbQuery {
         val paymentExists = checkIfPendingPaymentExistsForContract(contract.id, yearMonth)
         if (!paymentExists) {
             val paymentId = Payment.insert {
@@ -30,13 +33,14 @@ class PaymentService {
 
     }
 
-    private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int, yearMonth: String): Boolean = dbQuery {
-        Payment.selectAll().where {
-            (Payment.contractId eq contractId) and (Payment.scopeDate eq yearMonth)
-        }.singleOrNull() != null
-    }
+    private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int, yearMonth: String): Boolean =
+        databaseProvider.dbQuery {
+            Payment.selectAll().where {
+                (Payment.contractId eq contractId) and (Payment.scopeDate eq yearMonth)
+            }.singleOrNull() != null
+        }
 
-    suspend fun getAllPayments(): List<PaymentDTO> = dbQuery {
+    suspend fun getAllPayments(): List<PaymentDTO> = databaseProvider.dbQuery {
         Payment.selectAll().toList().map { resultRow ->
             PaymentDTO(
                 id = resultRow[Payment.id],
@@ -49,7 +53,7 @@ class PaymentService {
         }
     }
 
-    suspend fun getPaymentsForMouth(mouth: String) = dbQuery {
+    suspend fun getPaymentsForMouth(mouth: String) = databaseProvider.dbQuery {
         //todo tutaj duzo zapytań bedzie leciało wiec pozniej refaktor tego
         val roomsAparts = RoomService().getRoomsWithAparts()
         Payment.selectAll().where { Payment.scopeDate eq mouth }.map { payments ->
@@ -74,7 +78,7 @@ class PaymentService {
         }
     }
 
-    suspend fun confirmPayment(paymentDto: PaymentConfirmationDTO) = dbQuery {
+    suspend fun confirmPayment(paymentDto: PaymentConfirmationDTO) = databaseProvider.dbQuery {
         Payment.update({ Payment.id eq paymentDto.paymentId }) {
             it[status] = PaymentStatus.PAID
             it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
@@ -82,11 +86,75 @@ class PaymentService {
         }
     }
 
-    suspend fun deletePayment(paymentDto: PaymentConfirmationDTO) = dbQuery {
+    suspend fun deletePayment(paymentDto: PaymentConfirmationDTO) = databaseProvider.dbQuery {
         Payment.update({ Payment.id eq paymentDto.paymentId }) {
             it[status] = PaymentStatus.CANCELLED
             it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
             it[amount] = BigDecimal.valueOf(paymentDto.payedAmount)
+        }
+    }
+
+    suspend fun getPaymentSummariesByPerson(): List<PaymentSummaryDTO> = databaseProvider.dbQuery {
+        // Get all persons
+        val persons = Person.selectAll().toList()
+
+        // For each person, calculate payment summaries
+        persons.map { personRow ->
+            val personId = personRow[Person.id]
+            val firstName = personRow[Person.firstName]
+            val lastName = personRow[Person.lastName]
+
+            // Get all contracts for this person
+            val contractIds = Contract.selectAll()
+                .where { Contract.personId eq personId }
+                .map { it[Contract.id] }
+
+            // If no contracts, return zero values
+            if (contractIds.isEmpty()) {
+                return@map PaymentSummaryDTO(
+                    personId = personId,
+                    firstName = firstName,
+                    lastName = lastName,
+                    totalPaid = 0.0,
+                    totalPending = 0.0,
+                    totalLate = 0.0,
+                    totalCancelled = 0.0,
+                    paymentCount = 0
+                )
+            }
+
+            // Get all payments for these contracts
+            val payments = Payment.selectAll()
+                .where { Payment.contractId inList contractIds }
+                .toList()
+
+            // Calculate totals by status
+            val totalPaid = payments
+                .filter { it[Payment.status] == PaymentStatus.PAID }
+                .sumOf { it[Payment.amount].toDouble() }
+
+            val totalPending = payments
+                .filter { it[Payment.status] == PaymentStatus.PENDING }
+                .sumOf { it[Payment.amount].toDouble() }
+
+            val totalLate = payments
+                .filter { it[Payment.status] == PaymentStatus.LATE }
+                .sumOf { it[Payment.amount].toDouble() }
+
+            val totalCancelled = payments
+                .filter { it[Payment.status] == PaymentStatus.CANCELLED }
+                .sumOf { it[Payment.amount].toDouble() }
+
+            PaymentSummaryDTO(
+                personId = personId,
+                firstName = firstName,
+                lastName = lastName,
+                totalPaid = totalPaid,
+                totalPending = totalPending,
+                totalLate = totalLate,
+                totalCancelled = totalCancelled,
+                paymentCount = payments.size
+            )
         }
     }
 }

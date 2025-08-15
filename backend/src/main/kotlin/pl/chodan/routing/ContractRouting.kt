@@ -6,6 +6,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import pl.chodan.DeleteContractDTO
 import pl.chodan.NewContractDTO
 import pl.chodan.services.ContractDeleteResult
@@ -14,7 +15,7 @@ import pl.chodan.ultis.DateValidator
 import pl.chodan.ultis.ValidationResult
 
 fun Application.configureContractRouting() {
-    val contractService = ContractService()
+    val contractService by inject<ContractService>()
     routing {
         authenticate("auth-jwt") {
             route("/contracts") {
@@ -53,6 +54,7 @@ fun Application.configureContractRouting() {
                     val newContract = call.receive<NewContractDTO>()
                     try {
                         contractService.createContract(newContract)
+
                         call.respond(HttpStatusCode.Created)
                     } catch (ex: Exception) {
                         println(ex.message)
@@ -63,6 +65,7 @@ fun Application.configureContractRouting() {
 
                     when (val result = contractService.deleteContract(details)) {
                         is ContractDeleteResult.Success -> {
+                            
                             call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zakończony")
                         }
 

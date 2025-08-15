@@ -1,116 +1,75 @@
 package pl.chodan
 
-import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.calllogging.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.cors.routing.*
-import kotlinx.serialization.json.Json
-import org.slf4j.LoggerFactory
-import org.slf4j.event.Level
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import org.koin.core.context.startKoin
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.module
+import pl.chodan.config.*
+import pl.chodan.database.DatabaseProvider
+import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.routing.*
-import java.net.URL
+import pl.chodan.services.*
 
-fun main(args: Array<String>) {
-    io.ktor.server.netty.EngineMain.main(args)
+fun main() {
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+        .start(wait = true)
 }
 
 fun Application.module() {
-    configueModules()
-    configureSecurity()
-    configureDatabases()
+    val config = createConfigFromYaml(environment)
 
-//    configureUtilityRouting()
+    startKoin {
+        modules(appModule(config))
+    }
+
+    configureModules()
+
     configureApartmentRouting()
     configurePersonRouting()
     configureRoomRouting()
     configureContractRouting()
     configurePaymentRouting()
-}
-
-fun Application.configueModules() {
-
-    println("KEYCLOAK URL ${environment.config.property("keycloak.url").getString()}")
-    println("KEYCLOAK CLIENT_ID ${environment.config.property("keycloak.clientId").getString()}")
-    println("KEYCLOAK REALM ${environment.config.property("keycloak.realm").getString()}")
-
-
-    val allowedHosts = environment.config.property("ktor.cors.allowedHosts").getString().split(",").map { it.trim() }
-    allowedHosts.forEach { println(it) }
-    install(CORS) {
-        allowHeader(HttpHeaders.Authorization)
-        allowHeader(HttpHeaders.ContentType)
-        allowHeader(HttpHeaders.AccessControlAllowOrigin)
-        allowHeader(HttpHeaders.AccessControlAllowHeaders)
-
-        allowMethod(HttpMethod.Get)
-        allowMethod(HttpMethod.Post)
-        allowMethod(HttpMethod.Put)
-        allowMethod(HttpMethod.Delete)
-        allowMethod(HttpMethod.Options)
-
-        allowNonSimpleContentTypes = true
-        allowCredentials = true
-        allowSameOrigin = true
-
-        allowedHosts.forEach { allowHost(it) }
-
-
-    }
-    install(ContentNegotiation) {
-        json(Json {
-            ignoreUnknownKeys = true
-        })
-    }
-    install(CallLogging) {
-        level = Level.INFO
-    }
-
 
 }
 
-fun Application.configureSecurity() {
-    val keycloakAddress = environment.config.property("keycloak.url").getString()
-    val clientId = environment.config.property("keycloak.clientId").getString()
-    val realm = environment.config.property("keycloak.realm").getString()
-    val logger = LoggerFactory.getLogger(Application::class.java)
+val appModule = { config: Config ->
+    module {
+        single<Config> { config }
+        single<DatabaseProviderContract> { DatabaseProvider() }
 
-    install(Authentication) {
-        jwt("auth-jwt") {
-            verifier(
-                JwkProviderBuilder(URL("${keycloakAddress}/realms/${realm}/protocol/openid-connect/certs"))
-                    .build(),
-                issuer = "${keycloakAddress}/realms/${realm}",
+        // Services
+        singleOf(::ApartmentService)
+        singleOf(::PersonService)
+        singleOf(::RoomService)
+        singleOf(::ContractService)
+        singleOf(::PaymentService)
+
+    }
+}
+
+fun createConfigFromYaml(environment: ApplicationEnvironment): Config {
+    return Config(
+        ktor = KtorConfig(
+            database = DatabaseConfig(
+                url = environment.config.property("ktor.database.url").getString(),
+                user = environment.config.property("ktor.database.user").getString(),
+                password = environment.config.property("ktor.database.password").getString(),
+                driver = environment.config.property("ktor.database.driver").getString()
+            ),
+            cors = CorsConfig(
+                allowedHosts = environment.config.property("ktor.cors.allowedHosts")
+                    .getString()
+                    .split(",")
+                    .map { it.trim() }
             )
-            validate { credential ->
-                try {
-                    val username = credential.payload.getClaim("preferred_username").asString()
-                    if (username != null) {
-                        JWTPrincipal(credential.payload)
-                    } else {
-                        logger.warn("Brak preferred_username w tokenie")
-                        null
-                    }
-                } catch (e: Exception) {
-                    logger.warn("Błąd walidacji tokenu ${e.message}")
-                    null
-                }
-            }
-        }
-    }
-//    routing {
-//        post("/login") {
-//            val request = call.receive<LoginRequest>()
-//            val token = login(request.username, request.password)
-//            if (token != null) {
-//                call.respond(mapOf("access_token" to token))
-//            } else {
-//                call.respondText("Invalid credentials", status = HttpStatusCode.Unauthorized)
-//            }
-//        }
-//    }
+        ),
+        keycloak = KeycloakConfig(
+            url = environment.config.property("keycloak.url").getString(),
+            clientId = environment.config.property("keycloak.clientId").getString(),
+            realm = environment.config.property("keycloak.realm").getString(),
+            tokenPath = environment.config.property("keycloak.tokenPath").getString()
+        )
+    )
 }

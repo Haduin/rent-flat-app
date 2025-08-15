@@ -1,4 +1,3 @@
-import {ContractDto, DeleteContractDTO} from "../../components/commons/types.ts";
 import {Dialog} from "primereact/dialog";
 import {useFormik} from "formik";
 import * as Yup from 'yup';
@@ -7,20 +6,12 @@ import {CheckboxField} from "../../components/checkbox/checkbox.tsx";
 import {DateSelector} from "../../components/date-selector/date-selector.tsx";
 import {Button} from "primereact/button";
 import {dateToStringFullYearMouthDay} from "../../components/commons/dateFormatter.ts";
-import {UseMutationResult} from "@tanstack/react-query";
+import {DeleteContractFormikValues, DisableContractModalProps} from "./contract.types.ts";
 
-interface DisableContractModalProps {
-    isVisible: boolean;
-    selectedContract: ContractDto | null
-    onHide: () => void;
-    onConfirm: UseMutationResult<void, Error, {
-        details: DeleteContractDTO
-    }>
-}
 
 const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: DisableContractModalProps) => {
 
-    const formik = useFormik({
+    const formik = useFormik<DeleteContractFormikValues>({
         initialValues: {
             description: '',
             terminationDate: new Date(),
@@ -29,7 +20,7 @@ const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: D
         },
         validationSchema: Yup.object().shape({
             description: Yup.string(),
-            terminationDate: Yup.date(),
+            terminationDate: Yup.date().nullable().required("Data zakończenia jest wymagana"),
             depositReturned: Yup.boolean(),
             positiveCancel: Yup.boolean(),
         }),
@@ -55,7 +46,12 @@ const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: D
     >
         <form onSubmit={formik.handleSubmit}>
             <div className="m-4">
-                <DateSelector name="terminationDate" label="Data zakończenia kontraktu" formik={formik}/>
+                <DateSelector name="terminationDate" label="Data zakończenia kontraktu" formik={formik}
+                              onChange={(selectedDate) => {
+                                  formik.setFieldValue("terminationDate", selectedDate);
+                              }}
+                />
+
                 <TextField name="description" label="Opis" formik={formik}/>
                 <div className="flex justify-content-between">
                     <CheckboxField name="depositReturned" label="Kaucja zwrócona" formik={formik}/>

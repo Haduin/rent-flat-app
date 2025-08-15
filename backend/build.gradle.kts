@@ -2,6 +2,7 @@ val exposed_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
 val ktor_version: String by project
+val koin_ktor: String by project
 
 plugins {
     kotlin("jvm") version "2.1.0"
@@ -44,9 +45,18 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml-jvm")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
-
-
+    implementation("io.insert-koin:koin-ktor:$koin_ktor")
+    implementation("io.insert-koin:koin-logger-slf4j:$koin_ktor")
+    implementation("io.insert-koin:koin-ktor:$koin_ktor")
+    testImplementation("io.ktor:ktor-server-test-host:${ktor_version}")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:${kotlin_version}")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    testImplementation("org.testcontainers:postgresql:1.21.3")
+    testImplementation("io.insert-koin:koin-test:$koin_ktor")
     testImplementation("io.ktor:ktor-server-test-host-jvm")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("io.ktor:ktor-server-test-host:${ktor_version}")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:${kotlin_version}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
 

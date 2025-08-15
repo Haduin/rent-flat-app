@@ -8,7 +8,7 @@ interface DateSelectorProps {
     formik: FormikProps<any>;
     disabled?: boolean;
     selectionMode?: CalendarSelectionMode;
-    onChange?: (e: any) => void;
+    onChange: (value: Date | null) => void;
     hideOnRangeSelection?: boolean;
 }
 
@@ -30,7 +30,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                 id={name}
                 name={name}
                 value={formik.values[name]}
-                onChange={onChange}
+                onChange={(e) => onChange(e.value as Date)} // Wysłanie aktualnej wartości do formika
                 onBlur={formik.handleBlur}
                 className={`w-full rounded-md ${formik.touched[name] && formik.errors[name] ? 'p-invalid' : ''}`}
                 disabled={disabled}

@@ -1,14 +1,18 @@
 package pl.chodan.services
 
 import org.jetbrains.exposed.sql.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 import pl.chodan.*
+import pl.chodan.database.*
 import java.time.LocalDate
 
-class ContractService {
-    private val logger = LoggerFactory.getLogger(pl.chodan.services.ContractService::class.java)
+class ContractService : KoinComponent {
+    private val databaseProvider by inject<DatabaseProviderContract>()
+    private val logger = LoggerFactory.getLogger(ContractService::class.java)
 
-    suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = dbQuery {
+    suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = databaseProvider.dbQuery {
         // znajdz kontrakt miedzy datami start i end date
         // następnie wygeneruj nowy payment
 
@@ -35,7 +39,7 @@ class ContractService {
 
     }
 
-    suspend fun createContract(newContractDTO: NewContractDTO): Int = dbQuery {
+    suspend fun createContract(newContractDTO: NewContractDTO): Int = databaseProvider.dbQuery {
         Person.update({ Person.id eq newContractDTO.personId }) {
             it[status] = PersonStatus.RESIDENT
         }
@@ -51,7 +55,7 @@ class ContractService {
         } get Contract.id
     }
 
-    suspend fun getContractById(id: Int): ContractDB? = dbQuery {
+    suspend fun getContractById(id: Int): ContractDB? = databaseProvider.dbQuery {
         Contract.selectAll()
             .where { Contract.id eq id }
             .singleOrNull()?.let { resultRow ->
@@ -67,7 +71,7 @@ class ContractService {
             }
     }
 
-    suspend fun getAllContractsWithRoomAndPersonDetails(): List<ContractDTO> = dbQuery {
+    suspend fun getAllContractsWithRoomAndPersonDetails(): List<ContractDTO> = databaseProvider.dbQuery {
         (Contract
             .join(Person, JoinType.INNER, Contract.personId, Person.id)
             .join(Room, JoinType.INNER, Contract.roomId, Room.id)
@@ -110,7 +114,7 @@ class ContractService {
     }
 
 
-    suspend fun deleteContract(details: DeleteContractDTO): ContractDeleteResult = dbQuery {
+    suspend fun deleteContract(details: DeleteContractDTO): ContractDeleteResult = databaseProvider.dbQuery {
         try {
             Contract.selectAll().where { Contract.id eq details.contractId }
                 .singleOrNull() ?: return@dbQuery ContractDeleteResult.NotFound
@@ -124,9 +128,9 @@ class ContractService {
             }
 
             if (updatedPayments < 0) {
-                return@dbQuery ContractDeleteResult.PaymentUpdateError(
-                    "Błąd podczas aktualizacji płatności dla kontraktu ${details.contractId}"
-                )
+                val message = "Błąd podczas aktualizacji płatności dla kontraktu ${details.contractId}"
+                logger.info(message)
+                return@dbQuery ContractDeleteResult.PaymentUpdateError(message)
             }
 
             val updatedContract = Contract.update({ Contract.id eq details.contractId }) {

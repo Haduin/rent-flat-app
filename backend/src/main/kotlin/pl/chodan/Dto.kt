@@ -2,6 +2,8 @@ package pl.chodan
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import pl.chodan.database.PaymentStatus
+import pl.chodan.database.UtilityType
 import java.math.BigDecimal
 
 @Serializable
@@ -154,3 +156,15 @@ data class AddNewUtilityCostDTO(
 
 @Serializable
 data class LoginRequest(val username: String, val password: String)
+
+@Serializable
+data class PaymentSummaryDTO(
+    val personId: Int,
+    val firstName: String,
+    val lastName: String,
+    val totalPaid: Double,
+    val totalPending: Double,
+    val totalLate: Double,
+    val totalCancelled: Double,
+    val paymentCount: Int
+)
