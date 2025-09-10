@@ -13,15 +13,15 @@ export const useContractsView = () => {
 
     const {isOpen: isAddContractDialogVisible, setOpen: setIsAddContractDialogVisible} = useModal()
     const {isOpen: isDetailsDialogVisible, setOpen: setIsDetailsDialogVisible} = useModal()
-    const {isOpen: isEditContactModalOpen, setOpen: setIsEditContactModalOpen} = useModal()
+    const {isOpen: isEditContractVisible, setOpen: setIsEditContractVisible} = useModal()
     const {isOpen: isDeleteDialogVisible, setOpen: setIsDeleteDialogVisible} = useModal()
 
-    const openDetailsDialog = (selectedContract: ContractDto) => {
+    const handleOpenDetailsDialog = (selectedContract: ContractDto) => {
         setIsDetailsDialogVisible(true);
         setSelectedContract(selectedContract);
     }
 
-    const closeDetailsDialog = () => {
+    const handleCloseDetailsDialog = () => {
         setIsDetailsDialogVisible(false);
         setSelectedContract(null);
     }
@@ -36,11 +36,11 @@ export const useContractsView = () => {
 
     const handleOpenEditDialog = (contract: ContractDto) => {
         setSelectedContract(contract);
-        setIsEditContactModalOpen(true);
+        setIsEditContractVisible(true);
     }
 
     const handleCloseEditDialog = () => {
-        setIsEditContactModalOpen(false);
+        setIsEditContractVisible(false);
         setSelectedContract(null);
     }
 
@@ -111,8 +111,8 @@ export const useContractsView = () => {
     return {
         contracts,
         loading,
-        openDetailsDialog,
-        closeDetailsDialog,
+        handleOpenDetailsDialog,
+        handleCloseDetailsDialog,
         isDetailsDialogVisible,
         selectedContract,
         isAddContractDialogVisible,
@@ -121,7 +121,7 @@ export const useContractsView = () => {
         unassignedPersons,
         addContractMutation,
 
-        isEditContactModalOpen,
+        isEditContractVisible,
         handleOpenEditDialog,
         handleCloseEditDialog,
         updateContractMutation,

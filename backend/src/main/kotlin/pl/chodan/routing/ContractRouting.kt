@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 import pl.chodan.DeleteContractDTO
 import pl.chodan.NewContractDTO
+import pl.chodan.UpdateContractDetails
 import pl.chodan.services.ContractDeleteResult
 import pl.chodan.services.ContractService
 import pl.chodan.ultis.DateValidator
@@ -28,8 +29,7 @@ fun Application.configureContractRouting() {
                     when (val validationResult = DateValidator.instance.validateMonthParameter(monthParam)) {
                         is ValidationResult.Error -> {
                             call.respond(
-                                HttpStatusCode.BadRequest,
-                                mapOf("error" to validationResult.message)
+                                HttpStatusCode.BadRequest, mapOf("error" to validationResult.message)
                             )
                             return@post
                         }
@@ -60,12 +60,16 @@ fun Application.configureContractRouting() {
                         println(ex.message)
                     }
                 }
+                put {
+                    val contract = call.receive<UpdateContractDetails>()
+                    contractService.updateContract(contract)
+                }
                 delete {
                     val details = call.receive<DeleteContractDTO>()
 
                     when (val result = contractService.deleteContract(details)) {
                         is ContractDeleteResult.Success -> {
-                            
+
                             call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zakończony")
                         }
 

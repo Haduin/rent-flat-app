@@ -15,7 +15,7 @@
 //
 //suspend fun login(username: String, password: String): String? {
 //    val response: HttpResponse =
-//        client.post("http://localhost:8081/realms/mieszkania_realm/protocol/openid-connect/token") {
+//        client.post("http://localhost:8081/realms/mieszkanie_realm/protocol/openid-connect/token") {
 //            contentType(ContentType.Application.FormUrlEncoded)
 //            setBody(
 //                listOf(

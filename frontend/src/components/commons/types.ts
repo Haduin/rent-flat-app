@@ -104,6 +104,22 @@ export interface PaymentSummary {
     paymentCount: number;
 }
 
+export interface UpdateContractDetails {
+    id: number;
+    personId?: number;
+    roomId?: number;
+    amount?: number;
+    deposit?: number;
+    depositReturned?: boolean;
+    startDate?: string;
+    endDate?: string;
+    terminationDate?: string;
+    description?: string;
+    status: ContractStatus;
+    payedTillDayOfMonth?: string;
+}
+
+
 export const getStatusLabel = (status: Status): string => {
     return statusMap[status] || 'Nieznany';
 };

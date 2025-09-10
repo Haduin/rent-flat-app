@@ -1,0 +1,584 @@
+openapi: "3.1.0"
+info:
+  title: "mieszkania API"
+  description: "mieszkania API"
+  version: "1.0.0"
+servers:
+  - url: "https://mieszkania"
+paths:
+  /apartments:
+    get:
+      description: ""
+  /contracts:
+    delete:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteContractDTO"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Kontrakt został pomyślnie zakończony"
+        "500":
+          description: "Internal Server Error"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Nie znaleziono kontraktu"
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ContractDTO"
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewContractDTO"
+        required: true
+      responses:
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+  /contracts/generateMonthlyPayments/{month}:
+    post:
+      description: ""
+      parameters:
+        - name: "month"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Unit"
+        "500":
+          description: "Internal Server Error"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /payments:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/PaymentDTO"
+  /payments/{mouth}:
+    get:
+      description: ""
+      parameters:
+        - name: "mouth"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/PaymentHistoryWithPersonDTO"
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+              examples:
+                Example#1:
+                  value: "Mouth parameter is required"
+  /payments/confirm:
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentConfirmationDTO"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /persons:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/PersonDTO"
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatedPersonDTO"
+        required: true
+      responses:
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+  /persons/{id}:
+    delete:
+      description: ""
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+    put:
+      description: ""
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePersonDTO"
+        required: true
+      responses:
+        "204":
+          description: "No Content"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+  /persons/non-residents:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/PersonDTO"
+  /rooms:
+    get:
+      description: ""
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/RoomDTO"
+  /rooms/non-occupied:
+    get:
+      description: ""
+      parameters:
+        - name: "startDate"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+        - name: "endDate"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/RoomWithApartmentDTO"
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+components:
+  schemas:
+    DeleteContractDTO:
+      type: "object"
+      properties:
+        contractId:
+          type: "integer"
+          format: "int32"
+        terminationDate:
+          type: "string"
+        depositReturned:
+          type: "boolean"
+          nullable: true
+        positiveCancel:
+          type: "boolean"
+          nullable: true
+        description:
+          type: "string"
+          nullable: true
+      required:
+        - "contractId"
+        - "terminationDate"
+    PersonDTO:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        firstName:
+          type: "string"
+        lastName:
+          type: "string"
+        documentNumber:
+          type: "string"
+          nullable: true
+        nationality:
+          type: "string"
+          nullable: true
+        status:
+          type: "string"
+      required:
+        - "id"
+        - "firstName"
+        - "lastName"
+        - "status"
+    RoomWithApartmentDTO:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        number:
+          type: "string"
+        apartment:
+          type: "string"
+      required:
+        - "id"
+        - "number"
+        - "apartment"
+    ContractDTO:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        person:
+          nullable: true
+          $ref: "#/components/schemas/PersonDTO"
+        room:
+          nullable: true
+          $ref: "#/components/schemas/RoomWithApartmentDTO"
+        startDate:
+          type: "string"
+          nullable: true
+        endDate:
+          type: "string"
+          nullable: true
+        terminationDate:
+          type: "string"
+          nullable: true
+        payedTillDayOfMonth:
+          type: "string"
+          nullable: true
+        amount:
+          type: "number"
+          format: "double"
+          nullable: true
+        deposit:
+          type: "number"
+          format: "double"
+          nullable: true
+        depositReturned:
+          type: "boolean"
+          nullable: true
+        description:
+          type: "string"
+          nullable: true
+        status:
+          type: "string"
+      required:
+        - "id"
+        - "status"
+    NewContractDTO:
+      type: "object"
+      properties:
+        personId:
+          type: "integer"
+          format: "int32"
+        roomId:
+          type: "integer"
+          format: "int32"
+        startDate:
+          type: "string"
+        endDate:
+          type: "string"
+        amount:
+          type: "number"
+          format: "double"
+        deposit:
+          type: "number"
+          format: "double"
+        payedDate:
+          type: "integer"
+          format: "int32"
+      required:
+        - "personId"
+        - "roomId"
+        - "startDate"
+        - "endDate"
+        - "amount"
+        - "deposit"
+        - "payedDate"
+    Map:
+      type: "object"
+      properties: { }
+    Map_String:
+      type: "string"
+    Unit:
+      type: "object"
+      properties: { }
+    PaymentDTO:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        contractId:
+          type: "integer"
+          format: "int32"
+        payedDate:
+          type: "string"
+          nullable: true
+        scopeDate:
+          type: "string"
+          nullable: true
+        amount:
+          type: "number"
+          format: "double"
+        status:
+          type: "string"
+          enum:
+            - "PENDING"
+            - "PAID"
+            - "LATE"
+            - "CANCELLED"
+      required:
+        - "id"
+        - "contractId"
+        - "amount"
+        - "status"
+    PersonSmallDetailsDTO:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        firstName:
+          type: "string"
+        lastName:
+          type: "string"
+      required:
+        - "id"
+        - "firstName"
+        - "lastName"
+    PaymentHistoryWithPersonDTO:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        contractId:
+          type: "integer"
+          format: "int32"
+        person:
+          nullable: true
+          $ref: "#/components/schemas/PersonSmallDetailsDTO"
+        room:
+          nullable: true
+          $ref: "#/components/schemas/RoomWithApartmentDTO"
+        payedDate:
+          type: "string"
+          nullable: true
+        scopeDate:
+          type: "string"
+          nullable: true
+        amount:
+          type: "number"
+          format: "double"
+        status:
+          type: "string"
+          enum:
+            - "PENDING"
+            - "PAID"
+            - "LATE"
+            - "CANCELLED"
+      required:
+        - "id"
+        - "contractId"
+        - "amount"
+        - "status"
+    PaymentConfirmationDTO:
+      type: "object"
+      properties:
+        paymentId:
+          type: "integer"
+          format: "int32"
+        paymentDate:
+          type: "string"
+        payedAmount:
+          type: "number"
+          format: "double"
+      required:
+        - "paymentId"
+        - "paymentDate"
+        - "payedAmount"
+    CreatedPersonDTO:
+      type: "object"
+      properties:
+        firstName:
+          type: "string"
+        lastName:
+          type: "string"
+        documentNumber:
+          type: "string"
+        nationality:
+          type: "string"
+      required:
+        - "firstName"
+        - "lastName"
+        - "documentNumber"
+        - "nationality"
+    UpdatePersonDTO:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        firstName:
+          type: "string"
+        lastName:
+          type: "string"
+        documentNumber:
+          type: "string"
+        nationality:
+          type: "string"
+        status:
+          type: "string"
+      required:
+        - "id"
+        - "firstName"
+        - "lastName"
+        - "documentNumber"
+        - "nationality"
+        - "status"
+    RoomDTO:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        name:
+          type: "string"
+        apartmentId:
+          type: "integer"
+          format: "int32"
+          nullable: true
+      required:
+        - "id"
+        - "name"

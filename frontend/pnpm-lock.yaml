@@ -15,7 +15,7 @@ importers:
         specifier: ^2.6.1
         version: 2.6.1(react@18.3.1)
       '@tailwindcss/vite':
-        specifier: ^4.0.12
+        specifier: ^4.0.15
         version: 4.0.15(vite@6.2.3(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0))
       '@tanstack/react-query':
         specifier: ^5.69.0
@@ -24,10 +24,10 @@ importers:
         specifier: ^8.21.3
         version: 8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       axios:
-        specifier: ^1.4.0
+        specifier: ^1.8.4
         version: 1.8.4
       chart.js:
-        specifier: ^4.4.1
+        specifier: ^4.5.0
         version: 4.5.0
       formik:
         specifier: ^2.4.6
@@ -60,10 +60,10 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0(oidc-client-ts@3.2.0)(react@18.3.1)
       react-router:
-        specifier: ^7.0.2
+        specifier: ^7.4.0
         version: 7.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       redux:
-        specifier: ^4.0.4
+        specifier: ^4.2.1
         version: 4.2.1
       yup:
         specifier: ^1.6.1
@@ -73,46 +73,46 @@ importers:
         version: 3.22.4
     devDependencies:
       '@eslint/js':
-        specifier: ^9.15.0
+        specifier: ^9.23.0
         version: 9.23.0
       '@types/react':
-        specifier: ^18.3.12
+        specifier: ^18.3.20
         version: 18.3.20
       '@types/react-dom':
-        specifier: ^18.3.1
+        specifier: ^18.3.5
         version: 18.3.5(@types/react@18.3.20)
       '@vitejs/plugin-react-swc':
-        specifier: ^3.5.0
+        specifier: ^3.8.1
         version: 3.8.1(vite@6.2.3(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0))
       autoprefixer:
-        specifier: ^10.4.20
+        specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.3)
       eslint:
-        specifier: ^9.15.0
+        specifier: ^9.23.0
         version: 9.23.0(jiti@2.4.2)
       eslint-plugin-react-hooks:
-        specifier: ^5.0.0
+        specifier: ^5.2.0
         version: 5.2.0(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-react-refresh:
-        specifier: ^0.4.14
+        specifier: ^0.4.19
         version: 0.4.19(eslint@9.23.0(jiti@2.4.2))
       globals:
-        specifier: ^15.12.0
+        specifier: ^15.15.0
         version: 15.15.0
       postcss:
-        specifier: ^8.4.49
+        specifier: ^8.5.3
         version: 8.5.3
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
       typescript:
-        specifier: ~5.6.2
+        specifier: ~5.6.3
         version: 5.6.3
       typescript-eslint:
-        specifier: ^8.15.0
+        specifier: ^8.28.0
         version: 8.28.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.6.3)
       vite:
-        specifier: ^6.0.1
+        specifier: ^6.2.3
         version: 6.2.3(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0)
       web-vitals:
         specifier: ^4.2.4
@@ -837,8 +837,8 @@ packages:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
     engines: {node: '>= 6'}
 
-  caniuse-lite@1.0.30001707:
-    resolution: {integrity: sha512-3qtRjw/HQSMlDWf+X79N206fepf4SOOU6SQLMaq/0KkZLmSjPxAkBOQQ+FxbHKfHmYLZFfdWsO3KA90ceHPSnw==}
+  caniuse-lite@1.0.30001739:
+    resolution: {integrity: sha512-y+j60d6ulelrNSwpPyrHdl+9mJnQzHBr08xm48Qno0nSk4h3Qojh+ziv2qE6rXf4k3tadF4o1J/1tAbVm1NtnA==}
 
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
@@ -2359,7 +2359,7 @@ snapshots:
   autoprefixer@10.4.21(postcss@8.5.3):
     dependencies:
       browserslist: 4.24.4
-      caniuse-lite: 1.0.30001707
+      caniuse-lite: 1.0.30001739
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
@@ -2393,7 +2393,7 @@ snapshots:
 
   browserslist@4.24.4:
     dependencies:
-      caniuse-lite: 1.0.30001707
+      caniuse-lite: 1.0.30001739
       electron-to-chromium: 1.5.123
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.24.4)
@@ -2407,7 +2407,7 @@ snapshots:
 
   camelcase-css@2.0.1: {}
 
-  caniuse-lite@1.0.30001707: {}
+  caniuse-lite@1.0.30001739: {}
 
   chalk@4.1.2:
     dependencies:
