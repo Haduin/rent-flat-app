@@ -19,6 +19,10 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                                                               selectionMode = "single",
                                                               hideOnRangeSelection = false
                                                           }) => {
+
+    if(formik.values[name] === null){
+      return null;
+    }
     return (
         <div className="mb-4 mt-4">
             <label className="block text-sm font-medium mb-2" htmlFor={name}>
@@ -28,7 +32,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                 id={name}
                 name={name}
                 value={formik.values[name]}
-                onChange={(e) => formik.setFieldValue(name, e.value)} // Wysłanie aktualnej wartości do formika
+                onChange={(e) => formik.setFieldValue(name, e.value)}
                 onBlur={formik.handleBlur}
                 className={`w-full rounded-md ${formik.touched[name] && formik.errors[name] ? 'p-invalid' : ''}`}
                 disabled={disabled}

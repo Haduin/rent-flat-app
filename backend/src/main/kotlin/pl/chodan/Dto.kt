@@ -185,3 +185,11 @@ data class UpdateContractDetails(
     val status: ContractStatus?,
     val payedTillDayOfMonth: String?
 )
+
+@Serializable
+data class PaymentEdit(
+    val paymentId: Int,
+    val amount: Double?,
+    val status: PaymentStatus?,
+    val payedDate: String?
+)

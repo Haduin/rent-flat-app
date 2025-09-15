@@ -24,7 +24,6 @@ const ContractsView = () => {
         isEditContractVisible,
         handleOpenEditDialog,
         handleCloseEditDialog,
-        updateContractMutation,
         isDeleteDialogVisible,
         handleOpenDeleteDialog,
         handleCloseDeleteDialog,

@@ -1,7 +1,7 @@
-import {useToast} from "../../components/commons/ToastProvider.tsx";
 import {useState} from "react";
-import {dateToStringWithYearMonth} from "../../components/commons/dateFormatter.ts";
-import {Payment, PaymentConfirmationDTO} from "../../components/commons/types.ts";
+import {useToast} from "../../components/commons/ToastProvider.tsx";
+import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../../components/commons/dateFormatter.ts";
+import {EditPayment, Payment, PaymentConfirmationDTO} from "../../components/commons/types.ts";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {api} from "../../api/api.ts";
 import {queryClient} from "../../main.tsx";
@@ -48,7 +48,7 @@ export const usePaymentsView = () => {
         }
     });
 
-    const handleConfirmPayment = useMutation({
+    const confirmPayment = useMutation({
         mutationFn: async (request: PaymentConfirmationDTO) =>
             api.paymentsApi.confirmPayment(request),
         onSuccess: async () => {
@@ -83,9 +83,28 @@ export const usePaymentsView = () => {
         setSelectedPayment(null);
     }
 
+
+    const handleConfirmPayment = async (date: Date, paymentId: number, amount: number) => {
+      closeConfirmationDialog()
+      confirmPayment.mutate({
+        paymentId: paymentId,
+        paymentDate: dateToStringFullYearMouthDay(date),
+        payedAmount: amount
+      })
+    }
+
+    const handleEditPayment = async (payment: EditPayment) => {
+      await api.paymentsApi.editPayment(payment)
+      await queryClient.invalidateQueries({
+        queryKey: ['payments']
+      })
+      showToast('success', 'Pomyślnie zaktualizowano płatność')
+      closeEditDialog()
+    }
+
     return {
         payments,
-        loading: loading || handleGenerateNewMonthPayments.isPending || handleConfirmPayment.isPending,
+        loading: loading || handleGenerateNewMonthPayments.isPending || confirmPayment.isPending,
         dateSelected,
         selectedPayment,
         isConfirmationDialogVisible,
@@ -96,6 +115,7 @@ export const usePaymentsView = () => {
         handleGenerateNewMonthPayments,
         isEditPaymentVisible,
         openEditDialog,
-        closeEditDialog
+        closeEditDialog,
+        handleEditPayment
     };
 };

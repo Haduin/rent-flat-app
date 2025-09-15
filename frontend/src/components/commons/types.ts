@@ -83,14 +83,17 @@ export interface Payment {
     status: Status
 }
 
+export interface EditPayment {
+    paymentId: number,
+    amount?: number
+    status: string,
+    payedDate: string
+}
+
 export interface PaymentConfirmationDTO {
     paymentId: number,
     paymentDate: string,
     payedAmount: number,
-}
-
-export interface UtilityDTO {
-
 }
 
 export interface PaymentSummary {

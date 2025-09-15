@@ -2,7 +2,7 @@ import {ProgressSpinner} from 'primereact/progressspinner';
 import {Calendar} from "primereact/calendar";
 import {Button} from "primereact/button";
 import {usePaymentsView} from "./payments-view.hook.ts";
-import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../../components/commons/dateFormatter.ts";
+import {dateToStringWithYearMonth} from "../../components/commons/dateFormatter.ts";
 import {PaymentsTable} from "./payments-view.table.tsx";
 import {EditPaymentDialog} from "./edit-payment-dialog.tsx";
 import {ConfirmPaymentDialog} from "./confirm-payment-dialog.tsx";
@@ -23,7 +23,8 @@ const PaymentsView = () => {
         handleGenerateNewMonthPayments,
         isEditPaymentVisible,
         openEditDialog,
-        closeEditDialog
+        closeEditDialog,
+        handleEditPayment
     } = usePaymentsView()
 
     return (
@@ -59,24 +60,14 @@ const PaymentsView = () => {
                     <ConfirmPaymentDialog
                         isVisible={isConfirmationDialogVisible}
                         onHide={closeConfirmationDialog}
-                        onConfirm={async (date: Date, paymentId: number, amount: number) => {
-                            closeConfirmationDialog()
-                            handleConfirmPayment.mutate({
-                                paymentId: paymentId,
-                                paymentDate: dateToStringFullYearMouthDay(date),
-                                payedAmount: amount
-                            })
-                        }
-
-                        }
+                        onConfirm={handleConfirmPayment}
                         selectedPayment={selectedPayment}
                     />
                     <EditPaymentDialog
                         onHide={closeEditDialog}
                         selectedPayment={selectedPayment}
                         isVisible={isEditPaymentVisible}
-                        onConfirm={() => {
-                        }}
+                        onConfirm={handleEditPayment}
                     />
                 </div>
             )}
