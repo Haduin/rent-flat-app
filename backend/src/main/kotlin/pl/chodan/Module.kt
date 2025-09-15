@@ -26,54 +26,45 @@ fun Application.configureModules() {
     val logger = LoggerFactory.getLogger(Module::class.java)
     println(config)
     install(Authentication) {
-        if(config.keycloak.url != "mock") {
-            jwt("auth-jwt") {
-                verifier(
-                    JwkProviderBuilder(URL("${config.keycloak.url}/realms/${config.keycloak.realm}/protocol/openid-connect/certs"))
-                        .build(),
-                    issuer = "${config.keycloak.url}/realms/${config.keycloak.realm}",
-                )
-                validate { credential ->
-                    try {
-                        val username = credential.payload.getClaim("preferred_username").asString()
-                        val email = credential.payload.getClaim("email")?.asString()
-                        val roles = credential.payload.getClaim("realm_access")?.asMap()?.get("roles") as? List<String>
-                            ?: emptyList()
+        jwt("auth-jwt") {
+            verifier(
+                JwkProviderBuilder(URL("${config.keycloak.url}/realms/${config.keycloak.realm}/protocol/openid-connect/certs"))
+                    .build(),
+                issuer = "${config.keycloak.url}/realms/${config.keycloak.realm}",
+            )
+            validate { credential ->
+                try {
+                    val username = credential.payload.getClaim("preferred_username").asString()
+                    val email = credential.payload.getClaim("email")?.asString()
+                    val roles = credential.payload.getClaim("realm_access")?.asMap()?.get("roles") as? List<String>
+                        ?: emptyList()
 
-                        if (username != null) {
-                            val userDetails = UserDetails(
-                                username = username,
-                                email = email,
-                                roles = roles,
-                                isAuthenticated = true
-                            )
-                            KtorUserDetailsPrincipal(userDetails)
-                        } else {
-                            logger.warn("Brak preferred_username w tokenie JWT dla '${credential.payload.subject}'")
-                            null
-                        }
-                    } catch (e: Exception) {
-                        logger.error(
-                            "Błąd walidacji tokenu JWT: ${e.message}",
-                            e
+                    if (username != null) {
+                        val userDetails = UserDetails(
+                            username = username,
+                            email = email,
+                            roles = roles,
+                            isAuthenticated = true
                         )
+                        KtorUserDetailsPrincipal(userDetails)
+                    } else {
+                        logger.warn("Brak preferred_username w tokenie JWT dla '${credential.payload.subject}'")
                         null
                     }
-                }
-
-                challenge { defaultScheme, realm ->
-                    call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+                } catch (e: Exception) {
+                    logger.error(
+                        "Błąd walidacji tokenu JWT: ${e.message}",
+                        e
+                    )
+                    null
                 }
             }
-        } else {
-            basic("test-auth") {
-                validate {
-                    KtorUserDetailsPrincipal(
-                        UserDetails("test", "test@example.com", listOf("ADMIN"), true)
-                    )
-                }
+
+            challenge { defaultScheme, realm ->
+                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
             }
         }
+
 
     }
 

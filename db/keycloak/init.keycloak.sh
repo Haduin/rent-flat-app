@@ -2,7 +2,7 @@
 
 # Zmienne konfiguracyjne
 KEYCLOAK_CONTAINER="keycloak"
-REALM_NAME="mieszkania_realm"
+REALM_NAME="mieszkanie_realm"
 CLIENT_ID="mieszkanie_client_id"
 ROOT_URL="http://localhost:5173"
 HOME_URL="http://localhost:5173"

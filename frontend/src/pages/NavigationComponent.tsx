@@ -7,13 +7,26 @@ import {Button} from "primereact/button";
 import {confirmDialog} from "primereact/confirmdialog";
 import {useOidc} from "../oidc.tsx";
 
+interface MenuItem {
+  label: string;
+  icon: string;
+  url?: string;
+  items?: MenuItem[];
+  command?: (e: MenuItemCommandEvent) => void;
+}
+
 const NavigationComponent = () => {
     const {logout} = useOidc({assert: "user logged in"});
-    const items = [
+    const items: MenuItem[] = [
         {
             label: 'Home',
             icon: 'pi pi-home',
             url: '/protected/home'
+        },
+        {
+            label: 'Dashboard',
+            icon: 'pi pi-chart-bar',
+            url: '/protected/dashboard'
         },
         {
             label: 'Koszta',
@@ -33,10 +46,10 @@ const NavigationComponent = () => {
         {
             label: 'Kontrakty',
             icon: 'pi pi-envelope',
-            url: '/protected/kontract'
+            url: '/protected/kontrakt'
         },
         {
-            label: 'Płatnosci',
+            label: 'Płatności',
             icon: 'pi pi-credit-card',
             items: [
                 {
@@ -54,19 +67,22 @@ const NavigationComponent = () => {
     ];
     const nav = useNavigate();
 
-    const items2 = items.map((item) => ({
-        ...item,
-        command: (options: MenuItemCommandEvent) => {
-            const originalEvent = options.originalEvent;
-            originalEvent.preventDefault();
-            originalEvent.stopPropagation();
-            if (item.url) {
-                nav(item.url);
-            }
-        },
-    }));
+  const mapMenuItems = (menuItem: MenuItem): MenuItem => ({
+    ...menuItem,
+    command: menuItem.url ? (options: MenuItemCommandEvent) => {
+      const originalEvent = options.originalEvent;
+      originalEvent.preventDefault();
+      originalEvent.stopPropagation();
+      nav(menuItem.url!);
+    } : undefined,
+    items: menuItem.items ? menuItem.items.map(mapMenuItems) : undefined
+  });
 
-    const handleLogout = () => {
+  const items2: MenuItem[] = items.map(mapMenuItems);
+
+
+
+  const handleLogout = () => {
         confirmDialog({
             message: <>
                 Czy na pewno chcesz sie wylogować?

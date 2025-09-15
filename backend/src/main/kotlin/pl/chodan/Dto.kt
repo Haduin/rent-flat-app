@@ -157,6 +157,51 @@ data class AddNewUtilityCostDTO(
 @Serializable
 data class LoginRequest(val username: String, val password: String)
 
+// Dashboard DTOs
+@Serializable
+data class IncomeDataPoint(
+    val month: String,
+    val expected: Double,
+    val received: Double
+)
+
+@Serializable
+data class OccupancyDataPoint(
+    val month: String,
+    val totalRooms: Long,
+    val occupiedRooms: Long,
+    val occupancyRate: Double
+)
+
+@Serializable
+data class StatusDataPoint(
+    val status: String,
+    val count: Int,
+    val amount: Double
+)
+
+@Serializable
+data class PaymentStatusDataPoint(
+    val month: String,
+    val statusData: List<StatusDataPoint>
+)
+
+@Serializable
+data class MonthlyComparisonDataPoint(
+    val month: String,
+    val income: Double,
+    val previousIncome: Double,
+    val change: Double
+)
+
+@Serializable
+data class DashboardDataDTO(
+    val incomeData: List<IncomeDataPoint>,
+    val occupancyData: List<OccupancyDataPoint>,
+    val paymentStatusData: List<PaymentStatusDataPoint>,
+    val monthlyComparisonData: List<MonthlyComparisonDataPoint>
+)
+
 @Serializable
 data class PaymentSummaryDTO(
     val personId: Int,
