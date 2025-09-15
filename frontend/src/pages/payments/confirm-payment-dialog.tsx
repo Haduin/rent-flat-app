@@ -12,7 +12,7 @@ interface ConfirmPaymentDialogProps {
     selectedPayment: Payment | null;
 }
 
-const ConfirmPaymentDialog = ({isVisible, onHide, selectedPayment, onConfirm}: ConfirmPaymentDialogProps) => {
+export const ConfirmPaymentDialog = ({isVisible, onHide, selectedPayment, onConfirm}: ConfirmPaymentDialogProps) => {
 
     return (
         <Dialog header="Potwierdz wpłatne najemcy"
@@ -58,11 +58,7 @@ const ConfirmPaymentDialog = ({isVisible, onHide, selectedPayment, onConfirm}: C
                                 disabled={true}
                             />
                         </div>
-                        <DateSelector name="dates" label="Data wpłaty" formik={formik}
-                                      onChange={(selectedDate) => {
-                                          formik.setFieldValue("dates", selectedDate);
-                                      }}
-                        />
+                        <DateSelector name="dates" label="Data wpłaty" formik={formik}/>
                         <div className="mb-4">
                             <label htmlFor="payedAmount" className="block text-sm font-medium text-gray-700">
                                 Kwota
@@ -94,5 +90,3 @@ const ConfirmPaymentDialog = ({isVisible, onHide, selectedPayment, onConfirm}: C
         </Dialog>
     )
 }
-
-export default ConfirmPaymentDialog;

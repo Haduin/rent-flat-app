@@ -8,11 +8,13 @@ import {Button} from "primereact/button";
 interface PaymentsTableProps {
     payments?: Payment[];
     openConfirmationDialog: (payment: Payment) => void;
+    openEditDialog: (payment: Payment) => void;
 }
 
 export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                                                                 payments,
-                                                                openConfirmationDialog
+                                                                openConfirmationDialog,
+                                                                openEditDialog
                                                             }) => {
     const payerNameTemplate = (rowData: Payment) =>
         `${rowData.person.firstName} ${rowData.person.lastName}`;
@@ -46,6 +48,16 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                     className="p-button-rounded p-button-sm"
                 />
             );
+        }
+        if (rowData.status === Status.PAID || rowData.status === Status.CANCELLED) {
+            return (
+                <Button
+                    label="Edytuj"
+                    icon="pi pi-pencil"
+                    onClick={() => openEditDialog(rowData)}
+                />
+            )
+
         }
         return null;
     };

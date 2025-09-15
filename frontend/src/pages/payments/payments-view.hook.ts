@@ -5,12 +5,15 @@ import {Payment, PaymentConfirmationDTO} from "../../components/commons/types.ts
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {api} from "../../api/api.ts";
 import {queryClient} from "../../main.tsx";
+import {useModal} from "../../hooks/use-modal";
 
 export const usePaymentsView = () => {
     const {showToast} = useToast();
     const [dateSelected, setDateSelected] = useState<Date>();
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
     const [isConfirmationDialogVisible, setIsConfirmationDialogVisible] = useState<boolean>(false);
+    const {isOpen: isEditPaymentVisible, setOpen: setIsEditPaymentVisible} = useModal()
+
 
     const {
         data: payments,
@@ -70,6 +73,15 @@ export const usePaymentsView = () => {
         setSelectedPayment(payment);
     };
 
+    const openEditDialog = (payment: Payment) => {
+        setIsEditPaymentVisible(true);
+        setSelectedPayment(payment);
+    }
+
+    const closeEditDialog = () => {
+        setIsEditPaymentVisible(false);
+        setSelectedPayment(null);
+    }
 
     return {
         payments,
@@ -82,5 +94,8 @@ export const usePaymentsView = () => {
         closeConfirmationDialog,
         handleConfirmPayment,
         handleGenerateNewMonthPayments,
+        isEditPaymentVisible,
+        openEditDialog,
+        closeEditDialog
     };
 };

@@ -1,10 +1,11 @@
 import {ProgressSpinner} from 'primereact/progressspinner';
 import {Calendar} from "primereact/calendar";
 import {Button} from "primereact/button";
-import ConfirmPaymentDialog from "./confirm-payment-dialog.tsx";
 import {usePaymentsView} from "./payments-view.hook.ts";
 import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../../components/commons/dateFormatter.ts";
 import {PaymentsTable} from "./payments-view.table.tsx";
+import {EditPaymentDialog} from "./edit-payment-dialog.tsx";
+import {ConfirmPaymentDialog} from "./confirm-payment-dialog.tsx";
 
 
 const PaymentsView = () => {
@@ -19,7 +20,10 @@ const PaymentsView = () => {
         openConfirmationDialog,
         closeConfirmationDialog,
         handleConfirmPayment,
-        handleGenerateNewMonthPayments
+        handleGenerateNewMonthPayments,
+        isEditPaymentVisible,
+        openEditDialog,
+        closeEditDialog
     } = usePaymentsView()
 
     return (
@@ -49,6 +53,7 @@ const PaymentsView = () => {
                 <div className="p-2">
                     <PaymentsTable
                         openConfirmationDialog={openConfirmationDialog}
+                        openEditDialog={openEditDialog}
                         payments={payments}
                     />
                     <ConfirmPaymentDialog
@@ -65,6 +70,13 @@ const PaymentsView = () => {
 
                         }
                         selectedPayment={selectedPayment}
+                    />
+                    <EditPaymentDialog
+                        onHide={closeEditDialog}
+                        selectedPayment={selectedPayment}
+                        isVisible={isEditPaymentVisible}
+                        onConfirm={() => {
+                        }}
                     />
                 </div>
             )}

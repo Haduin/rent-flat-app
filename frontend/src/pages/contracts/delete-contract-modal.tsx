@@ -46,12 +46,7 @@ const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: D
     >
         <form onSubmit={formik.handleSubmit}>
             <div className="m-4">
-                <DateSelector name="terminationDate" label="Data zakończenia kontraktu" formik={formik}
-                              onChange={(selectedDate) => {
-                                  formik.setFieldValue("terminationDate", selectedDate);
-                              }}
-                />
-
+                <DateSelector name="terminationDate" label="Data zakończenia kontraktu" formik={formik}/>
                 <TextField name="description" label="Opis" formik={formik}/>
                 <div className="flex justify-content-between">
                     <CheckboxField name="depositReturned" label="Kaucja zwrócona" formik={formik}/>
