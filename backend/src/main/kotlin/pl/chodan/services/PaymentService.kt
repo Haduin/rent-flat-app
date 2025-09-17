@@ -33,6 +33,16 @@ class PaymentService : KoinComponent {
 
     }
 
+    suspend fun editPayment(paymentEdit: PaymentEdit) = databaseProvider.dbQuery {
+
+        Payment.update({ Payment.id eq paymentEdit.paymentId }) {
+            paymentEdit.amount?.let { amount -> it[Payment.amount] = BigDecimal.valueOf(amount) }
+            paymentEdit.status?.let { status -> it[Payment.status] = status }
+            paymentEdit.payedDate?.let { payedDate -> it[Payment.payedDate] = payedDate.toLocalDateWithFullPattern() }
+        }
+
+    }
+
     private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int, yearMonth: String): Boolean =
         databaseProvider.dbQuery {
             Payment.selectAll().where {

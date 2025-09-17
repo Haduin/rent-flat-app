@@ -9,13 +9,15 @@ interface ContractTableProps {
     showContracts: () => ContractDto[];
     handleOpenEditDialog: (contract: ContractDto) => void;
     handleOpenDeleteDialog: (contract: ContractDto) => void;
+    handleOpenDetailsDialog: (contract: ContractDto) => void;
 }
 
 export const ContractTable = ({
                                   renderHeader,
                                   showContracts,
                                   handleOpenEditDialog,
-                                  handleOpenDeleteDialog
+                                  handleOpenDeleteDialog,
+                                  handleOpenDetailsDialog
                               }: ContractTableProps) => {
     return (
         <DataTable value={showContracts()} paginator rows={10} stripedRows header={renderHeader()}>
@@ -46,6 +48,10 @@ export const ContractTable = ({
                     body={(rowData: ContractDto) => (
                         <div className="flex gap-2">
                             <Button label="Szczegóły"
+                                    icon="pi pi-eye"
+                                    onClick={() => handleOpenDetailsDialog(rowData)}
+                                    className="p-button-rounded p-button-sm"/>
+                            <Button label="Edytuj"
                                     icon="pi pi-eye"
                                     onClick={() => handleOpenEditDialog(rowData)}
                                     className="p-button-rounded p-button-sm"/>

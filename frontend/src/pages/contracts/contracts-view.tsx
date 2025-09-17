@@ -6,27 +6,30 @@ import ContractDetailsModal from "./contract-details-modal.tsx";
 import DeleteContractModal from "./delete-contract-modal.tsx";
 import {Checkbox} from "primereact/checkbox";
 import {ContractTable} from "./contract-view.table.tsx";
+import {UpdateContractModal} from "./update-contract-modal.tsx";
 
 const ContractsView = () => {
 
     const {
         loading,
+        handleOpenDetailsDialog,
+        handleCloseDetailsDialog,
+        isDetailsDialogVisible,
+        selectedContract,
         isAddContractDialogVisible,
         closeAddDialog,
         openAddDialog,
         unassignedPersons,
         addContractMutation,
-
-        isEditContactModalOpen,
+        isEditContractVisible,
         handleOpenEditDialog,
         handleCloseEditDialog,
-        selectedContract,
-        handleOpenDeleteDialog,
-        deleteContractMutation,
         isDeleteDialogVisible,
+        handleOpenDeleteDialog,
         handleCloseDeleteDialog,
+        deleteContractMutation,
         showOnlyActiveContracts, setShowOnlyActiveContracts,
-        showContracts
+        showContracts,
     } = useContractsView();
 
 
@@ -67,6 +70,7 @@ const ContractsView = () => {
                         renderHeader={renderHeader}
                         showContracts={showContracts}
                         handleOpenEditDialog={handleOpenEditDialog}
+                        handleOpenDetailsDialog={handleOpenDetailsDialog}
                         handleOpenDeleteDialog={handleOpenDeleteDialog}
                     />
 
@@ -81,9 +85,15 @@ const ContractsView = () => {
                                      unassignedPersons={unassignedPersons}
                                      onHide={closeAddDialog}/>
                     <ContractDetailsModal
-                        visible={isEditContactModalOpen}
-                        onHide={handleCloseEditDialog}
                         selectedContract={selectedContract}
+                        visible={isDetailsDialogVisible}
+                        onHide={handleCloseDetailsDialog}
+                    />
+                    <UpdateContractModal
+                        selectedContract={selectedContract}
+                        isVisible={isEditContractVisible}
+                        onHide={handleCloseEditDialog}
+                        onSave={handleCloseEditDialog}
                     />
                 </div>
             )}

@@ -3,10 +3,11 @@ import {getStatusLabel, Status} from "../types.ts";
 
 interface StatusTagProps {
     status: Status;
+    className?: string;
 }
 
-const StatusTag = ({status}: StatusTagProps) => {
-    return <Tag value={getStatusLabel(status)} severity={getTagSeverity(status)}/>;
+const StatusTag = ({status, className}: StatusTagProps) => {
+    return <Tag className={className} value={getStatusLabel(status)} severity={getTagSeverity(status)}/>;
 };
 
 const getTagSeverity = (status: Status): "warning" | "success" | "danger" | "info" | "secondary" | "contrast" | null => {

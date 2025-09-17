@@ -83,14 +83,17 @@ export interface Payment {
     status: Status
 }
 
+export interface EditPayment {
+    paymentId: number,
+    amount?: number
+    status: string,
+    payedDate: string
+}
+
 export interface PaymentConfirmationDTO {
     paymentId: number,
     paymentDate: string,
     payedAmount: number,
-}
-
-export interface UtilityDTO {
-
 }
 
 export interface PaymentSummary {
@@ -103,6 +106,22 @@ export interface PaymentSummary {
     totalCancelled: number;
     paymentCount: number;
 }
+
+export interface UpdateContractDetails {
+    id: number;
+    personId?: number;
+    roomId?: number;
+    amount?: number;
+    deposit?: number;
+    depositReturned?: boolean;
+    startDate?: string;
+    endDate?: string;
+    terminationDate?: string;
+    description?: string;
+    status: ContractStatus;
+    payedTillDayOfMonth?: string;
+}
+
 
 export const getStatusLabel = (status: Status): string => {
     return statusMap[status] || 'Nieznany';

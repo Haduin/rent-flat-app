@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 import pl.chodan.PaymentConfirmationDTO
+import pl.chodan.PaymentEdit
 import pl.chodan.services.PaymentService
 
 fun Application.configurePaymentRouting() {
@@ -34,6 +35,19 @@ fun Application.configurePaymentRouting() {
                         call.respond(
                             HttpStatusCode.BadRequest,
                             mapOf("error" to "Failed to confirm payment: ${e.message}")
+                        )
+                    }
+                }
+
+                put("/edit") {
+                    val request = call.receive<PaymentEdit>()
+                    try {
+                        paymentService.editPayment(request)
+                        call.respond(HttpStatusCode.OK)
+                    } catch (e: Exception) {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("error" to "Failed to edit payment: ${e.message}")
                         )
                     }
                 }

@@ -2,6 +2,7 @@ package pl.chodan
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import pl.chodan.database.ContractStatus
 import pl.chodan.database.PaymentStatus
 import pl.chodan.database.UtilityType
 import java.math.BigDecimal
@@ -167,4 +168,28 @@ data class PaymentSummaryDTO(
     val totalLate: Double,
     val totalCancelled: Double,
     val paymentCount: Int
+)
+
+@Serializable
+data class UpdateContractDetails(
+    val contractId: Int,
+    val personId: Int?,
+    val roomId: Int?,
+    val amount: Double?,
+    val deposit: Double?,
+    val depositReturned: Boolean?,
+    val startDate: String?,
+    val endDate: String?,
+    val terminationDate: String?,
+    val description: String?,
+    val status: ContractStatus?,
+    val payedTillDayOfMonth: String?
+)
+
+@Serializable
+data class PaymentEdit(
+    val paymentId: Int,
+    val amount: Double?,
+    val status: PaymentStatus?,
+    val payedDate: String?
 )
