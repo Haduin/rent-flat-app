@@ -28,9 +28,15 @@ export const {
     clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
     __unsafe_clientSecret: import.meta.env.VITE_OIDC_CLIENT_SECRET || undefined,
     __unsafe_useIdTokenAsAccessToken: import.meta.env.VITE_OIDC_USE_ID_TOKEN_AS_ACCESS_TOKEN === "true",
+    idleSessionLifetimeInSeconds: 120,
     scopes: (import.meta.env.VITE_OIDC_SCOPE || undefined)?.split(" "),
-    homeUrl: import.meta.env.BASE_URL,
-    /**
+    homeUrl: import.meta.env.VITE_FRONTEND_URL,
+
+    autoLogoutParams: {
+      redirectTo: "home",
+    },
+
+  /**
      * This parameter is optional.
      *
      * It allows you to validate the shape of the idToken so that you

@@ -78,7 +78,6 @@ export const router = createBrowserRouter([
 
 async function enforceLogin(request: { url: string }): Promise<void | never> {
     const oidc = await getOidc();
-
     if (!oidc.isUserLoggedIn) {
         await oidc.login({
             // The loader function is invoked by react-router before the browser URL is updated to the target protected route URL.

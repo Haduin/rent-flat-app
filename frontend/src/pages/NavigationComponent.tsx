@@ -36,7 +36,7 @@ const NavigationComponent = () => {
             url: '/protected/kontract'
         },
         {
-            label: 'Płatnosci',
+            label: 'Płatności',
             icon: 'pi pi-credit-card',
             items: [
                 {
@@ -76,7 +76,7 @@ const NavigationComponent = () => {
             acceptLabel: "Tak",
             rejectLabel: "Nie",
             accept() {
-                logout({redirectTo: "home"})
+                logout({redirectTo: "current page"})
             }
 
         })
