@@ -29,14 +29,16 @@ export const {
     __unsafe_clientSecret: import.meta.env.VITE_OIDC_CLIENT_SECRET || undefined,
     __unsafe_useIdTokenAsAccessToken: import.meta.env.VITE_OIDC_USE_ID_TOKEN_AS_ACCESS_TOKEN === "true",
     idleSessionLifetimeInSeconds: 120,
-    scopes: (import.meta.env.VITE_OIDC_SCOPE || undefined)?.split(" "),
+    scopes: import.meta.env.VITE_OIDC_SCOPE
+        ? import.meta.env.VITE_OIDC_SCOPE.split(" ")
+        : ["openid", "profile", "email"],
     homeUrl: import.meta.env.VITE_FRONTEND_URL,
 
     autoLogoutParams: {
-      redirectTo: "home",
+        redirectTo: "home",
     },
 
-  /**
+    /**
      * This parameter is optional.
      *
      * It allows you to validate the shape of the idToken so that you
@@ -80,7 +82,7 @@ export const {
         ui_locales: isSilent ? undefined : "en" // Here you would dynamically get the current language at the time of redirecting to the OIDC server
     }),
     // Remove this in your repo
-    debugLogs: false
+    // debugLogs: false
 });
 
 // Using the mock adapter:
