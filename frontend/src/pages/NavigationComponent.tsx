@@ -7,9 +7,17 @@ import {Button} from "primereact/button";
 import {confirmDialog} from "primereact/confirmdialog";
 import {useOidc} from "../oidc.tsx";
 
+interface MenuItem {
+    label: string;
+    icon: string;
+    url?: string;
+    items?: MenuItem[];
+    command?: (e: MenuItemCommandEvent) => void;
+}
+
 const NavigationComponent = () => {
     const {logout} = useOidc({assert: "user logged in"});
-    const items = [
+    const items: MenuItem[] = [
         {
             label: 'Home',
             icon: 'pi pi-home',
@@ -54,17 +62,19 @@ const NavigationComponent = () => {
     ];
     const nav = useNavigate();
 
-    const items2 = items.map((item) => ({
-        ...item,
-        command: (options: MenuItemCommandEvent) => {
+    const mapMenuItems = (menuItem: MenuItem): MenuItem => ({
+        ...menuItem,
+        command: menuItem.url ? (options: MenuItemCommandEvent) => {
             const originalEvent = options.originalEvent;
             originalEvent.preventDefault();
             originalEvent.stopPropagation();
-            if (item.url) {
-                nav(item.url);
-            }
-        },
-    }));
+            nav(menuItem.url!);
+        } : undefined,
+        items: menuItem.items ? menuItem.items.map(mapMenuItems) : undefined
+    });
+
+    const items2: MenuItem[] = items.map(mapMenuItems);
+
 
     const handleLogout = () => {
         confirmDialog({

@@ -61,7 +61,7 @@ const ContractsView = () => {
     }
 
     return (
-        <div>
+        <div className="text-black p-2 flex flex-col gap-2">
             <h1>Kontrakty</h1>
             {loading ? (
                 <div className="flex justify-content-center">
