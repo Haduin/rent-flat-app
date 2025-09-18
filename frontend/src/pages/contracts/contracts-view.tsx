@@ -21,9 +21,12 @@ const ContractsView = () => {
         openAddDialog,
         unassignedPersons,
         addContractMutation,
+
         isEditContractVisible,
         handleOpenEditDialog,
         handleCloseEditDialog,
+        editContractMutation,
+
         isDeleteDialogVisible,
         handleOpenDeleteDialog,
         handleCloseDeleteDialog,
@@ -93,7 +96,7 @@ const ContractsView = () => {
                         selectedContract={selectedContract}
                         isVisible={isEditContractVisible}
                         onHide={handleCloseEditDialog}
-                        onSave={handleCloseEditDialog}
+                        onSave={editContractMutation}
                     />
                 </div>
             )}

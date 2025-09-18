@@ -1,5 +1,5 @@
 import {useCallback, useState} from 'react';
-import {ContractDto, DeleteContractDTO, PersonDto} from "../../components/commons/types.ts";
+import {ContractDto, DeleteContractDTO, PersonDto, UpdateContractDetails} from "../../components/commons/types.ts";
 import {queryClient} from "../../main.tsx";
 import {useToast} from "../../components/commons/ToastProvider.tsx";
 import {useMutation, useQuery} from "@tanstack/react-query";
@@ -76,9 +76,9 @@ export const useContractsView = () => {
         }
     });
 
-    const updateContractMutation = useMutation({
-        mutationFn: ({contractId, contract}: { contractId: number, contract: any }) =>
-            api.contractsApi.updateContract(contractId, contract),
+    const editContractMutation = useMutation({
+        mutationFn: ({contract}: { contract: UpdateContractDetails }) =>
+            api.contractsApi.updateContract(contract),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['contracts']});
             showToast('success', 'Pomyślnie zaktualizowano kontrakt.');
@@ -124,7 +124,7 @@ export const useContractsView = () => {
         isEditContractVisible,
         handleOpenEditDialog,
         handleCloseEditDialog,
-        updateContractMutation,
+        editContractMutation,
 
         isDeleteDialogVisible,
         handleOpenDeleteDialog,

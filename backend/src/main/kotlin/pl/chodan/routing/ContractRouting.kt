@@ -62,7 +62,17 @@ fun Application.configureContractRouting() {
                 }
                 put {
                     val contract = call.receive<UpdateContractDetails>()
-                    contractService.updateContract(contract)
+                    try {
+                        println(contract)
+                        contractService.updateContract(contract)
+                        call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zaktualizowany")
+                    } catch (e: Exception) {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("error" to "Failed to edit contract: ${e.message}")
+                        )
+                    }
+
                 }
                 delete {
                     val details = call.receive<DeleteContractDTO>()

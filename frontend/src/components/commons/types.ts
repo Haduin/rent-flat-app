@@ -19,7 +19,8 @@ export interface ContractDto {
     room?: Room
     startDate?: string
     endDate?: string
-    terminationDate: string
+    terminationDate?: string
+    payedTillDayOfMonth: string
     payedDate?: string
     status: ContractStatus
     description?: string
@@ -108,17 +109,11 @@ export interface PaymentSummary {
 }
 
 export interface UpdateContractDetails {
-    id: number;
-    personId?: number;
-    roomId?: number;
+    contractId: number;
     amount?: number;
     deposit?: number;
-    depositReturned?: boolean;
     startDate?: string;
     endDate?: string;
-    terminationDate?: string;
-    description?: string;
-    status: ContractStatus;
     payedTillDayOfMonth?: string;
 }
 

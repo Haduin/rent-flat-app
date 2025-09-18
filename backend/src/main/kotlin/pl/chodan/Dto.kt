@@ -173,16 +173,10 @@ data class PaymentSummaryDTO(
 @Serializable
 data class UpdateContractDetails(
     val contractId: Int,
-    val personId: Int?,
-    val roomId: Int?,
     val amount: Double?,
     val deposit: Double?,
-    val depositReturned: Boolean?,
     val startDate: String?,
     val endDate: String?,
-    val terminationDate: String?,
-    val description: String?,
-    val status: ContractStatus?,
     val payedTillDayOfMonth: String?
 )
 

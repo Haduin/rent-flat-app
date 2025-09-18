@@ -1,11 +1,11 @@
 import React from 'react';
-import {Button} from "primereact/button";
-import {Dialog} from "primereact/dialog";
 import {Person} from "./person-table.types.ts";
 import * as Yup from 'yup';
 import {useFormik} from "formik";
 import {UseMutationResult} from "@tanstack/react-query";
 import {TextField} from "../../components/text-field/text-field.tsx";
+import {Modal} from "../../components/modal/modal.tsx";
+import {ModalFooter} from "../../components/modal/footer/modal-footer.tsx";
 
 interface EditPersonDialogProps {
     person: Person | null;
@@ -40,40 +40,24 @@ const EditPersonDialog: React.FC<EditPersonDialogProps> = ({person, visible, onS
             });
         },
     });
+    const handleOnClose = () => {
+        formik.resetForm();
+        onHide();
+    }
 
     return (
-        <Dialog
-            visible={visible}
-            header="Edytuj najemcę"
-            modal
-            onHide={() => {
-                onHide();
-                formik.resetForm();
-            }}
+        <Modal
+            isOpen={visible}
+            title="Edytuj najemcę"
+            onClose={handleOnClose}
             footer={
-                // @ts-ignore
-                !onSave.isLoading && (
-                    <div>
-                        <Button
-                            label="Anuluj"
-                            icon="pi pi-times"
-                            className="p-button-text"
-                            onClick={() => {
-                                onHide();
-                                formik.resetForm();
-                            }}
-                        />
-                        <Button
-                            label="Zapisz"
-                            icon="pi pi-check"
-                            className="p-button-text"
-                            onClick={() => formik.handleSubmit()}
-                        />
-                    </div>
-                )
+                <ModalFooter onConfirm={formik.handleSubmit}
+                             onCancel={handleOnClose}
+                             confirmLabel="Zapisz"
+                             cancelLabel="Anuluj"
+                />
             }
-        >
-            {onSave.isPending ? (
+            content={onSave.isPending ? (
                 <div className="flex justify-content-center align-items-center" style={{height: '200px'}}>
                     <i className="pi pi-spin pi-spinner" style={{fontSize: '3rem'}}></i>
                 </div>
@@ -87,7 +71,7 @@ const EditPersonDialog: React.FC<EditPersonDialogProps> = ({person, visible, onS
                     </div>
                 </form>
             )}
-        </Dialog>
+        />
     );
 };
 

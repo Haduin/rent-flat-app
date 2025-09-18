@@ -3,7 +3,7 @@ import {InputText} from "primereact/inputtext";
 import {FormikProps} from "formik";
 
 
-export type InputType = 'text' | 'number' | 'mixed';
+export type InputType = 'text' | 'number';
 
 interface TextFieldProps {
     name: string;
@@ -13,31 +13,13 @@ interface TextFieldProps {
     formik: FormikProps<any>; //todo poprawienie tego typu na jakiś generyk z komponentu przekazanego, np validationSchema??
 }
 
-export const TextField: React.FC<TextFieldProps> = ({name, label, disabled, formik,   inputType = 'mixed',
+export const TextField: React.FC<TextFieldProps> = ({
+                                                        name, label, disabled, formik, inputType = 'text'
                                                     }) => {
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
 
-    const specialKeys = [
-      'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-      'Tab', 'Enter', 'Escape', 'Home', 'End', 'Control', 'Alt', 'Shift'
-    ];
-
-    if (specialKeys.includes(e.key) || e.ctrlKey || e.altKey || e.metaKey) {
-      return;
-    }
-
-    if (inputType === 'number' && !/^[0-9.,]$/.test(e.key)) {
-      e.preventDefault();
-    } else if (inputType === 'text' && /[0-9]/.test(e.key)) {
-      e.preventDefault();
-    }
-  };
-
-
-
-  return (
-        <div className="field">
+    return (
+        <div className="my-4 flex flex-col">
             <label className="mr-2" htmlFor={label}>{label}</label>
             <InputText
                 disabled={disabled}
@@ -46,7 +28,7 @@ export const TextField: React.FC<TextFieldProps> = ({name, label, disabled, form
                 value={formik.values[name]}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                onKeyDown={handleKeyDown}
+                type={inputType}
                 className={formik.touched[name] && formik.errors[name] ? 'p-invalid' : 'w-full'}
             />
             {formik.touched[name] && formik.errors[name] && (

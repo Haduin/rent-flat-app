@@ -4,6 +4,8 @@ import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -16,7 +18,7 @@ class DatabaseProvider : DatabaseProviderContract, KoinComponent {
     private val config by inject<Config>()
 
     init {
-        Database.Companion.connect(
+        Database.connect(
             url = config.ktor.database.url,
             driver = config.ktor.database.driver,
             user = config.ktor.database.user,
@@ -32,7 +34,7 @@ class DatabaseProvider : DatabaseProviderContract, KoinComponent {
     }
 
     override suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) {
-//    addLogger(StdOutSqlLogger)
+        addLogger(StdOutSqlLogger)
         block()
     }
 }

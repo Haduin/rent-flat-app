@@ -18,7 +18,7 @@ export const ModalFooter = ({
                                 confirmButtonDisabled,
                                 cancelButtonDisabled,
                             }: ModalFooterProps) => (
-    <div className="flex justify-content-between gap-2">
+    <div className="flex justify-content-end gap-2">
         <Button
             disabled={cancelButtonDisabled}
             onClick={onCancel}

@@ -24,22 +24,22 @@ export const EditPaymentDialog = ({
                                   }: EditPaymentDialogProps) => {
 
 
-  const defaultValues  =  useMemo(() => ({
-    payedDate: selectedPayment?.payedDate ? new Date(selectedPayment.payedDate) : new Date(),
-    amount: selectedPayment?.amount,
-    status: selectedPayment?.status
-  }),[selectedPayment?.amount, selectedPayment?.payedDate, selectedPayment?.status])
+    const defaultValues = useMemo(() => ({
+        payedDate: selectedPayment?.payedDate ? new Date(selectedPayment.payedDate) : new Date(),
+        amount: selectedPayment?.amount,
+        status: selectedPayment?.status
+    }), [selectedPayment?.amount, selectedPayment?.payedDate, selectedPayment?.status])
 
     const formik = useFormik({
         initialValues: defaultValues,
         enableReinitialize: true,
-      onSubmit: async (values) => {
-          const request = {
-            paymentId: selectedPayment?.id,
-            payedDate: dateToStringFullYearMouthDay(values?.payedDate),
-            amount: values.amount,
-            status: values.status,
-          } as EditPayment;
+        onSubmit: async (values) => {
+            const request = {
+                paymentId: selectedPayment?.id,
+                payedDate: dateToStringFullYearMouthDay(values?.payedDate),
+                amount: values.amount,
+                status: values.status,
+            } as EditPayment;
             await onConfirm(request)
         },
         validationSchema: Yup.object().shape({
@@ -56,7 +56,7 @@ export const EditPaymentDialog = ({
         {label: "Anulowane", value: "CANCELLED", status: Status.CANCELLED}
     ];
 
-  return (
+    return (
         <Modal isOpen={isVisible}
                title="Edycja płatoności"
                onClose={onHide}
@@ -71,7 +71,6 @@ export const EditPaymentDialog = ({
                            options={statusOptions}
                            placeholder="Wybierz status płatności"
                        />
-
                    </form>
                }
                footer={

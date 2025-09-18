@@ -18,7 +18,7 @@ export const contractsApi: ContractsApi = {
         }
     }).then(response => response.data),
     addContract: (newContract: NewContract) => axiosInstance.post('/contracts', newContract),
-    updateContract: (contract: UpdateContractDetails) => axiosInstance.put(`/contracts/`, {data: contract}),
+    updateContract: (contract: UpdateContractDetails) => axiosInstance.put(`/contracts`, contract),
     deleteContract: (details: DeleteContractDTO) => axiosInstance.delete(`/contracts`, {data: details}),
     generateMouthPayments: (yearMonth: string) => axiosInstance.post(`/contracts/generateMonthlyPayments/${yearMonth}`)
 }

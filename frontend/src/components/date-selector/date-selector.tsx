@@ -24,7 +24,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
       return null;
     }
     return (
-        <div className="mb-4 mt-4">
+        <div className="my-4">
             <label className="block text-sm font-medium mb-2" htmlFor={name}>
                 {label}
             </label>
