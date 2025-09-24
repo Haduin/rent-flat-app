@@ -6,6 +6,7 @@ import {TextField} from "../../components/text-field/text-field.tsx";
 import {DateSelector} from "../../components/date-selector/date-selector.tsx";
 import {ModalFooter} from "../../components/modal/footer/modal-footer.tsx";
 import {UseMutationResult} from "@tanstack/react-query";
+import {SelectField} from "../../components/select/select-field.tsx";
 
 interface UpdateContractModalProps {
     isVisible: boolean;
@@ -19,14 +20,14 @@ interface UpdateContractModalProps {
 export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave}: UpdateContractModalProps) => {
     const formik = useFormik({
         initialValues: {
-            personId: selectedContract?.person?.firstName + " " + selectedContract?.person?.lastName || '',
-            roomId: selectedContract?.room?.id || '',
+            personName: selectedContract?.person?.firstName + " " + selectedContract?.person?.lastName || '',
+            roomId: Number(selectedContract?.room?.id),
             dates: selectedContract?.startDate && selectedContract?.endDate
                 ? [new Date(selectedContract.startDate), new Date(selectedContract.endDate)]
                 : [],
             amount: Number(selectedContract?.amount),
             deposit: selectedContract?.deposit + "" || null,
-            payedTillDayOfMonth: Number(selectedContract?.payedTillDayOfMonth)
+            payedTillDayOfMonth: Number(selectedContract?.payedTillDayOfMonth),
 
         },
         enableReinitialize: true,
@@ -39,7 +40,6 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
                 startDate: values.dates?.[0]?.toISOString().split('T')[0],
                 endDate: values.dates?.[1]?.toISOString().split('T')[0],
             };
-            console.log(updatedContract);
             onSave.mutate({contract: updatedContract});
             formik.resetForm();
         },
@@ -60,14 +60,16 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
                 onHide();
             }}
             content={
-                <form onSubmit={formik.handleSubmit}>
+                <>
                     <TextField
                         formik={formik}
                         label="Osoba"
-                        name="personId"
+                        name="personName"
                         inputType="text"
                         disabled
                     />
+                    <SelectField
+                        label="Mieszkanie | Pokój" name="room" options={[]} formik={formik}/>
                     <DateSelector
                         formik={formik}
                         name="dates"
@@ -93,7 +95,7 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
                         name="payedTillDayOfMonth"
                         inputType="number"
                     />
-                </form>
+                </>
             }
             footer={
                 <ModalFooter

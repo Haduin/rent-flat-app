@@ -5,6 +5,7 @@ export type SelectFieldProps = {
     name: string;
     options: SelectFieldOption[];
     formik: FormikProps<any>;
+    disabled?: boolean;
 }
 export type SelectFieldOption = {
     label: string;

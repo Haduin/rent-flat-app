@@ -110,6 +110,7 @@ export interface PaymentSummary {
 
 export interface UpdateContractDetails {
     contractId: number;
+    roomId?: number;
     amount?: number;
     deposit?: number;
     startDate?: string;

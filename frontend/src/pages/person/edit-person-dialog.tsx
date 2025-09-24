@@ -50,13 +50,6 @@ const EditPersonDialog: React.FC<EditPersonDialogProps> = ({person, visible, onS
             isOpen={visible}
             title="Edytuj najemcę"
             onClose={handleOnClose}
-            footer={
-                <ModalFooter onConfirm={formik.handleSubmit}
-                             onCancel={handleOnClose}
-                             confirmLabel="Zapisz"
-                             cancelLabel="Anuluj"
-                />
-            }
             content={onSave.isPending ? (
                 <div className="flex justify-content-center align-items-center" style={{height: '200px'}}>
                     <i className="pi pi-spin pi-spinner" style={{fontSize: '3rem'}}></i>
@@ -71,6 +64,13 @@ const EditPersonDialog: React.FC<EditPersonDialogProps> = ({person, visible, onS
                     </div>
                 </form>
             )}
+            footer={
+                <ModalFooter onConfirm={formik.handleSubmit}
+                             onCancel={handleOnClose}
+                             confirmLabel="Zapisz"
+                             cancelLabel="Anuluj"
+                />
+            }
         />
     );
 };

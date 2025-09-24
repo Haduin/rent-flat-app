@@ -1,11 +1,11 @@
 import React from 'react';
 import {NewPerson} from "./person-table.types.ts";
-import {Dialog} from "primereact/dialog";
-import {Button} from "primereact/button";
 import {useFormik} from "formik";
 import * as Yup from 'yup';
 import {UseMutationResult} from "@tanstack/react-query";
 import {TextField} from "../../components/text-field/text-field.tsx";
+import {Modal} from "../../components/modal/modal.tsx";
+import {ModalFooter} from "../../components/modal/footer/modal-footer.tsx";
 
 interface AddPersonDialogProps {
     visible: boolean;
@@ -40,53 +40,40 @@ const AddNewPersonDialog: React.FC<AddPersonDialogProps> = ({visible, onSave, on
         },
     });
 
-    return (
-        <Dialog
-            visible={visible}
-            header="Dodaj nowego najemcę"
-            modal
-            onHide={() => {
-                formik.resetForm();
-                onHide();
-            }}
-            footer={
-                <div className="flex justify-content-between">
-                    <Button
-                        label="Anuluj"
-                        icon="pi pi-times"
-                        className="p-button-text"
-                        onClick={() => {
-                            formik.resetForm();
-                            onHide();
-                        }}
-                    />
-                    <Button
-                        label="Zapisz"
-                        icon="pi pi-check"
-                        className="p-button-text"
-                        onClick={() => formik.handleSubmit()}
-                    />
-                </div>
-            }
-        >
-            {onSave.isPending ? (
-                <div className="flex justify-content-center align-items-center" style={{height: '200px'}}>
-                    <i className="pi pi-spin pi-spinner" style={{fontSize: '3rem'}}></i>
-                </div>
-            ) : (
-                <form>
-                    <div className="p-fluid">
-                        <TextField name="firstName" label="Imię" formik={formik}/>
-                        <TextField name="lastName" label="Nazwisko" formik={formik}/>
-                        <TextField name="documentNumber" label="Numer dokumentu" formik={formik}/>
-                        <TextField name="nationality" label="Narodowość" formik={formik}/>
-                        <TextField name="numer" label="numer" formik={formik}/>
-                    </div>
-                </form>
-            )}
+    const handleOnClose = () => {
+        formik.resetForm();
+        onHide();
+    }
 
-        </Dialog>
-    );
+    return (
+        <Modal isOpen={visible}
+               title="Dodaj nowego najemce"
+               onClose={handleOnClose}
+               content={onSave.isPending ? (
+                   <div className="flex justify-content-center align-items-center" style={{height: '200px'}}>
+                       <i className="pi pi-spin pi-spinner" style={{fontSize: '3rem'}}></i>
+                   </div>
+               ) : (
+                   <form>
+                       <div className="p-fluid">
+                           <TextField name="firstName" label="Imię" formik={formik}/>
+                           <TextField name="lastName" label="Nazwisko" formik={formik}/>
+                           <TextField name="documentNumber" label="Numer dokumentu" formik={formik}/>
+                           <TextField name="nationality" label="Narodowość" formik={formik}/>
+                           <TextField name="numer" label="numer" formik={formik}/>
+                       </div>
+                   </form>
+               )}
+               footer={
+                   <ModalFooter
+                       cancelLabel="Anuluj"
+                       confirmLabel="Zapisz"
+                       onConfirm={formik.handleSubmit}
+                       onCancel={handleOnClose}
+                   />
+               }
+        />
+    )
 };
 
 export default AddNewPersonDialog;

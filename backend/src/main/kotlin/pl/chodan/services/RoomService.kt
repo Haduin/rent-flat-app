@@ -79,14 +79,18 @@ class RoomService : KoinComponent {
                 .where {
                     (Room.apartmentId eq Apartment.id)
                         .and(Room.id notInSubQuery (Contract.select(Contract.roomId).where {
-                            (Contract.startDate greaterEq LocalDate.parse(startDate) and
-                                    (Contract.endDate lessEq LocalDate.parse(endDate)) and
-                                    (Contract.status eq ContractStatus.ACTIVE))
+                            (Contract.status eq ContractStatus.ACTIVE) and (
+                                    (Contract.startDate lessEq LocalDate.parse(endDate)) and
+                                            (Contract.endDate greaterEq LocalDate.parse(startDate))
+                                    )
                         }))
                 }.map {
                     RoomWithApartmentDTO(
-                        id = it[Room.id], number = it[Room.name], apartment = it[Apartment.name]
+                        id = it[Room.id],
+                        number = it[Room.name],
+                        apartment = it[Apartment.name]
                     )
                 }
         }
+
 }

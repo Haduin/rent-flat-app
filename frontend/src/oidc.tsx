@@ -28,7 +28,7 @@ export const {
     clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
     __unsafe_clientSecret: import.meta.env.VITE_OIDC_CLIENT_SECRET || undefined,
     __unsafe_useIdTokenAsAccessToken: import.meta.env.VITE_OIDC_USE_ID_TOKEN_AS_ACCESS_TOKEN === "true",
-    idleSessionLifetimeInSeconds: 120,
+    idleSessionLifetimeInSeconds: 600,
     scopes: import.meta.env.VITE_OIDC_SCOPE
         ? import.meta.env.VITE_OIDC_SCOPE.split(" ")
         : ["openid", "profile", "email"],

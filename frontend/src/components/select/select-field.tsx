@@ -6,6 +6,7 @@ export const SelectField = ({
                                 name,
                                 label,
                                 formik,
+                                disabled,
                                 options,
                             }: SelectFieldProps) => {
     return (
@@ -14,6 +15,7 @@ export const SelectField = ({
                 {label}
             </label>
             <Dropdown id={name}
+                      disabled={disabled}
                       name={name}
                       className="w-full rounded-md border"
                       onBlur={formik.handleBlur}

@@ -3,7 +3,7 @@ import {useContractsView} from "./contracts-view.hook.tsx";
 import {Button} from "primereact/button";
 import AddContractView from "./add-contract-view.tsx";
 import ContractDetailsModal from "./contract-details-modal.tsx";
-import DeleteContractModal from "./delete-contract-modal.tsx";
+import {DeleteContractModal} from "./delete-contract-modal.tsx";
 import {Checkbox} from "primereact/checkbox";
 import {ContractTable} from "./contract-view.table.tsx";
 import {UpdateContractModal} from "./update-contract-modal.tsx";
@@ -12,14 +12,16 @@ const ContractsView = () => {
 
     const {
         loading,
+        selectedContract,
+        unassignedPersons,
+
         handleOpenDetailsDialog,
         handleCloseDetailsDialog,
         isDetailsDialogVisible,
-        selectedContract,
+
         isAddContractDialogVisible,
         closeAddDialog,
         openAddDialog,
-        unassignedPersons,
         addContractMutation,
 
         isEditContractVisible,
@@ -31,7 +33,9 @@ const ContractsView = () => {
         handleOpenDeleteDialog,
         handleCloseDeleteDialog,
         deleteContractMutation,
-        showOnlyActiveContracts, setShowOnlyActiveContracts,
+
+        showOnlyActiveContracts,
+        setShowOnlyActiveContracts,
         showContracts,
     } = useContractsView();
 

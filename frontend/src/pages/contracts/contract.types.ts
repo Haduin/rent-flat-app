@@ -11,6 +11,7 @@ export interface DisableContractModalProps {
 }
 
 export interface DeleteContractFormikValues {
+    contractId: number;
     description: string;
     terminationDate: Date;
     depositReturned: boolean;
