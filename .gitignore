@@ -44,3 +44,4 @@ out/
 /.env
 /frontend/dist
 /frontend/node_modules
+/prod
