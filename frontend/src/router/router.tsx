@@ -11,7 +11,6 @@ const HomePage = lazy(() => import ("../pages/home/home-page.tsx"))
 const ApartmentsPage = lazy(() => import ("../pages/apartment/apartments-page.tsx"))
 const PersonTable = lazy(() => import ("../pages/person/person-table.tsx"))
 const PaymentsView = lazy(() => import ("../pages/payments/payments-view.tsx"))
-const PaymentSummary = lazy(() => import ("../pages/payments/payment-summary/payment-summary.tsx"))
 const ContractsView = lazy(() => import ("../pages/contracts/contracts-view.tsx"))
 
 
@@ -49,10 +48,6 @@ export const router = createBrowserRouter([
                     {
                         path: "/protected/platnosci",
                         element: <PaymentsView/>,
-                    },
-                    {
-                        path: "/protected/platnosci/podsumowanie",
-                        element: <PaymentSummary/>,
                     },
                     {
                         path: "/protected/kontract",

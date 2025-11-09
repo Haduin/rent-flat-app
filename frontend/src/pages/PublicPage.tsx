@@ -10,7 +10,7 @@ export default function PublicPage() {
             <div className="absolute inset-0 bg-black/40"/>
             <div className="relative z-10 text-center text-white">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
-                    Witamy w systemie mieszkań
+                    Witaj w systemie mieszkań
                 </h1>
                 <p className="text-lg md:text-xl mb-6 drop-shadow">
                     Zarządzaj najemcami, umowami i płatnościami w jednym miejscu
