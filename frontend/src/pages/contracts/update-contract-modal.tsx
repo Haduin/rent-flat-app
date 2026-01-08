@@ -51,6 +51,9 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
         })
     });
 
+    if (!isVisible)
+        return null;
+
     return (
         <Modal
             title="Edytuj Kontrakt"

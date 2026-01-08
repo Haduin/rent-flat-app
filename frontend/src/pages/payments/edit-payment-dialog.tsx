@@ -56,6 +56,9 @@ export const EditPaymentDialog = ({
         {label: "Anulowane", value: "CANCELLED", status: Status.CANCELLED}
     ];
 
+    if (!isVisible)
+        return null;
+
     return (
         <Modal isOpen={isVisible}
                title="Edycja płatoności"

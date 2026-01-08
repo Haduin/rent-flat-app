@@ -81,27 +81,35 @@ const ContractsView = () => {
                         handleOpenDeleteDialog={handleOpenDeleteDialog}
                     />
 
-                    <DeleteContractModal
-                        selectedContract={selectedContract}
-                        isVisible={isDeleteDialogVisible}
-                        onHide={handleCloseDeleteDialog}
-                        onConfirm={deleteContractMutation}
-                    />
-                    <AddContractView isVisible={isAddContractDialogVisible}
-                                     onSave={addContractMutation.mutate}
-                                     unassignedPersons={unassignedPersons}
-                                     onHide={closeAddDialog}/>
-                    <ContractDetailsModal
-                        selectedContract={selectedContract}
-                        visible={isDetailsDialogVisible}
-                        onHide={handleCloseDetailsDialog}
-                    />
-                    <UpdateContractModal
-                        selectedContract={selectedContract}
-                        isVisible={isEditContractVisible}
-                        onHide={handleCloseEditDialog}
-                        onSave={editContractMutation}
-                    />
+                    {isDeleteDialogVisible && (
+                        <DeleteContractModal
+                            selectedContract={selectedContract}
+                            isVisible={isDeleteDialogVisible}
+                            onHide={handleCloseDeleteDialog}
+                            onConfirm={deleteContractMutation}
+                        />
+                    )}
+                    {isAddContractDialogVisible && (
+                        <AddContractView isVisible={isAddContractDialogVisible}
+                                         onSave={addContractMutation.mutate}
+                                         unassignedPersons={unassignedPersons}
+                                         onHide={closeAddDialog}/>
+                    )}
+                    {isDetailsDialogVisible && (
+                        <ContractDetailsModal
+                            selectedContract={selectedContract}
+                            visible={isDetailsDialogVisible}
+                            onHide={handleCloseDetailsDialog}
+                        />
+                    )}
+                    {isEditContractVisible && (
+                        <UpdateContractModal
+                            selectedContract={selectedContract}
+                            isVisible={isEditContractVisible}
+                            onHide={handleCloseEditDialog}
+                            onSave={editContractMutation}
+                        />
+                    )}
                 </div>
             )}
         </div>

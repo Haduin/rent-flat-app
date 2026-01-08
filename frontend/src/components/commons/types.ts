@@ -82,6 +82,7 @@ export interface Payment {
     amount: number,
     person: Person,
     status: Status
+    room: Room
 }
 
 export interface EditPayment {

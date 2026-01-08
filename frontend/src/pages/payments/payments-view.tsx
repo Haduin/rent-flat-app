@@ -24,7 +24,9 @@ const PaymentsView = () => {
         isEditPaymentVisible,
         openEditDialog,
         closeEditDialog,
-        handleEditPayment
+        handleEditPayment,
+        handleTableSort,
+        sortState
     } = usePaymentsView()
 
     return (
@@ -56,6 +58,8 @@ const PaymentsView = () => {
                         openConfirmationDialog={openConfirmationDialog}
                         openEditDialog={openEditDialog}
                         payments={payments}
+                        handleTableSort={handleTableSort}
+                        sortState={sortState}
                     />
                     <ConfirmPaymentDialog
                         isVisible={isConfirmationDialogVisible}

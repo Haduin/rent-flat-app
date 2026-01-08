@@ -14,7 +14,6 @@ const ContractDetailsModal = ({
                                   onHide,
                                   selectedContract,
                               }: ContractDetailsModalProps) => {
-
     return (
         <Dialog header="Szczegóły kontraktu"
                 closeOnEscape={true}

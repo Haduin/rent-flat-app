@@ -9,6 +9,8 @@ import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 import pl.chodan.*
 import pl.chodan.database.*
+import pl.chodan.routing.PaymentSortableField
+import pl.chodan.routing.SortOrder
 import java.math.BigDecimal
 
 class PaymentService : KoinComponent {
@@ -63,30 +65,51 @@ class PaymentService : KoinComponent {
         }
     }
 
-    suspend fun getPaymentsForMouth(mouth: String) = databaseProvider.dbQuery {
-        //todo tutaj duzo zapytań bedzie leciało wiec pozniej refaktor tego
-        val roomsAparts = RoomService().getRoomsWithAparts()
-        Payment.selectAll().where { Payment.scopeDate eq mouth }.map { payments ->
-            ContractService().getContractById(payments[Payment.contractId])?.let {
-                val room = roomsAparts.find { room -> room.id == it.roomId }
-                val person = PersonService().getPersonById(it.personId)?.let { person ->
-                    PersonSmallDetailsDTO(
-                        id = person.id, firstName = person.firstName, lastName = person.lastName
+    suspend fun getPaymentsForMouth(mouth: String, sortFieldName: PaymentSortableField, sortOrder: SortOrder) =
+        databaseProvider.dbQuery {
+            //todo tutaj duzo zapytań bedzie leciało wiec pozniej refaktor tego
+            val roomsAparts = RoomService().getRoomsWithAparts()
+            val query = Payment.selectAll().where { Payment.scopeDate eq mouth }.map { payments ->
+                ContractService().getContractById(payments[Payment.contractId])?.let {
+                    val room = roomsAparts.find { room -> room.id == it.roomId }
+                    val person = PersonService().getPersonById(it.personId)?.let { person ->
+                        PersonSmallDetailsDTO(
+                            id = person.id, firstName = person.firstName, lastName = person.lastName
+                        )
+                    }
+                    PaymentHistoryWithPersonDTO(
+                        id = payments[Payment.id],
+                        contractId = payments[Payment.contractId],
+                        scopeDate = payments[Payment.scopeDate],
+                        payedDate = payments[Payment.payedDate]?.toString() ?: null,
+                        amount = payments[Payment.amount].toDouble(),
+                        person = person,
+                        room = room,
+                        status = payments[Payment.status]
                     )
                 }
-                PaymentHistoryWithPersonDTO(
-                    id = payments[Payment.id],
-                    contractId = payments[Payment.contractId],
-                    scopeDate = payments[Payment.scopeDate],
-                    payedDate = payments[Payment.payedDate]?.toString() ?: null,
-                    amount = payments[Payment.amount].toDouble(),
-                    person = person,
-                    room = room,
-                    status = payments[Payment.status]
-                )
             }
+            when (sortFieldName) {
+                PaymentSortableField.FLAT ->
+                    if (sortOrder == SortOrder.ASC)
+                        query.sortedBy { it?.room?.apartment }
+                    else
+                        query.sortedByDescending { it?.room?.apartment }
+
+                PaymentSortableField.PERSON ->
+                    if (sortOrder == SortOrder.ASC)
+                        query.sortedBy { it?.person?.firstName }
+                    else
+                        query.sortedByDescending { it?.person?.firstName }
+
+                else ->
+                    if (sortOrder == SortOrder.ASC)
+                        query.sortedBy { it?.id }
+                    else
+                        query.sortedByDescending { it?.id }
+            }.map { it!! }.toList()
+
         }
-    }
 
     suspend fun confirmPayment(paymentDto: PaymentConfirmationDTO) = databaseProvider.dbQuery {
         Payment.update({ Payment.id eq paymentDto.paymentId }) {
