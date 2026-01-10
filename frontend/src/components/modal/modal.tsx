@@ -25,10 +25,7 @@ export const Modal = ({isOpen, title, content, footer, onClose}: ModalProps) => 
                 maxWidth: '100%',
                 height: 'auto'
             }}
-            onHide={() => {
-                if (!isOpen) return;
-                onClose()
-            }}
+            onHide={onClose}
             breakpoints={{'960px': '100vw'}}
             header={title}
             visible={isOpen}

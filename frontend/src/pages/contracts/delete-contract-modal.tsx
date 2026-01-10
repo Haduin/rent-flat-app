@@ -7,10 +7,10 @@ import {dateToStringFullYearMouthDay} from "../../components/commons/dateFormatt
 import {DeleteContractFormikValues, DisableContractModalProps} from "./contract.types.ts";
 import {Modal} from "../../components/modal/modal.tsx";
 import {ModalFooter} from "../../components/modal/footer/modal-footer.tsx";
+import {useEffect} from "react";
 
 
 export const DeleteContractModal = ({isVisible, onHide, selectedContract, onConfirm}: DisableContractModalProps) => {
-
     const formik = useFormik<DeleteContractFormikValues>({
         initialValues: {
             contractId: Number(selectedContract?.id),
@@ -25,22 +25,52 @@ export const DeleteContractModal = ({isVisible, onHide, selectedContract, onConf
             depositReturned: Yup.boolean(),
             positiveCancel: Yup.boolean(),
         }),
-        enableReinitialize: true,
         onSubmit: (values) => {
             onConfirm.mutate({
-                details: {
-                    contractId: values.contractId,
-                    depositReturned: values.depositReturned,
-                    terminationDate: dateToStringFullYearMouthDay(values.terminationDate),
-                    description: values.description,
-                    positiveCancel: values.positiveCancel
+                    details: {
+                        contractId: values.contractId,
+                        depositReturned: values.depositReturned,
+                        terminationDate: dateToStringFullYearMouthDay(values.terminationDate),
+                        description: values.description,
+                        positiveCancel: values.positiveCancel
+                    }
+                }, {
+                    onSuccess: () => {
+                        onHide();
+                        formik.resetForm();
+                    },
+                    onError: (error) => {
+                        console.error("Błąd usuwania kontraktu:", error);
+                    }
                 }
-            });
+            );
         }
     })
 
+    useEffect(() => {
+        if (isVisible) {
+            formik.resetForm({
+                values: {
+                    contractId: Number(selectedContract?.id),
+                    description: '',
+                    terminationDate: new Date(),
+                    depositReturned: false,
+                    positiveCancel: false,
+                }
+            });
+        }
+    }, [isVisible, selectedContract]);
+
+    if (!isVisible)
+        return null;
+
     return (
-        <Modal isOpen={isVisible} onClose={onHide} title="Czy chcesz zakończyć kontrakt?"
+        <Modal isOpen={isVisible}
+               onClose={() => {
+                   onHide()
+                   formik.resetForm();
+               }}
+               title="Czy chcesz zakończyć kontrakt?"
                content={
                    <div className="m-4">
                        <DateSelector name="terminationDate" label="Data zakończenia kontraktu" formik={formik}/>

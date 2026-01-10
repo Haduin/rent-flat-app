@@ -25,7 +25,6 @@ const AddContractView = ({
                              unassignedPersons,
                          }: Props) => {
 
-
     const formik = useFormik({
         initialValues: {
             personId: '',
@@ -67,6 +66,9 @@ const AddContractView = ({
         ),
         enabled: !!formik.values.dates[0] && !!formik.values.dates[0]
     });
+
+    if (!isVisible)
+        return null;
 
     return (
         <Modal title="Dodaj nowy kontrakt"

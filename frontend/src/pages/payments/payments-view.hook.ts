@@ -6,6 +6,16 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 import {api} from "../../api/api.ts";
 import {queryClient} from "../../main.tsx";
 import {useModal} from "../../hooks/use-modal";
+import {PaymentSortableField, SortOrder} from "./model/payments.model.ts";
+import {DataTableStateEvent} from "primereact/datatable";
+
+export const fieldMapping: Record<string, PaymentSortableField> = {
+    'payerName': PaymentSortableField.PERSON,
+    'flat': PaymentSortableField.FLAT,
+    'amount': PaymentSortableField.AMOUNT,
+    'date': PaymentSortableField.DATE,
+    'status': PaymentSortableField.STATUS
+};
 
 export const usePaymentsView = () => {
     const {showToast} = useToast();
@@ -14,15 +24,49 @@ export const usePaymentsView = () => {
     const [isConfirmationDialogVisible, setIsConfirmationDialogVisible] = useState<boolean>(false);
     const {isOpen: isEditPaymentVisible, setOpen: setIsEditPaymentVisible} = useModal()
 
+    const [sortState, setSortState] = useState<{
+        field?: PaymentSortableField,
+        order?: SortOrder
+    }>({
+        field: undefined,
+        order: undefined
+    });
+
+
+    const handleTableSort = (event: DataTableStateEvent) => {
+        const {sortField, sortOrder} = event;
+
+
+        const mappedSortField = fieldMapping[sortField] || undefined;
+
+        if (mappedSortField) {
+            const newOrder =
+                sortOrder === 1 ? SortOrder.ASC :
+                    sortOrder === -1 ? SortOrder.DESC :
+                        undefined;
+
+            setSortState({
+                field: mappedSortField,
+                order: newOrder
+            });
+        }
+
+
+    };
 
     const {
         data: payments,
         isLoading: loading,
     } = useQuery({
-        queryKey: ['payments', dateSelected ? dateToStringWithYearMonth(dateSelected) : ''],
+        queryKey: ['payments', dateSelected ? dateToStringWithYearMonth(dateSelected) : '', sortState.field, sortState.order],
         queryFn: () => {
             if (!dateSelected) return Promise.resolve([]);
-            return api.paymentsApi.getPayments(dateToStringWithYearMonth(dateSelected));
+            return api.paymentsApi.getPayments(
+                dateToStringWithYearMonth(dateSelected),
+                sortState.field,
+                sortState.order
+            );
+
         },
         enabled: !!dateSelected
     });
@@ -85,21 +129,21 @@ export const usePaymentsView = () => {
 
 
     const handleConfirmPayment = async (date: Date, paymentId: number, amount: number) => {
-      closeConfirmationDialog()
-      confirmPayment.mutate({
-        paymentId: paymentId,
-        paymentDate: dateToStringFullYearMouthDay(date),
-        payedAmount: amount
-      })
+        closeConfirmationDialog()
+        confirmPayment.mutate({
+            paymentId: paymentId,
+            paymentDate: dateToStringFullYearMouthDay(date),
+            payedAmount: amount
+        })
     }
 
     const handleEditPayment = async (payment: EditPayment) => {
-      await api.paymentsApi.editPayment(payment)
-      await queryClient.invalidateQueries({
-        queryKey: ['payments']
-      })
-      showToast('success', 'Pomyślnie zaktualizowano płatność')
-      closeEditDialog()
+        await api.paymentsApi.editPayment(payment)
+        await queryClient.invalidateQueries({
+            queryKey: ['payments']
+        })
+        showToast('success', 'Pomyślnie zaktualizowano płatność')
+        closeEditDialog()
     }
 
     return {
@@ -116,6 +160,8 @@ export const usePaymentsView = () => {
         isEditPaymentVisible,
         openEditDialog,
         closeEditDialog,
-        handleEditPayment
+        handleEditPayment,
+        handleTableSort,
+        sortState
     };
 };

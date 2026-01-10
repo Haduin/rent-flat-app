@@ -21,7 +21,14 @@ fun Application.configurePaymentRouting() {
                 }
                 get("/{mouth}") {
                     call.parameters["mouth"]?.let { mouth ->
-                        val response = paymentService.getPaymentsForMouth(mouth)
+                        val sortFieldName = call.request.queryParameters["sortField"]
+                            ?.let { PaymentSortableField.valueOf(it) }
+                            ?: PaymentSortableField.ID
+                        val sortOrder = call.request.queryParameters["sortOrder"]
+                            ?.let { SortOrder.valueOf(it) }
+                            ?: SortOrder.ASC
+
+                        val response = paymentService.getPaymentsForMouth(mouth, sortFieldName, sortOrder)
                         call.respond(response)
                     } ?: call.respond(HttpStatusCode.BadRequest, "Mouth parameter is required")
 
@@ -66,4 +73,13 @@ fun Application.configurePaymentRouting() {
             }
         }
     }
+}
+
+enum class PaymentSortableField() {
+    ID(),
+    PERSON(),
+    FLAT(),
+    DATE(),
+    AMOUNT(),
+    STATUS()
 }

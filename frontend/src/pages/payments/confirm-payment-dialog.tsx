@@ -31,6 +31,9 @@ export const ConfirmPaymentDialog = ({isVisible, onHide, selectedPayment, onConf
         }
     })
 
+    if (!isVisible)
+        return null;
+
     return (
         <Modal isOpen={isVisible}
                title="Potwierdz wpłatne najemcy"
