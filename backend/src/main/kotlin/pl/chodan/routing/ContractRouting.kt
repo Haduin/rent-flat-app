@@ -12,11 +12,13 @@ import pl.chodan.NewContractDTO
 import pl.chodan.UpdateContractDetails
 import pl.chodan.services.ContractDeleteResult
 import pl.chodan.services.ContractService
+import pl.chodan.services.PaymentService
 import pl.chodan.ultis.DateValidator
 import pl.chodan.ultis.ValidationResult
 
 fun Application.configureContractRouting() {
     val contractService by inject<ContractService>()
+    val paymentService by inject<PaymentService>()
     routing {
         authenticate("auth-jwt") {
             route("/contracts") {
@@ -38,7 +40,7 @@ fun Application.configureContractRouting() {
                             try {
                                 call.respond(
                                     HttpStatusCode.Created,
-                                    contractService.generateNewPaymentsForActiveContracts(validationResult.value)
+                                    paymentService.generateNewPaymentsForActiveContracts(validationResult.value)
                                 )
                             } catch (e: Exception) {
                                 call.respond(

@@ -75,8 +75,11 @@ fun Application.configurePaymentRouting() {
     }
 }
 
-enum class PaymentSortableField(val fieldName: String) {
-    ID("id"),
-    PERSON("person"),
-    FLAT("flat")
+enum class PaymentSortableField() {
+    ID(),
+    PERSON(),
+    FLAT(),
+    DATE(),
+    AMOUNT(),
+    STATUS()
 }

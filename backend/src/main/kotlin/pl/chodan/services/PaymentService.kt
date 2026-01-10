@@ -1,7 +1,7 @@
 package pl.chodan.services
 
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.koin.core.component.KoinComponent
@@ -12,28 +12,68 @@ import pl.chodan.database.*
 import pl.chodan.routing.PaymentSortableField
 import pl.chodan.routing.SortOrder
 import java.math.BigDecimal
+import java.time.LocalDate
 
 class PaymentService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
     private val logger = LoggerFactory.getLogger(PaymentService::class.java)
 
-    suspend fun createPayments(contract: RawContract, yearMonth: String) = databaseProvider.dbQuery {
-        val paymentExists = checkIfPendingPaymentExistsForContract(contract.id, yearMonth)
-        if (!paymentExists) {
-            val paymentId = Payment.insert {
-                it[contractId] = contract.id
-                it[amount] = contract.amount?.toBigDecimal() ?: BigDecimal.ZERO
-                it[payedDate] = null
-                it[scopeDate] = yearMonth
-                it[status] = PaymentStatus.PENDING
-            } get Payment.id
+    suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = databaseProvider.dbQuery {
+        val startDate = LocalDate.parse("$yearMonth-01")
+        val endDate = startDate.plusMonths(1).minusDays(1)
 
-            logger.info("✅ Utworzono nową płatność - ID: $paymentId, Kontrakt: ${contract.id}, Okres: $yearMonth, Kwota: ${contract.amount}")
-        } else {
-            logger.info("ℹ️ Płatność już istnieje dla kontraktu ${contract.id} w okresie $yearMonth - pomijam")
+        val activeContracts = Contract.selectAll().where {
+            (Contract.startDate lessEq endDate) and
+                    (Contract.endDate greaterEq startDate) and
+                    (Contract.status eq ContractStatus.ACTIVE)
+        }.map { row ->
+            RawContract(
+                id = row[Contract.id],
+                personId = row[Contract.personId],
+                roomId = row[Contract.roomId],
+                startDate = row[Contract.startDate].toString(),
+                endDate = row[Contract.endDate].toString(),
+                dueDate = row[Contract.payedTillDayOfMonth],
+                amount = row[Contract.amount].toDouble(),
+                deposit = row[Contract.deposit].toDouble(),
+            )
         }
 
+        val existingPayments = Payment.selectAll().where {
+            Payment.scopeDate eq yearMonth
+        }.map { it[Payment.contractId] }.toSet()
+
+        val paymentsToInsert = activeContracts
+            .filterNot { existingPayments.contains(it.id) }
+            .map { contract ->
+                PaymentData(
+                    contractId = contract.id,
+                    amount = contract.amount?.toBigDecimal() ?: BigDecimal.ZERO,
+                    scopeDate = yearMonth
+                )
+            }
+
+        if (paymentsToInsert.isNotEmpty()) {
+            Payment.batchInsert(paymentsToInsert) { paymentData ->
+                this[Payment.contractId] = paymentData.contractId
+                this[Payment.amount] = paymentData.amount
+                this[Payment.payedDate] = null
+                this[Payment.scopeDate] = paymentData.scopeDate
+                this[Payment.status] = PaymentStatus.PENDING
+            }
+
+            logger.info("✅ Utworzono ${paymentsToInsert.size} nowych płatności dla miesiąca $yearMonth")
+        } else {
+            logger.info("ℹ️ Brak nowych płatności do wygenerowania w miesiącu $yearMonth")
+        }
     }
+
+    private data class PaymentData(
+        val contractId: Int,
+        val amount: BigDecimal,
+        val scopeDate: String
+    )
+
 
     suspend fun editPayment(paymentEdit: PaymentEdit) = databaseProvider.dbQuery {
 
@@ -44,13 +84,6 @@ class PaymentService : KoinComponent {
         }
 
     }
-
-    private suspend fun checkIfPendingPaymentExistsForContract(contractId: Int, yearMonth: String): Boolean =
-        databaseProvider.dbQuery {
-            Payment.selectAll().where {
-                (Payment.contractId eq contractId) and (Payment.scopeDate eq yearMonth)
-            }.singleOrNull() != null
-        }
 
     suspend fun getAllPayments(): List<PaymentDTO> = databaseProvider.dbQuery {
         Payment.selectAll().toList().map { resultRow ->
@@ -67,47 +100,70 @@ class PaymentService : KoinComponent {
 
     suspend fun getPaymentsForMouth(mouth: String, sortFieldName: PaymentSortableField, sortOrder: SortOrder) =
         databaseProvider.dbQuery {
-            //todo tutaj duzo zapytań bedzie leciało wiec pozniej refaktor tego
+            val payments = Payment.selectAll().where { Payment.scopeDate eq mouth }.toList()
             val roomsAparts = RoomService().getRoomsWithAparts()
-            val query = Payment.selectAll().where { Payment.scopeDate eq mouth }.map { payments ->
-                ContractService().getContractById(payments[Payment.contractId])?.let {
-                    val room = roomsAparts.find { room -> room.id == it.roomId }
-                    val person = PersonService().getPersonById(it.personId)?.let { person ->
+
+            val contractIds = payments.map { it[Payment.contractId] }.distinct()
+            val contracts = Contract.selectAll().where { Contract.id inList contractIds }
+                .associateBy { it[Contract.id] }
+
+            val personIds = contracts.values.map { it[Contract.personId] }.distinct()
+            val persons = Person.selectAll().where { Person.id inList personIds }
+                .associateBy { it[Person.id] }
+
+            val query = payments.mapNotNull { paymentRow ->
+                val contract = contracts[paymentRow[Payment.contractId]]
+                contract?.let {
+                    val room = roomsAparts.find { room -> room.id == it[Contract.roomId] }
+                    val person = persons[it[Contract.personId]]?.let { personRow ->
                         PersonSmallDetailsDTO(
-                            id = person.id, firstName = person.firstName, lastName = person.lastName
+                            id = personRow[Person.id],
+                            firstName = personRow[Person.firstName],
+                            lastName = personRow[Person.lastName]
                         )
                     }
                     PaymentHistoryWithPersonDTO(
-                        id = payments[Payment.id],
-                        contractId = payments[Payment.contractId],
-                        scopeDate = payments[Payment.scopeDate],
-                        payedDate = payments[Payment.payedDate]?.toString() ?: null,
-                        amount = payments[Payment.amount].toDouble(),
+                        id = paymentRow[Payment.id],
+                        contractId = paymentRow[Payment.contractId],
+                        scopeDate = paymentRow[Payment.scopeDate],
+                        payedDate = paymentRow[Payment.payedDate]?.toString() ?: null,
+                        amount = paymentRow[Payment.amount].toDouble(),
                         person = person,
                         room = room,
-                        status = payments[Payment.status]
+                        status = paymentRow[Payment.status]
                     )
                 }
             }
+
             when (sortFieldName) {
                 PaymentSortableField.FLAT ->
                     if (sortOrder == SortOrder.ASC)
-                        query.sortedBy { it?.room?.apartment }
+                        query.sortedBy { it.room?.apartment }
                     else
-                        query.sortedByDescending { it?.room?.apartment }
+                        query.sortedByDescending { it.room?.apartment }
 
                 PaymentSortableField.PERSON ->
                     if (sortOrder == SortOrder.ASC)
-                        query.sortedBy { it?.person?.firstName }
+                        query.sortedBy { it.person?.firstName }
                     else
-                        query.sortedByDescending { it?.person?.firstName }
+                        query.sortedByDescending { it.person?.firstName }
+
+                PaymentSortableField.DATE ->
+                    if (sortOrder == SortOrder.ASC) query.sortedBy { it.payedDate }
+                    else query.sortedByDescending { it.payedDate }
+
+                PaymentSortableField.AMOUNT -> if (sortOrder == SortOrder.ASC) query.sortedBy { it.amount }
+                else query.sortedByDescending { it.amount }
+
+                PaymentSortableField.STATUS -> if (sortOrder == SortOrder.ASC) query.sortedBy { it.status }
+                else query.sortedByDescending { it.status }
 
                 else ->
                     if (sortOrder == SortOrder.ASC)
-                        query.sortedBy { it?.id }
+                        query.sortedBy { it.id }
                     else
-                        query.sortedByDescending { it?.id }
-            }.map { it!! }.toList()
+                        query.sortedByDescending { it.id }
+            }.map { it }.toList()
 
         }
 

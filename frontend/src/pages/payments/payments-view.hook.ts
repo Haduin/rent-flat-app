@@ -12,6 +12,9 @@ import {DataTableStateEvent} from "primereact/datatable";
 export const fieldMapping: Record<string, PaymentSortableField> = {
     'payerName': PaymentSortableField.PERSON,
     'flat': PaymentSortableField.FLAT,
+    'amount': PaymentSortableField.AMOUNT,
+    'date': PaymentSortableField.DATE,
+    'status': PaymentSortableField.STATUS
 };
 
 export const usePaymentsView = () => {

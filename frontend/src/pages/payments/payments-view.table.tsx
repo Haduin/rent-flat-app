@@ -71,15 +71,6 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
         return null;
     };
 
-    const customDateSort = (event: any) => {
-        const {data, order} = event;
-        return [...data].sort((a, b) => {
-            const dateA = a.payedDate ? new Date(a.payedDate).getTime() : 0;
-            const dateB = b.payedDate ? new Date(b.payedDate).getTime() : 0;
-            return order === 1 ? dateA - dateB : dateB - dateA;
-        });
-    };
-
     return (
         <DataTable
             value={payments}
@@ -128,7 +119,6 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                 field="date"
                 header="Data"
                 sortable
-                sortFunction={customDateSort}
                 body={dateTemplate}
                 style={{width: '20%'}}
             />

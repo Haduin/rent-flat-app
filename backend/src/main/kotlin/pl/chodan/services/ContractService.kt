@@ -12,33 +12,6 @@ class ContractService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
     private val logger = LoggerFactory.getLogger(ContractService::class.java)
 
-    suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = databaseProvider.dbQuery {
-        // znajdz kontrakt miedzy datami start i end date
-        // następnie wygeneruj nowy payment
-
-        val startDate = LocalDate.parse("$yearMonth-01")
-        val endDate = startDate.plusMonths(1).minusDays(1)
-
-        Contract.selectAll().where {
-            (Contract.startDate lessEq endDate) and
-                    (Contract.endDate greaterEq startDate) and
-                    (Contract.status eq ContractStatus.ACTIVE)
-
-        }.map { row ->
-            RawContract(
-                id = row[Contract.id],
-                personId = row[Contract.personId],
-                roomId = row[Contract.roomId],
-                startDate = row[Contract.startDate].toString(),
-                endDate = row[Contract.endDate].toString(),
-                dueDate = row[Contract.payedTillDayOfMonth],
-                amount = row[Contract.amount].toDouble(),
-                deposit = row[Contract.deposit].toDouble(),
-            )
-        }.forEach { contract -> PaymentService().createPayments(contract, yearMonth) }
-
-    }
-
     suspend fun createContract(newContractDTO: NewContractDTO): Int = databaseProvider.dbQuery {
         Person.update({ Person.id eq newContractDTO.personId }) {
             it[status] = PersonStatus.RESIDENT

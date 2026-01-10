@@ -1,7 +1,10 @@
 export enum PaymentSortableField {
     ID = 'ID',
     PERSON = 'PERSON',
-    FLAT = 'FLAT'
+    FLAT = 'FLAT',
+    AMOUNT = 'AMOUNT',
+    DATE = 'DATE',
+    STATUS = 'STATUS'
 }
 
 export enum SortOrder {
