@@ -45,7 +45,7 @@ class ContractService : KoinComponent {
     }
 
     suspend fun updateContract(contractDetails: UpdateContractDetails) = databaseProvider.dbQuery {
-        val result = Contract.update({ Contract.id eq contractDetails.contractId }) {
+        Contract.update({ Contract.id eq contractDetails.contractId }) {
             contractDetails.roomId?.let { value -> it[roomId] = value }
             contractDetails.amount?.let { value -> it[amount] = value.toBigDecimal() }
             contractDetails.deposit?.let { value -> it[deposit] = value.toBigDecimal() }
@@ -53,7 +53,6 @@ class ContractService : KoinComponent {
             contractDetails.endDate?.let { value -> it[endDate] = value.toLocalDateWithFullPattern() }
             contractDetails.payedTillDayOfMonth?.let { value -> it[payedTillDayOfMonth] = value }
         }
-        println(result)
     }
 
 
