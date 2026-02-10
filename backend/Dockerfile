@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . /app/
 RUN gradle clean jar --no-daemon --info
 
-FROM openjdk:21-slim
+FROM amazoncorretto:21
 WORKDIR /app
 #COPY .env.prod /app/.env
 COPY --from=build /app/build/libs/backend.jar /app

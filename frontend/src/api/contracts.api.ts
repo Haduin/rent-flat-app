@@ -11,6 +11,7 @@ import {axiosInstance} from "./api.ts";
 export const contractsApi: ContractsApi = {
     fetchContracts: () => axiosInstance.get("/contracts").then(response => response.data),
     fetchUnassignedPersons: () => axiosInstance.get("/persons/non-residents").then(response => response.data),
+    fetchRooms: () => axiosInstance.get("/rooms").then(response => response.data),
     fetchUnassignedRooms: (startDate: string, endDate: string) => axiosInstance.get('/rooms/non-occupied', {
         params: {
             startDate: startDate,
@@ -25,6 +26,7 @@ export const contractsApi: ContractsApi = {
 
 export type ContractsApi = {
     fetchContracts: () => Promise<ContractDto[]>
+    fetchRooms: () => Promise<Room[]>
     fetchUnassignedPersons: () => Promise<PersonDto[]>
     fetchUnassignedRooms: (startDate: string, endDate: string) => Promise<Room[]>,
     addContract: (newContract: NewContract) => Promise<void>

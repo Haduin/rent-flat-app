@@ -14,7 +14,7 @@ fun Application.configureRoomRouting() {
         authenticate("auth-jwt") {
             route("/rooms") {
                 get {
-                    call.respond(roomService.getAllRooms())
+                    call.respond(roomService.getRoomsWithAparts())
                 }
                 get("/non-occupied") {
                     try {

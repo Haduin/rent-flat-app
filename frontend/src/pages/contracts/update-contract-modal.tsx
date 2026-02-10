@@ -1,12 +1,13 @@
-import {ContractDto, UpdateContractDetails} from "../../components/commons/types.ts";
+import {ContractDto, Room, UpdateContractDetails} from "../../components/commons/types.ts";
 import * as Yup from 'yup';
 import {useFormik} from "formik";
 import {Modal} from "../../components/modal/modal.tsx";
 import {TextField} from "../../components/text-field/text-field.tsx";
 import {DateSelector} from "../../components/date-selector/date-selector.tsx";
 import {ModalFooter} from "../../components/modal/footer/modal-footer.tsx";
-import {UseMutationResult} from "@tanstack/react-query";
+import {UseMutationResult, useQuery} from "@tanstack/react-query";
 import {SelectField} from "../../components/select/select-field.tsx";
+import {api} from "../../api/api.ts";
 
 interface UpdateContractModalProps {
     isVisible: boolean;
@@ -18,6 +19,13 @@ interface UpdateContractModalProps {
 }
 
 export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave}: UpdateContractModalProps) => {
+
+    const {data: rooms} = useQuery<Room[]>({
+        queryKey: ['rooms'],
+        queryFn: () => api.contractsApi.fetchRooms(),
+        enabled: true
+    });
+
     const formik = useFormik({
         initialValues: {
             personName: selectedContract?.person?.firstName + " " + selectedContract?.person?.lastName || '',
@@ -32,10 +40,12 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
         },
         enableReinitialize: true,
         onSubmit: (values) => {
+            console.log(values)
             const updatedContract: UpdateContractDetails = {
                 contractId: selectedContract!.id,
                 amount: Number(values.amount),
                 deposit: Number(values.deposit),
+                roomId: values.roomId,
                 payedTillDayOfMonth: values.payedTillDayOfMonth + "",
                 startDate: values.dates?.[0]?.toISOString().split('T')[0],
                 endDate: values.dates?.[1]?.toISOString().split('T')[0],
@@ -50,6 +60,8 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
             payedTillDayOfMonth: Yup.string().required("Data przewidywanej płatności jest wymagana")
         })
     });
+
+    const mappedRooms = rooms?.map(room => ({label: `${room.apartment} ${room.number}`, value: room.id})) || [];
 
     if (!isVisible)
         return null;
@@ -72,7 +84,10 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
                         disabled
                     />
                     <SelectField
-                        label="Mieszkanie | Pokój" name="room" options={[]} formik={formik}/>
+                        label="Mieszkanie | Pokój"
+                        options={mappedRooms}
+                        name="roomId"
+                        formik={formik}/>
                     <DateSelector
                         formik={formik}
                         name="dates"

@@ -64,11 +64,12 @@ fun Application.configureContractRouting() {
                 }
                 put {
                     val contract = call.receive<UpdateContractDetails>()
+                    println(contract)
                     try {
-                        println(contract)
                         contractService.updateContract(contract)
                         call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zaktualizowany")
                     } catch (e: Exception) {
+                        println(e.message)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             mapOf("error" to "Failed to edit contract: ${e.message}")
