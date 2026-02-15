@@ -1,17 +1,12 @@
 package pl.chodan.database
 
 import kotlinx.coroutines.Dispatchers
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import pl.chodan.config.Config
-import kotlin.getValue
 
 class DatabaseProvider : DatabaseProviderContract, KoinComponent {
 
@@ -29,7 +24,16 @@ class DatabaseProvider : DatabaseProviderContract, KoinComponent {
             val schema = Schema("flat")
             SchemaUtils.createSchema(schema)
             SchemaUtils.setSchema(schema)
-            SchemaUtils.create(Apartment, Room, Person, Contract, Payment, UtilityCosts)
+            SchemaUtils.create(
+                Apartment,
+                Room,
+                Person,
+                Contract,
+                Payment,
+                UtilityCosts,
+                OperationalExpenseTemplate,
+                OperationalExpense
+            )
         }
     }
 

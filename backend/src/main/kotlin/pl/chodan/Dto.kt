@@ -5,7 +5,20 @@ import kotlinx.serialization.Serializable
 import pl.chodan.database.ContractStatus
 import pl.chodan.database.PaymentStatus
 import pl.chodan.database.UtilityType
+import pl.chodan.database.ExpenseCategory
 import java.math.BigDecimal
+
+@Serializable
+enum class ExpenseCategorySerializable {
+    OWNER_RENT,
+    UTILITY_WATER_COLD,
+    UTILITY_WATER_HOT,
+    UTILITY_ELECTRICITY,
+    UTILITY_GAS,
+    TAX_ZUS,
+    TAX_PIT,
+    OTHER
+}
 
 @Serializable
 data class ApartmentDTO(val id: Int, val name: String)
@@ -187,4 +200,44 @@ data class PaymentEdit(
     val amount: Double?,
     val status: PaymentStatus?,
     val payedDate: String?
+)
+
+@Serializable
+data class OperationalExpenseDTO(
+    val id: Int,
+    val apartmentId: Int?,
+    val roomId: Int?,
+    val insertDate: String,
+    val costDate: String?,
+    val amount: Double,
+    val category: ExpenseCategory,
+    val description: String?,
+    val invoiceNumber: String?,
+    val templateId: Int?
+)
+
+@Serializable
+data class NewOperationalExpenseDTO(
+    val apartmentId: Int?,
+    val roomId: Int?,
+    val insertDate: String,
+    val costDate: String?,
+    val amount: Double,
+    val category: ExpenseCategory,
+    val description: String?,
+    val invoiceNumber: String?,
+    val templateId: Int? = null
+)
+
+@Serializable
+data class UpdateOperationalExpenseDTO(
+    val id: Int,
+    val apartmentId: Int?,
+    val roomId: Int?,
+    val insertDate: String?,
+    val costDate: String?,
+    val amount: Double?,
+    val category: ExpenseCategory?,
+    val description: String?,
+    val invoiceNumber: String?
 )

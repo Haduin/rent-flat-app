@@ -123,3 +123,52 @@ export interface UpdateContractDetails {
 export const getStatusLabel = (status: Status): string => {
     return statusMap[status] || 'Nieznany';
 };
+
+// Operational expenses domain
+export enum ExpenseCategory {
+    OWNER_RENT = 'OWNER_RENT',
+    UTILITY_WATER_COLD = 'UTILITY_WATER_COLD',
+    UTILITY_WATER_HOT = 'UTILITY_WATER_HOT',
+    UTILITY_ELECTRICITY = 'UTILITY_ELECTRICITY',
+    UTILITY_GAS = 'UTILITY_GAS',
+    TAX_ZUS = 'TAX_ZUS',
+    TAX_PIT = 'TAX_PIT',
+    OTHER = 'OTHER',
+}
+
+export interface OperationalExpense {
+    id: number;
+    apartmentId?: number | null;
+    roomId?: number | null;
+    insertDate: string; // yyyy-MM-dd
+    costDate?: string | null; // yyyy-MM-dd
+    amount: number;
+    category: ExpenseCategory;
+    description?: string | null;
+    invoiceNumber?: string | null;
+    templateId?: number | null;
+}
+
+export interface NewOperationalExpense {
+    apartmentId?: number | null;
+    roomId?: number | null;
+    insertDate: string; // yyyy-MM-dd
+    costDate?: string | null; // yyyy-MM-dd
+    amount: number;
+    category: ExpenseCategory;
+    description?: string | null;
+    invoiceNumber?: string | null;
+    templateId?: number | null;
+}
+
+export interface UpdateOperationalExpense {
+    id: number;
+    apartmentId?: number | null;
+    roomId?: number | null;
+    insertDate?: string; // yyyy-MM-dd
+    costDate?: string | null; // yyyy-MM-dd
+    amount?: number;
+    category?: ExpenseCategory;
+    description?: string | null;
+    invoiceNumber?: string | null;
+}

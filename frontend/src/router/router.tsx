@@ -5,6 +5,7 @@ import {getOidc} from "../oidc.tsx";
 import ApartmentPage from "../pages/apartment/apartment-page.tsx";
 import {UtilityPage} from "../pages/utility/utility-page.tsx";
 
+const ExpensesView = lazy(() => import("../pages/expenses/expenses-view.tsx"));
 const PublicPage = lazy(() => import("../pages/PublicPage"));
 const NavigationComponent = lazy(() => import("../pages/NavigationComponent.tsx"));
 const HomePage = lazy(() => import ("../pages/home/home-page.tsx"))
@@ -56,6 +57,10 @@ export const router = createBrowserRouter([
                     {
                         path: "/protected/koszta",
                         element: <UtilityPage/>,
+                    },
+                    {
+                        path: "/protected/wydatki",
+                        element: <ExpensesView/>,
                     },
                 ],
             },

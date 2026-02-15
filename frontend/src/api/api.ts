@@ -4,12 +4,16 @@ import {personsApi} from "./persons.api.ts";
 import {apartmentsApi} from "./apartments.api.ts";
 import {paymentsApi} from "./payments.api.ts";
 import {contractsApi} from "./contracts.api.ts";
+import {expensesApi} from "./expenses.api.ts";
+import {expenseTemplatesApi} from "./expense-templates.api.ts";
 
 type Api = {
     apartmentsApi: typeof apartmentsApi
     personsApi: typeof personsApi
     paymentsApi: typeof paymentsApi
     contractsApi: typeof contractsApi
+    expensesApi: typeof expensesApi
+    expenseTemplatesApi: typeof expenseTemplatesApi
 };
 
 export const axiosInstance = axios.create({
@@ -42,5 +46,7 @@ export const api: Api = {
     apartmentsApi: apartmentsApi,
     personsApi: personsApi,
     paymentsApi: paymentsApi,
-    contractsApi: contractsApi
+    contractsApi: contractsApi,
+    expensesApi: expensesApi,
+    expenseTemplatesApi: expenseTemplatesApi,
 };

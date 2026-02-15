@@ -47,6 +47,11 @@ const NavigationComponent = () => {
             label: 'Płatności',
             icon: 'pi pi-credit-card',
             url: '/protected/platnosci',
+        },
+        {
+            label: 'Wydatki',
+            icon: 'pi pi-wallet',
+            url: '/protected/wydatki'
         }
     ];
     const nav = useNavigate();

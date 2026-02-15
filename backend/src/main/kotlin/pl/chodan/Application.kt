@@ -31,7 +31,9 @@ fun Application.module() {
     configureRoomRouting()
     configureContractRouting()
     configurePaymentRouting()
-
+    configureExpenseRouting()
+    configureExpenseTemplateRouting()
+ 
 }
 
 val appModule = { config: Config ->
@@ -45,6 +47,8 @@ val appModule = { config: Config ->
         singleOf(::RoomService)
         singleOf(::ContractService)
         singleOf(::PaymentService)
+        singleOf(::ExpenseService)
+        singleOf(::ExpenseTemplateService)
 
     }
 }
