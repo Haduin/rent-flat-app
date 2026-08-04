@@ -5,14 +5,14 @@ import {getOidc} from "../oidc.tsx";
 import ApartmentPage from "../pages/apartment/apartment-page.tsx";
 import {UtilityPage} from "../pages/utility/utility-page.tsx";
 
-const ExpensesView = lazy(() => import("../pages/expenses/expenses-view.tsx"));
+const ExpensesTemplateView = lazy(() => import("../pages/expenses-template/expenses-template-view/expenses-template-view.tsx"));
 const PublicPage = lazy(() => import("../pages/PublicPage"));
 const NavigationComponent = lazy(() => import("../pages/NavigationComponent.tsx"));
 const HomePage = lazy(() => import ("../pages/home/home-page.tsx"))
 const ApartmentsPage = lazy(() => import ("../pages/apartment/apartments-page.tsx"))
-const PersonTable = lazy(() => import ("../pages/person/person-table.tsx"))
+const PersonTable = lazy(() => import ("../pages/person/person-table/person-table.tsx"))
 const PaymentsView = lazy(() => import ("../pages/payments/payments-view.tsx"))
-const ContractsView = lazy(() => import ("../pages/contracts/contracts-view.tsx"))
+const ContractsView = lazy(() => import ("../pages/contracts/contract-view/contracts-view.tsx"))
 
 
 export const router = createBrowserRouter([
@@ -60,7 +60,7 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "/protected/wydatki",
-                        element: <ExpensesView/>,
+                        element: <ExpensesTemplateView/>,
                     },
                 ],
             },

@@ -1,13 +1,12 @@
-import {ContractDto, DeleteContractDTO} from "../../components/commons/types.ts";
+import {DeleteContractDTO} from "../../components/commons/types.ts";
 import {UseMutationResult} from "@tanstack/react-query";
+import {ContractDTO} from "../../api/generated";
 
 export interface DisableContractModalProps {
     isVisible: boolean;
-    selectedContract: ContractDto | null
+    selectedContract: ContractDTO | null
     onHide: () => void;
-    onConfirm: UseMutationResult<void, Error, {
-        details: DeleteContractDTO
-    }>
+    onConfirm: UseMutationResult<void, unknown, DeleteContractDTO, unknown>;
 }
 
 export interface DeleteContractFormikValues {

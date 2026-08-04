@@ -1,6 +1,7 @@
 package pl.chodan.database
 
 import org.jetbrains.exposed.sql.Table
+import pl.chodan.model.apartment.database.Apartment
 
 object Room : Table("flat.room") {
     val id = integer("id").autoIncrement()

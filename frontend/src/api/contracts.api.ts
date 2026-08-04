@@ -6,7 +6,8 @@ import {
     Room,
     UpdateContractDetails
 } from "../components/commons/types.ts";
-import {axiosInstance} from "./api.ts";
+import {axiosInstance} from "./expenses-template.api.ts";
+import {config} from "./config.api";
 
 export const contractsApi: ContractsApi = {
     fetchContracts: () => axiosInstance.get("/contracts").then(response => response.data),
@@ -34,3 +35,5 @@ export type ContractsApi = {
     deleteContract: (details: DeleteContractDTO) => Promise<void>
     generateMouthPayments: (yearMonth: string) => Promise<void>
 };
+
+export const contractApi = new ContractsApi(config);

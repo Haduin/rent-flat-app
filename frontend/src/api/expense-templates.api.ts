@@ -1,11 +1,16 @@
-import {axiosInstance} from "./api.ts";
+import {axiosInstance} from "./expenses-template.api.ts";
+import {AddExpenseTemplateRequest, OperationalExpenseTemplateResponse} from "../pages/expenses/types.ts";
 
+export const expenseTemplatesApi = new ExpenseTemplatesApi(config);
+
+
+const baseUrl = "/expense-template"
 export const expenseTemplatesApi: ExpenseTemplatesApi = {
-    generate: (yearMonth: string) => axiosInstance.post(`/expense-templates/generate`, null, {
-        params: { yearMonth }
-    }).then(res => res.data)
+    addExpenseTemplate: (expenseTemplate: AddExpenseTemplateRequest) => axiosInstance.post(baseUrl, expenseTemplate),
+    findAll: (): Promise<OperationalExpenseTemplateResponse[]> => axiosInstance.get(baseUrl).then(res => res.data),
 }
 
 export type ExpenseTemplatesApi = {
-    generate: (yearMonth: string) => Promise<{ created: number, createdIds: number[] }>
+    addExpenseTemplate: (expenseTemplate: AddExpenseTemplateRequest) => Promise<void>,
+    findAll: () => Promise<OperationalExpenseTemplateResponse[]>
 }

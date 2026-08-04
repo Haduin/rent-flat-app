@@ -10,8 +10,8 @@ export const SelectField = ({
                                 options,
                             }: SelectFieldProps) => {
     return (
-        <div className="mb-4">
-            <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+        <div className="">
+            <label htmlFor={name} className="block text-sm font-medium">
                 {label}
             </label>
             <Dropdown id={name}
@@ -22,6 +22,7 @@ export const SelectField = ({
                       value={formik.values[name]}
                       onChange={(e) => formik.setFieldValue(name, e.value)}
                       options={options}
+                      emptyMessage="Brak opcji do wyboru"
             >
                 {options.map((opt, index) => (
                     <option key={index} label={opt.label}

@@ -23,6 +23,24 @@ repositories {
     mavenCentral()
 }
 
+// Separate source set for Testcontainers-backed integration tests, kept out of the default
+// `test` task so `./gradlew test` stays fast and Docker-free. Run with `./gradlew integrationTest`.
+sourceSets {
+    val integrationTest by creating {
+        kotlin.srcDir("src/integrationTest/kotlin")
+        resources.srcDir("src/integrationTest/resources")
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+val integrationTestImplementation by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+val integrationTestRuntimeOnly by configurations.getting {
+    extendsFrom(configurations.testRuntimeOnly.get())
+}
+
 dependencies {
     implementation("io.ktor:ktor-client-core:2.3.0")
     implementation("io.ktor:ktor-client-cio:2.3.0")
@@ -50,14 +68,47 @@ dependencies {
     implementation("io.insert-koin:koin-ktor:$koin_ktor")
     testImplementation("io.ktor:ktor-server-test-host:${ktor_version}")
     testImplementation("org.jetbrains.kotlin:kotlin-test:${kotlin_version}")
-    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
-    testImplementation("org.testcontainers:postgresql:1.21.3")
     testImplementation("io.insert-koin:koin-test:$koin_ktor")
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("io.ktor:ktor-server-test-host:${ktor_version}")
     testImplementation("org.jetbrains.kotlin:kotlin-test:${kotlin_version}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+
+    implementation("io.ktor:ktor-server-core")
+    implementation("io.ktor:ktor-server-netty")
+
+    implementation("io.ktor:ktor-server-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
+
+    implementation("io.ktor:ktor-server-openapi")
+    implementation("io.ktor:ktor-server-swagger")
+    implementation("io.github.smiley4:ktor-openapi:5.6.0")
+    implementation("io.github.smiley4:schema-kenerator-core:2.7.1")
+    implementation("io.github.smiley4:schema-kenerator-reflection:2.7.1")
+    implementation("io.github.smiley4:schema-kenerator-serialization:2.7.1")
+    implementation("io.github.smiley4:schema-kenerator-jsonschema:2.7.1")
+    implementation("io.github.smiley4:schema-kenerator-swagger:2.7.1")
+    implementation("io.github.smiley4:schema-kenerator-jackson:2.7.1")
+    implementation("io.github.smiley4:schema-kenerator-jackson-jsonschema:2.7.1")
+    implementation("io.github.smiley4:schema-kenerator-jackson-swagger:2.7.1")
+    implementation("io.github.smiley4:schema-kenerator-validation-swagger:2.7.1")
+
+    implementation("org.jetbrains.exposed:exposed-core")
+
+    integrationTestImplementation("org.testcontainers:postgresql:1.21.3")
+    integrationTestImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    integrationTestImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+    integrationTestRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+}
+
+val integrationTest = tasks.register<Test>("integrationTest") {
+    description = "Runs integration tests against a real PostgreSQL instance via Testcontainers. Requires a running Docker daemon."
+    group = "verification"
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
+    useJUnitPlatform()
+    shouldRunAfter(tasks.test)
 }
 
 tasks.jar {

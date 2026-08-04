@@ -9,6 +9,7 @@ interface DateSelectorProps {
     disabled?: boolean;
     selectionMode?: CalendarSelectionMode;
     hideOnRangeSelection?: boolean;
+    dateFormat?: string;
 }
 
 export const DateSelector: React.FC<DateSelectorProps> = ({
@@ -17,14 +18,12 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                                                               formik,
                                                               disabled,
                                                               selectionMode = "single",
-                                                              hideOnRangeSelection = false
+                                                              hideOnRangeSelection = false,
+                                                              dateFormat = "yy-mm-dd"
                                                           }) => {
 
-    if(formik.values[name] === null){
-      return null;
-    }
     return (
-        <div className="my-4">
+        <div className="">
             <label className="block text-sm font-medium mb-2" htmlFor={name}>
                 {label}
             </label>
@@ -37,7 +36,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                 className={`w-full rounded-md ${formik.touched[name] && formik.errors[name] ? 'p-invalid' : ''}`}
                 disabled={disabled}
                 locale="pl"
-                dateFormat="yy-mm-dd"
+                dateFormat={dateFormat}
                 readOnlyInput
                 selectionMode={selectionMode}
                 hideOnRangeSelection={hideOnRangeSelection}

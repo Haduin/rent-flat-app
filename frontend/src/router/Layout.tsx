@@ -1,5 +1,5 @@
 import {Outlet} from "react-router";
-import {AutoLogoutCountdown} from "./AutoLogoutCountdown";
+import {AutoLogoutWarningOverlay} from "./AutoLogoutWarningOverlay";
 
 
 export function Layout() {
@@ -7,7 +7,7 @@ export function Layout() {
         <>
             {/*<Header/>*/}
             <Outlet/>
-            <AutoLogoutCountdown/>
+            <AutoLogoutWarningOverlay/>
         </>
     );
 }

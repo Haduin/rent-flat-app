@@ -7,12 +7,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import pl.chodan.config.Config
+import pl.chodan.model.apartment.database.Apartment
+import pl.chodan.model.contract.database.Contract
 
 class DatabaseProvider : DatabaseProviderContract, KoinComponent {
 
     private val config by inject<Config>()
 
     init {
+        exposedLogger.info("Connecting to database")
         Database.connect(
             url = config.ktor.database.url,
             driver = config.ktor.database.driver,
@@ -30,7 +33,6 @@ class DatabaseProvider : DatabaseProviderContract, KoinComponent {
                 Person,
                 Contract,
                 Payment,
-                UtilityCosts,
                 OperationalExpenseTemplate,
                 OperationalExpense
             )

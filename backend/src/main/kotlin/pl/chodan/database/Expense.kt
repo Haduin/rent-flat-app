@@ -2,6 +2,7 @@ package pl.chodan.database
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.date
+import pl.chodan.model.apartment.database.Apartment
 
 /**
  * Tabela kosztów operacyjnych powiązanych z mieszkaniami/pokojami.
@@ -43,11 +44,7 @@ object OperationalExpenseTemplate : Table("flat.operational_expense_template") {
         toDb = { value -> value.name }
     )
     val dayOfMonth = integer("day_of_month")
-    val description = varchar("description", 255).nullable()
-    val invoicePrefix = varchar("invoice_prefix", 50).nullable()
     val active = bool("active").default(true)
-    val startMonth = date("start_month").nullable() // yyyy-MM
-    val endMonth = date("end_month").nullable() // yyyy-MM
 
     override val primaryKey = PrimaryKey(id)
 }

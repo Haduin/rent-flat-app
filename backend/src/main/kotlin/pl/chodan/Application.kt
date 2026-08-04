@@ -9,8 +9,20 @@ import org.koin.dsl.module
 import pl.chodan.config.*
 import pl.chodan.database.DatabaseProvider
 import pl.chodan.database.DatabaseProviderContract
-import pl.chodan.routing.*
-import pl.chodan.services.*
+import pl.chodan.model.apartment.routing.configureApartmentRouting
+import pl.chodan.model.apartment.service.ApartmentService
+import pl.chodan.model.contract.routing.configureContractRouting
+import pl.chodan.model.contract.service.ContractService
+import pl.chodan.model.expenses.routing.configureExpenseRouting
+import pl.chodan.model.expenses.routing.configureExpenseTemplateRouting
+import pl.chodan.model.expenses.service.ExpenseService
+import pl.chodan.model.expenses.service.ExpenseTemplateService
+import pl.chodan.model.payments.routing.configurePaymentRouting
+import pl.chodan.model.payments.service.PaymentService
+import pl.chodan.model.perons.routing.configurePersonRouting
+import pl.chodan.model.perons.service.PersonService
+import pl.chodan.model.room.routing.configureRoomRouting
+import pl.chodan.model.room.service.RoomService
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -25,7 +37,7 @@ fun Application.module() {
     }
 
     configureModules()
-
+    configureOpenAPI()
     configureApartmentRouting()
     configurePersonRouting()
     configureRoomRouting()
@@ -33,13 +45,12 @@ fun Application.module() {
     configurePaymentRouting()
     configureExpenseRouting()
     configureExpenseTemplateRouting()
- 
 }
 
 val appModule = { config: Config ->
     module {
         single<Config> { config }
-        single<DatabaseProviderContract> { DatabaseProvider() }
+        single<DatabaseProviderContract>(createdAtStart = true) { DatabaseProvider() }
 
         // Services
         singleOf(::ApartmentService)

@@ -1,6 +1,15 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package pl.chodan
 
 import com.auth0.jwk.JwkProviderBuilder
+import io.github.smiley4.ktoropenapi.OpenApi
+import io.github.smiley4.ktoropenapi.config.ExampleEncoder
+import io.github.smiley4.ktoropenapi.config.OutputFormat
+import io.github.smiley4.ktoropenapi.config.SchemaGenerator
+import io.github.smiley4.ktoropenapi.openApi
+import io.github.smiley4.schemakenerator.swagger.data.RefType
+import io.github.smiley4.schemakenerator.swagger.data.TitleType
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -10,6 +19,8 @@ import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
 import org.koin.ktor.ext.inject
@@ -24,57 +35,40 @@ fun Application.configureModules() {
 
     val config by inject<Config>()
     val logger = LoggerFactory.getLogger(Module::class.java)
-    println(config)
     install(Authentication) {
-        if(config.keycloak.url != "mock") {
-            jwt("auth-jwt") {
-                verifier(
-                    JwkProviderBuilder(URL("${config.keycloak.url}/realms/${config.keycloak.realm}/protocol/openid-connect/certs"))
-                        .build(),
-                    issuer = "${config.keycloak.url}/realms/${config.keycloak.realm}",
-                )
-                validate { credential ->
-                    try {
-                        val username = credential.payload.getClaim("preferred_username").asString()
-                        val email = credential.payload.getClaim("email")?.asString()
-                        val roles = credential.payload.getClaim("realm_access")?.asMap()?.get("roles") as? List<String>
-                            ?: emptyList()
+        jwt("auth-jwt") {
+            verifier(
+                JwkProviderBuilder(URL("${config.keycloak.url}/realms/${config.keycloak.realm}/protocol/openid-connect/certs")).build(),
+                issuer = "${config.keycloak.url}/realms/${config.keycloak.realm}",
+            )
+            validate { credential ->
+                try {
+                    val username = credential.payload.getClaim("preferred_username").asString()
+                    val email = credential.payload.getClaim("email")?.asString()
+                    val roles = credential.payload.getClaim("realm_access")?.asMap()?.get("roles") as? List<String>
+                        ?: emptyList()
 
-                        if (username != null) {
-                            val userDetails = UserDetails(
-                                username = username,
-                                email = email,
-                                roles = roles,
-                                isAuthenticated = true
-                            )
-                            KtorUserDetailsPrincipal(userDetails)
-                        } else {
-                            logger.warn("Brak preferred_username w tokenie JWT dla '${credential.payload.subject}'")
-                            null
-                        }
-                    } catch (e: Exception) {
-                        logger.error(
-                            "Błąd walidacji tokenu JWT: ${e.message}",
-                            e
+                    if (username != null) {
+                        val userDetails = UserDetails(
+                            username = username, email = email, roles = roles, isAuthenticated = true
                         )
+                        KtorUserDetailsPrincipal(userDetails)
+                    } else {
+                        logger.warn("Brak preferred_username w tokenie JWT dla '${credential.payload.subject}'")
                         null
                     }
-                }
-
-                challenge { defaultScheme, realm ->
-                    call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+                } catch (e: Exception) {
+                    logger.error(
+                        "Błąd walidacji tokenu JWT: ${e.message}", e
+                    )
+                    null
                 }
             }
-        } else {
-            basic("test-auth") {
-                validate {
-                    KtorUserDetailsPrincipal(
-                        UserDetails("test", "test@example.com", listOf("ADMIN"), true)
-                    )
-                }
+
+            challenge { defaultScheme, realm ->
+                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
             }
         }
-
     }
 
     install(CORS) {
@@ -104,5 +98,32 @@ fun Application.configureModules() {
     }
     install(CallLogging) {
         level = Level.INFO
+    }
+}
+
+fun Application.configureOpenAPI() {
+    install(OpenApi) {
+        info {
+            title = "Rental API"
+            version = "1.0.0"
+            description = "API for rental management"
+
+        }
+        outputFormat = OutputFormat.JSON
+        schemas {
+            generator = SchemaGenerator.kotlinx {
+                title = TitleType.SIMPLE
+                referencePath = RefType.OPENAPI_SIMPLE
+            }
+        }
+        examples {
+            exampleEncoder = ExampleEncoder.jackson()
+        }
+
+    }
+    routing {
+        route("openapi.json") {
+            openApi()
+        }
     }
 }

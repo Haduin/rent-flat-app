@@ -2,6 +2,7 @@ package pl.chodan.database
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.date
+import pl.chodan.model.contract.database.Contract
 
 object Payment : Table("flat.payment") {
     val id = integer("id").autoIncrement()

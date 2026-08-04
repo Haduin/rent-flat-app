@@ -1,5 +1,8 @@
-import {NewPerson, Person} from "../pages/person/person-table.types.ts";
-import {axiosInstance} from "./api.ts";
+import {NewPerson, Person} from "../pages/person/person-table/person-table.types.ts";
+import {axiosInstance} from "./expenses-template.api.ts";
+
+import {PersonsApi} from "../generated-api/apis/PersonsApi";
+import {config} from "./config.api";
 
 export const personsApi: PersonsApi = {
     getPersons: () => axiosInstance.get("/persons").then(response => response.data),
@@ -14,3 +17,5 @@ type PersonsApi = {
     addPerson: (person: NewPerson) => Promise<void>,
     deletePerson: (id: number) => Promise<void>,
 }
+
+export const personApi = new PersonsApi(config);
