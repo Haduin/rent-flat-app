@@ -15,7 +15,7 @@ import pl.chodan.model.payments.dto.PaymentEdit
 import pl.chodan.model.payments.dto.PaymentHistoryWithPersonDTO
 import pl.chodan.model.payments.dto.PersonSmallDetailsDTO
 import pl.chodan.model.payments.routing.PaymentSortableField
-import pl.chodan.model.perons.dto.PaymentConfirmationDTO
+import pl.chodan.model.persons.dto.PaymentConfirmationDTO
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 import pl.chodan.routing.SortOrder
 import pl.chodan.toLocalDateWithFullPattern

@@ -20,3 +20,7 @@ Set timeouts to prevent runaway queries from impacting performance.
 
 ### Cache Expensive Queries
 Cache results of complex or frequent queries when appropriate.
+
+### Expression-Bodied suspend Functions Returning dbQuery Result
+Service functions are declared as `suspend fun name(...): T = databaseProvider.dbQuery { ... }` (expression body) rather than block bodies with explicit return.
+*Evidence: dominant pattern across sampled service classes, e.g. 5 of 5 methods in PersonService (confidence 74)*

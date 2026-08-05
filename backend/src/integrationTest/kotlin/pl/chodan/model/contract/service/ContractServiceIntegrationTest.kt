@@ -12,8 +12,8 @@ import pl.chodan.model.contract.dto.DeleteContractDTO
 import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.dto.UpdateContractDetails
 import pl.chodan.model.payments.service.PaymentService
-import pl.chodan.model.perons.dto.CreatedPersonDTO
-import pl.chodan.model.perons.service.PersonService
+import pl.chodan.model.persons.dto.CreatedPersonDTO
+import pl.chodan.model.persons.service.PersonService
 import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase
 import pl.chodan.testutil.insertApartment

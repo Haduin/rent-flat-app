@@ -11,9 +11,9 @@ import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.service.ContractService
 import pl.chodan.model.payments.dto.PaymentEdit
 import pl.chodan.model.payments.routing.PaymentSortableField
-import pl.chodan.model.perons.dto.CreatedPersonDTO
-import pl.chodan.model.perons.dto.PaymentConfirmationDTO
-import pl.chodan.model.perons.service.PersonService
+import pl.chodan.model.persons.dto.CreatedPersonDTO
+import pl.chodan.model.persons.dto.PaymentConfirmationDTO
+import pl.chodan.model.persons.service.PersonService
 import pl.chodan.routing.SortOrder
 import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase

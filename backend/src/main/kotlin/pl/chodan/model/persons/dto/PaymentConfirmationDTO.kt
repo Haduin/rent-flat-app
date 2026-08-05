@@ -1,4 +1,4 @@
-package pl.chodan.model.perons.dto
+package pl.chodan.model.persons.dto
 
 import kotlinx.serialization.Serializable
 

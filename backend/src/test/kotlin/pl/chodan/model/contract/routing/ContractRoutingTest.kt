@@ -17,7 +17,7 @@ import pl.chodan.model.contract.dto.UpdateContractDetails
 import pl.chodan.model.contract.service.ContractDeleteResult
 import pl.chodan.model.contract.service.ContractService
 import pl.chodan.model.payments.service.PaymentService
-import pl.chodan.model.perons.dto.PersonDTO
+import pl.chodan.model.persons.dto.PersonDTO
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 import pl.chodan.testutil.installTestAuthentication
 import pl.chodan.testutil.installTestContentNegotiation

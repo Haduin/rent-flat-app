@@ -26,3 +26,7 @@ If a component needs many props, consider composition or splitting it.
 
 ### Documentation
 Document usage, props, and examples to help team adoption.
+
+### Functional Components with Formik + Yup for Forms
+Modal/dialog form components are functional components (no classes found) built with `useFormik` and a co-located Yup validation schema file (`*.validation-schema.ts`), composed from shared primitives (Modal, SelectField, DateSelector, TextField, ModalFooter).
+*Evidence: add-contract-view.tsx, update-contract-modal.tsx, add-edit-expenses-template-dialog.tsx, income-confirm-payment-dialog.tsx all follow this (confidence 70)*

@@ -9,7 +9,7 @@ import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
 import pl.chodan.model.contract.database.ContractStatus
 import pl.chodan.model.contract.dto.*
-import pl.chodan.model.perons.dto.PersonDTO
+import pl.chodan.model.persons.dto.PersonDTO
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 import pl.chodan.toLocalDateWithFullPattern
 import java.time.LocalDate

@@ -23,3 +23,11 @@ Define relationships with appropriate cascade behaviors and naming.
 
 ### Practical Normalization
 Balance normalization with query performance needs.
+
+### @Serializable Data Classes for DTOs
+All DTO classes are Kotlin `data class` marked `@Serializable`, living under `model/<feature>/dto/`.
+*Evidence: 25 of 25 sampled DTO files follow this (confidence 82)*
+
+### Exposed Table Objects Named After Domain Entity
+Database table definitions are Kotlin `object`s extending Exposed's `Table`, named as the singular entity (not suffixed), e.g. `object Apartment : Table("flat.apartment")`.
+*Evidence: 6 of 6 sampled table definitions follow this (confidence 78)*

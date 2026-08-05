@@ -1,7 +1,7 @@
 package pl.chodan.model.contract.dto
 
 import kotlinx.serialization.Serializable
-import pl.chodan.model.perons.dto.PersonDTO
+import pl.chodan.model.persons.dto.PersonDTO
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 
 @Serializable

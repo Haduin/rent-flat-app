@@ -29,3 +29,11 @@ Maintain a changelog or release notes for significant changes.
 
 ### Build What's Needed
 Avoid speculative code and "just in case" additions (see minimal-implementation.md).
+
+### Ground Work in Project Documentation Before Coding
+Before writing or changing any code — even for quick, direct requests that don't go through a /maister:* workflow — read `.maister/docs/INDEX.md` first, then open and read the specific standards/project docs it points to that are relevant to the task. The index alone is not enough. Follow the standards while working; if a standard conflicts with the task, ask the user rather than silently deviating.
+*Evidence: CLAUDE.md (confidence 88)*
+
+### Propose Standards Updates for Recurring Patterns
+When recurring patterns, fixes, or conventions are noticed during implementation that aren't yet captured in the standards docs, briefly suggest the standard to the user; if approved, invoke `/maister:standards-update` to record it.
+*Evidence: CLAUDE.md (confidence 82)*

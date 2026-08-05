@@ -19,8 +19,8 @@ import pl.chodan.model.expenses.service.ExpenseService
 import pl.chodan.model.expenses.service.ExpenseTemplateService
 import pl.chodan.model.payments.routing.configurePaymentRouting
 import pl.chodan.model.payments.service.PaymentService
-import pl.chodan.model.perons.routing.configurePersonRouting
-import pl.chodan.model.perons.service.PersonService
+import pl.chodan.model.persons.routing.configurePersonRouting
+import pl.chodan.model.persons.service.PersonService
 import pl.chodan.model.room.routing.configureRoomRouting
 import pl.chodan.model.room.service.RoomService
 

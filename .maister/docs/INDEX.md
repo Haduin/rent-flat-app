@@ -54,15 +54,33 @@ Prefer self-explanatory code over comments, comment sparingly and only where log
 #### Minimal Implementation (`standards/global/minimal-implementation.md`)
 Build only methods/classes/functions that are actually called, ensure every method has a caller or clear readability purpose, delete unused exploration artifacts, avoid future stubs and placeholder "for extensibility" code, skip speculative abstractions (factories/strategies/adapters) without immediate need, and review for unused code before committing.
 
+#### Release Process (`standards/global/release-process.md`)
+Semantic Versioning (MAJOR.MINOR.PATCH) for releases, a pre-release checklist (bump package.json version, check environment configuration/variables), and a shared Docker-based release pipeline for backend and frontend (build production artifact, build/tag/push a Docker image to Docker Hub under `haduin/mieszkania-backend` and `haduin/mieszkania-frontend`).
+
+#### Tooling (`standards/global/tooling.md`)
+pnpm as the required frontend package manager (locked via pnpm-lock.yaml, no npm/yarn lockfiles), including in the Docker build stage which installs pnpm globally and runs a frozen-lockfile install.
+
 ### Frontend Standards
 
 Located in `.maister/docs/standards/frontend/`
 
+#### Project Structure (`standards/frontend/project-structure.md`)
+Layered feature-module structure (`generated-api/`, `api/`, `features/<domain>/`, `pages/`, `components/ui/`), strict allowed-import direction between layers, never hand-editing the OpenAPI-generated API client, mapper files as the sole boundary that may import generated DTOs, feature-local UI types decoupled from the API shape, centralized API clients/query keys, routing-and-composition-only pages, and feature modules exposing only a public `index.ts` barrel.
+
+#### TypeScript (`standards/frontend/typescript.md`)
+Strict compiler settings (`strict: true`, no unused locals/params, exhaustive switch checks, no unacknowledged side-effect imports), and `interface` for object/prop/DTO shapes vs. `type` for unions and simple aliases.
+
+#### Coding Style (`standards/frontend/coding-style.md`)
+ESLint built on TS-recommended plus React Hooks/Refresh rule sets, `tsc -b` type-checking gating the production build before Vite bundles, kebab-case file names with dotted role suffixes (`.props.ts`, `.hook.tsx`, `.api.ts`), and relative imports with explicit file extensions (no path alias).
+
 #### CSS (`standards/frontend/css.md`)
-Stick to one consistent styling methodology (Tailwind, BEM, CSS modules, etc.), work with the framework rather than overriding it excessively, establish documented design tokens for color/spacing/typography, minimize custom CSS in favor of framework utilities, and optimize production builds via CSS purging/tree-shaking.
+Stick to one consistent styling methodology (Tailwind, BEM, CSS modules, etc.), work with the framework rather than overriding it excessively, establish documented design tokens for color/spacing/typography, minimize custom CSS in favor of framework utilities, optimize production builds via CSS purging/tree-shaking, and combine Tailwind utilities with PrimeReact/primeflex/primeicons rather than CSS Modules or styled-components.
+
+#### API (`standards/frontend/api.md`)
+Feature-colocated `<feature>.api.ts` files using `@tanstack/react-query`'s `useQuery`/`useMutation`, invalidating query-key constants on success, and surfacing outcomes via a shared `useToast` hook instead of try/catch.
 
 #### Components (`standards/frontend/components.md`)
-Single-responsibility components, reusability via configurable props, composability over monoliths, clear/documented prop interfaces with sensible defaults, encapsulation of implementation details, consistent naming, keeping state local unless lifting is needed, minimal props (favor composition/splitting when props grow), and usage documentation.
+Single-responsibility components, reusability via configurable props, composability over monoliths, clear/documented prop interfaces with sensible defaults, encapsulation of implementation details, consistent naming, keeping state local unless lifting is needed, minimal props (favor composition/splitting when props grow), usage documentation, and functional modal/dialog forms built with `useFormik` + co-located Yup validation schemas composed from shared field primitives.
 
 #### Accessibility (`standards/frontend/accessibility.md`)
 Semantic HTML elements, full keyboard navigation with visible focus indicators, 4.5:1 color contrast (not color-only cues), descriptive alt text and form labels, screen reader testing, ARIA attributes for complex components, proper heading-level structure, and focus management in dynamic content/modals/SPAs.
@@ -73,6 +91,9 @@ Mobile-first layout with progressive enhancement, standard consistent breakpoint
 ### Backend Standards
 
 Located in `.maister/docs/standards/backend/`
+
+#### Architecture (`standards/backend/architecture.md`)
+Feature-module layering (`database/dto/service/routing` per feature under `pl.chodan.model.<feature>`) with a fixed Routing → Service → Database request flow, Service classes as `KoinComponent` injecting `DatabaseProviderContract` and wrapping persistence access in `dbQuery { ... }`, JetBrains' "official" Kotlin code style with PascalCase file naming, and fat-JAR packaging as `backend.jar` with Ktor Netty `EngineMain` as the manifest main class.
 
 #### API Design (`standards/backend/api.md`)
 RESTful resource-based URLs with correct HTTP methods, consistent endpoint naming, API versioning, plural resource nouns, limited URL nesting (2-3 levels max), query parameters for filtering/sorting/pagination, proper HTTP status codes, and rate-limit response headers.
@@ -91,7 +112,14 @@ Reversible migrations with rollback methods, small focused single-change migrati
 Located in `.maister/docs/standards/testing/`
 
 #### Test Writing (`standards/testing/test-writing.md`)
-Testing behavior rather than implementation details, clear descriptive test names, mocking external dependencies for isolation, fast unit test execution, risk-based test prioritization by business criticality, balancing coverage against velocity, critical-path focus for core workflows, and matching edge-case depth to code risk profile.
+Testing behavior rather than implementation details, clear descriptive test names, mocking external dependencies for isolation, fast unit test execution, risk-based test prioritization by business criticality, balancing coverage against velocity, critical-path focus for core workflows, matching edge-case depth to code risk profile, an isolated Docker-dependent `integrationTest` Gradle source set kept separate from the fast default `test` task, and a mirrored unit/integration test structure (mockk + Koin test modules for routing under `src/test`, real-Postgres integration tests for services under `src/integrationTest`) that mirrors the main package layout.
+
+### Infrastructure Standards
+
+Located in `.maister/docs/standards/infrastructure/`
+
+#### Containerization (`standards/infrastructure/containerization.md`)
+Multi-stage Docker builds (build in a heavier SDK/toolchain image, run in a slim runtime image — `amazoncorretto:21` for the backend, `nginx:latest` for the frontend's static `dist` output) and docker-compose-provisioned local dependency services (app PostgreSQL, auth PostgreSQL, Keycloak) sharing a `keycloak_network` bridge network.
 
 ---
 

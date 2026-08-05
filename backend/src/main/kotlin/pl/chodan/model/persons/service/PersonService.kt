@@ -1,4 +1,4 @@
-package pl.chodan.model.perons.service
+package pl.chodan.model.persons.service
 
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -10,9 +10,9 @@ import org.koin.core.component.inject
 import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.Person
 import pl.chodan.database.PersonStatus
-import pl.chodan.model.perons.dto.CreatedPersonDTO
-import pl.chodan.model.perons.dto.PersonDTO
-import pl.chodan.model.perons.dto.UpdatePersonDTO
+import pl.chodan.model.persons.dto.CreatedPersonDTO
+import pl.chodan.model.persons.dto.PersonDTO
+import pl.chodan.model.persons.dto.UpdatePersonDTO
 
 class PersonService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()

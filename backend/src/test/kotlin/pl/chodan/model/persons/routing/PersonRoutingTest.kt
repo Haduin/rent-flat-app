@@ -1,4 +1,4 @@
-package pl.chodan.model.perons.routing
+package pl.chodan.model.persons.routing
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -10,10 +10,10 @@ import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import org.koin.dsl.module
-import pl.chodan.model.perons.dto.CreatedPersonDTO
-import pl.chodan.model.perons.dto.PersonDTO
-import pl.chodan.model.perons.dto.UpdatePersonDTO
-import pl.chodan.model.perons.service.PersonService
+import pl.chodan.model.persons.dto.CreatedPersonDTO
+import pl.chodan.model.persons.dto.PersonDTO
+import pl.chodan.model.persons.dto.UpdatePersonDTO
+import pl.chodan.model.persons.service.PersonService
 import pl.chodan.testutil.installTestAuthentication
 import pl.chodan.testutil.installTestContentNegotiation
 import pl.chodan.testutil.startTestKoin

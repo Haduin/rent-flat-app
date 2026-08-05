@@ -1,4 +1,4 @@
-package pl.chodan.model.perons.service
+package pl.chodan.model.persons.service
 
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -9,8 +9,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.service.ContractService
-import pl.chodan.model.perons.dto.CreatedPersonDTO
-import pl.chodan.model.perons.dto.UpdatePersonDTO
+import pl.chodan.model.persons.dto.CreatedPersonDTO
+import pl.chodan.model.persons.dto.UpdatePersonDTO
 import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase
 import pl.chodan.testutil.insertApartment

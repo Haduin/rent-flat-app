@@ -1,4 +1,4 @@
-package pl.chodan.model.perons.routing
+package pl.chodan.model.persons.routing
 
 import io.github.smiley4.ktoropenapi.*
 import io.ktor.http.*
@@ -9,10 +9,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import pl.chodan.model.perons.dto.CreatedPersonDTO
-import pl.chodan.model.perons.dto.PersonDTO
-import pl.chodan.model.perons.dto.UpdatePersonDTO
-import pl.chodan.model.perons.service.PersonService
+import pl.chodan.model.persons.dto.CreatedPersonDTO
+import pl.chodan.model.persons.dto.PersonDTO
+import pl.chodan.model.persons.dto.UpdatePersonDTO
+import pl.chodan.model.persons.service.PersonService
 
 fun Application.configurePersonRouting() {
 
