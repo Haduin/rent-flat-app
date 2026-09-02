@@ -7,6 +7,8 @@ import {getExpensesTemplate} from "../api/expenses-template.api.ts";
 import {useState} from "react";
 import {OperationalExpenseTemplateResponse} from "../../../api/generated";
 import {ViewMode} from "../../../commons/view-mode.ts";
+import {ConfirmationDialog} from "../../../components/confirmation-dialog/confirmation-dialog.tsx";
+import {getExpenseCategoryLabel} from "../enum/expenses.enum.ts";
 
 export default function ExpensesTemplateView() {
 
@@ -24,6 +26,11 @@ export default function ExpensesTemplateView() {
         setOpen: setExpensesModalOpen
     } = useModal()
 
+    const {
+        isOpen: isExpensesDeleteModalOpen,
+        setOpen: setExpensesDeleteModalOpen
+    } = useModal()
+
 
     const handleOpenCreate = () => {
         setMode(ViewMode.CREATE)
@@ -35,16 +42,35 @@ export default function ExpensesTemplateView() {
         setExpensesModalOpen(true)
     }
 
+    const handleRemoveAction = () => {
+
+    }
+
+
     const handleClose = () => {
         setExpensesModalOpen(false)
+        setExpensesDeleteModalOpen(false)
         setSelectedExpense(null)
         setMode(null)
     }
 
 
-    const handleSelectExpense = (selectedExpense: OperationalExpenseTemplateResponse) => {
+    const handleSelectEditExpense = (selectedExpense: OperationalExpenseTemplateResponse) => {
         setSelectedExpense(selectedExpense)
         handleOpenEdit()
+    }
+
+    const handleOnDelete = (selectedExpense: OperationalExpenseTemplateResponse) => {
+        setSelectedExpense(selectedExpense)
+        setExpensesDeleteModalOpen(true)
+    }
+
+    const getSelectedExpenseLabel = (expense: OperationalExpenseTemplateResponse | null) => {
+        if (!expense) {
+            return ''
+        }
+        const target = expense.room?.name ?? expense.apartment?.name ?? 'ogólny'
+        return `${getExpenseCategoryLabel(expense.category)} (${target}) - ${expense.amount.toFixed(2)} zł`
     }
 
     return (
@@ -73,7 +99,8 @@ export default function ExpensesTemplateView() {
                         <ExpensesTable
                             items={expensesTemplates}
                             loading={expensesTemplatesLoading}
-                            handleOnExpenseEdit={handleSelectExpense}
+                            handleOnExpenseEdit={handleSelectEditExpense}
+                            handleOnDelete={handleOnDelete}
                         />
                     </div>
                 )}
@@ -83,6 +110,14 @@ export default function ExpensesTemplateView() {
                 isVisible={isExpensesModalOpen}
                 onHide={handleClose}
                 selectedExpense={selectedExpense}
+            />
+            <ConfirmationDialog
+                title={`Czy na pewno chcesz usunąć szablon: ${getSelectedExpenseLabel(selectedExpense)}`}
+                isOpen={isExpensesDeleteModalOpen}
+                onClose={handleClose}
+                onConfirm={handleRemoveAction}
+                confirmLabel="Usuń"
+                cancelLabel="Anuluj"
             />
         </>
     );

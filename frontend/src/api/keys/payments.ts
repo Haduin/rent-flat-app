@@ -4,5 +4,6 @@ export const PAYMENTS_QUERY_KEYS = {
 
 export const PAYMENTS_MUTATIONS_KEYS = {
     REMOVE_EXPENSE: "remove-expense",
-    PAYMENTS: "payment"
+    PAYMENTS: "payment",
+    PAYMENT_SPLITS: "payment-splits"
 }

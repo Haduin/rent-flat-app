@@ -8,7 +8,8 @@ import {
     useConfirmPayment,
     useEditPayment,
     useGenerateNewMonthPayments,
-    usePaymentsQuery
+    usePaymentsQuery,
+    useSplitPayment
 } from "../api/income-payments-view.api.ts";
 import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../../api/generated";
 import {SortOrder} from "primereact/api";
@@ -26,6 +27,7 @@ export const usePaymentsView = () => {
     const [dateSelected, setDateSelected] = useState<Date>();
     const [selectedPayment, setSelectedPayment] = useState<PaymentHistoryWithPersonDTO | null>(null);
     const [isConfirmationDialogVisible, setIsConfirmationDialogVisible] = useState<boolean>(false);
+    const [isSplitDialogVisible, setIsSplitDialogVisible] = useState<boolean>(false);
     const {isOpen: isEditPaymentVisible, setOpen: setIsEditPaymentVisible} = useModal()
 
     const [sortState, setSortState] = useState<{
@@ -65,6 +67,7 @@ export const usePaymentsView = () => {
     const handleGenerateNewMonthPayments = useGenerateNewMonthPayments(dateSelected)
     const confirmPayment = useConfirmPayment()
     const editPayment = useEditPayment()
+    const splitPayment = useSplitPayment()
 
     const closeConfirmationDialog = () => {
         setIsConfirmationDialogVisible(false);
@@ -73,6 +76,16 @@ export const usePaymentsView = () => {
 
     const openConfirmationDialog = (payment: PaymentHistoryWithPersonDTO) => {
         setIsConfirmationDialogVisible(true);
+        setSelectedPayment(payment);
+    };
+
+    const closeSplitDialog = () => {
+        setIsSplitDialogVisible(false);
+        setSelectedPayment(null);
+    };
+
+    const openSplitDialog = (payment: PaymentHistoryWithPersonDTO) => {
+        setIsSplitDialogVisible(true);
         setSelectedPayment(payment);
     };
 
@@ -96,6 +109,15 @@ export const usePaymentsView = () => {
         })
     }
 
+    const handleSplitPayment = async (date: Date, paymentId: number, amount: number) => {
+        closeSplitDialog()
+        splitPayment.mutate({
+            paymentId: paymentId,
+            paymentDate: dateToStringFullYearMouthDay(date),
+            amount: amount
+        })
+    }
+
     const handleEditPayment = async (payment: EditPayment) => {
         editPayment.mutate({
             paymentId: payment.paymentId,
@@ -108,7 +130,7 @@ export const usePaymentsView = () => {
 
     return {
         payments,
-        loading: loading || handleGenerateNewMonthPayments.isPending || confirmPayment.isPending,
+        loading: loading || handleGenerateNewMonthPayments.isPending || confirmPayment.isPending || splitPayment.isPending,
         dateSelected,
         selectedPayment,
         isConfirmationDialogVisible,
@@ -116,6 +138,10 @@ export const usePaymentsView = () => {
         openConfirmationDialog,
         closeConfirmationDialog,
         handleConfirmPayment,
+        isSplitDialogVisible,
+        openSplitDialog,
+        closeSplitDialog,
+        handleSplitPayment,
         handleGenerateNewMonthPayments,
         isEditPaymentVisible,
         openEditDialog,

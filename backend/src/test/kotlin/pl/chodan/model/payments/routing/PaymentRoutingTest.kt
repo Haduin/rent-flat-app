@@ -14,6 +14,8 @@ import pl.chodan.database.PaymentStatus
 import pl.chodan.model.payments.dto.PaymentDTO
 import pl.chodan.model.payments.dto.PaymentEdit
 import pl.chodan.model.payments.dto.PaymentHistoryWithPersonDTO
+import pl.chodan.model.payments.dto.PaymentSplitDTO
+import pl.chodan.model.payments.dto.PaymentSplitEntryDTO
 import pl.chodan.model.payments.dto.PersonSmallDetailsDTO
 import pl.chodan.model.payments.service.PaymentService
 import pl.chodan.model.persons.dto.PaymentConfirmationDTO
@@ -167,5 +169,50 @@ class PaymentRoutingTest {
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun `POST payments split records a split payment`() = testApplication {
+        setup()
+        val dto = PaymentSplitDTO(paymentId = 1, amount = 800.0, paymentDate = "2026-08-08")
+        coEvery { paymentService.splitPayment(dto) } returns 1
+
+        val response = client.post("/payments/split") {
+            testAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(PaymentSplitDTO.serializer(), dto))
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        coVerify(exactly = 1) { paymentService.splitPayment(dto) }
+    }
+
+    @Test
+    fun `POST payments split returns bad request when the service throws`() = testApplication {
+        setup()
+        val dto = PaymentSplitDTO(paymentId = 1, amount = 5000.0, paymentDate = "2026-08-08")
+        coEvery { paymentService.splitPayment(dto) } throws IllegalArgumentException("boom")
+
+        val response = client.post("/payments/split") {
+            testAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(PaymentSplitDTO.serializer(), dto))
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun `GET payments splits returns the recorded instalments`() = testApplication {
+        setup()
+        val split = PaymentSplitEntryDTO(id = 1, paymentId = 1, amount = 800.0, paymentDate = "2026-08-08")
+        coEvery { paymentService.getPaymentSplits(1) } returns listOf(split)
+
+        val response = client.get("/payments/1/splits") { testAuthHeader() }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        val body = Json.parseToJsonElement(response.bodyAsText()).jsonArray
+        assertEquals(1, body.size)
+        coVerify(exactly = 1) { paymentService.getPaymentSplits(1) }
     }
 }

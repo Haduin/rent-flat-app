@@ -3,6 +3,7 @@ package pl.chodan.model.payments.service
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -10,6 +11,7 @@ import pl.chodan.database.PaymentStatus
 import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.service.ContractService
 import pl.chodan.model.payments.dto.PaymentEdit
+import pl.chodan.model.payments.dto.PaymentSplitDTO
 import pl.chodan.model.payments.routing.PaymentSortableField
 import pl.chodan.model.persons.dto.CreatedPersonDTO
 import pl.chodan.model.persons.dto.PaymentConfirmationDTO
@@ -19,6 +21,7 @@ import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase
 import pl.chodan.testutil.insertApartment
 import pl.chodan.testutil.insertPayment
+import pl.chodan.testutil.insertPaymentSplit
 import pl.chodan.testutil.insertRoom
 import pl.chodan.testutil.startTestKoin
 import pl.chodan.testutil.stopTestKoin
@@ -166,5 +169,79 @@ class PaymentServiceIntegrationTest {
         val payments = PaymentService().getAllPayments()
         assertEquals(1, payments.size)
         assertEquals(PaymentStatus.CANCELLED, payments.single().status)
+    }
+
+    @Test
+    fun `splitPayment marks the payment PARTIALLY_PAID when the instalment doesn't cover the due amount`() = runBlocking {
+        val contractId = createContract()
+        val paymentId = database.insertPayment(contractId, scopeDate = "2026-08", amount = 1000.0)
+
+        PaymentService().splitPayment(
+            PaymentSplitDTO(paymentId = paymentId, amount = 800.0, paymentDate = "2026-08-08")
+        )
+
+        val payment = PaymentService().getAllPayments().single { it.id == paymentId }
+        assertEquals(PaymentStatus.PARTIALLY_PAID, payment.status)
+        assertEquals("2026-08-08", payment.payedDate)
+        assertEquals(1000.0, payment.amount)
+    }
+
+    @Test
+    fun `splitPayment marks the payment PAID once instalments cover the full due amount`() = runBlocking {
+        val contractId = createContract()
+        val paymentId = database.insertPayment(contractId, scopeDate = "2026-08", amount = 1000.0)
+        database.insertPaymentSplit(paymentId, amount = 800.0, paymentDate = "2026-08-08")
+
+        PaymentService().splitPayment(
+            PaymentSplitDTO(paymentId = paymentId, amount = 200.0, paymentDate = "2026-08-20")
+        )
+
+        val payment = PaymentService().getAllPayments().single { it.id == paymentId }
+        assertEquals(PaymentStatus.PAID, payment.status)
+        assertEquals("2026-08-20", payment.payedDate)
+    }
+
+    @Test
+    fun `splitPayment rejects an instalment larger than the remaining balance`() = runBlocking {
+        val contractId = createContract()
+        val paymentId = database.insertPayment(contractId, scopeDate = "2026-08", amount = 1000.0)
+        database.insertPaymentSplit(paymentId, amount = 800.0, paymentDate = "2026-08-08")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                PaymentService().splitPayment(
+                    PaymentSplitDTO(paymentId = paymentId, amount = 300.0, paymentDate = "2026-08-20")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `splitPayment rejects splitting an already paid payment`() = runBlocking {
+        val contractId = createContract()
+        val paymentId = database.insertPayment(
+            contractId, scopeDate = "2026-08", amount = 1000.0, status = PaymentStatus.PAID
+        )
+
+        assertThrows(IllegalStateException::class.java) {
+            runBlocking {
+                PaymentService().splitPayment(
+                    PaymentSplitDTO(paymentId = paymentId, amount = 100.0, paymentDate = "2026-08-20")
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `getPaymentSplits returns the recorded instalments ordered by payment date`() = runBlocking {
+        val contractId = createContract()
+        val paymentId = database.insertPayment(contractId, scopeDate = "2026-08", amount = 1000.0)
+        database.insertPaymentSplit(paymentId, amount = 200.0, paymentDate = "2026-08-20")
+        database.insertPaymentSplit(paymentId, amount = 800.0, paymentDate = "2026-08-08")
+
+        val splits = PaymentService().getPaymentSplits(paymentId)
+
+        assertEquals(listOf(800.0, 200.0), splits.map { it.amount })
+        assertEquals(listOf("2026-08-08", "2026-08-20"), splits.map { it.paymentDate })
     }
 }

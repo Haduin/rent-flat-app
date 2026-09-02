@@ -20,5 +20,16 @@ object Payment : Table("flat.payment") {
 }
 
 enum class PaymentStatus {
-    PENDING, PAID, LATE, CANCELLED
+    PENDING, PAID, LATE, CANCELLED, PARTIALLY_PAID
+}
+
+// A tenant sometimes pays a due amount in several instalments (e.g. 80% now, the rest later).
+// Each instalment is recorded here so the running total paid so far can be reconstructed, while
+// Payment.amount keeps holding the originally due amount.
+object PaymentSplit : Table("flat.payment_split") {
+    val id = integer("id").autoIncrement()
+    val paymentId = reference("payment_id", Payment.id)
+    val amount = decimal("amount", 10, 2)
+    val paymentDate = date("payment_date")
+    override val primaryKey = PrimaryKey(id)
 }

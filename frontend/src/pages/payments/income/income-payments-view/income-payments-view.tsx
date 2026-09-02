@@ -6,6 +6,7 @@ import {dateToStringWithYearMonth} from "../../../../components/commons/dateForm
 import {PaymentsTable} from "./income-payments-view.table.tsx";
 import {IncomeEditPaymentDialog} from "../income-edit-payment-dialog/income-edit-payment-dialog.tsx";
 import {IncomeConfirmPaymentDialog} from "../income-confirm-payment-dialog/income-confirm-payment-dialog.tsx";
+import {IncomeSplitPaymentDialog} from "../income-split-payment-dialog/income-split-payment-dialog.tsx";
 
 
 const IncomePaymentsView = () => {
@@ -21,6 +22,10 @@ const IncomePaymentsView = () => {
         openConfirmationDialog,
         closeConfirmationDialog,
         handleConfirmPayment,
+        isSplitDialogVisible,
+        openSplitDialog,
+        closeSplitDialog,
+        handleSplitPayment,
         handleGenerateNewMonthPayments,
         isEditPaymentVisible,
         openEditDialog,
@@ -61,6 +66,7 @@ const IncomePaymentsView = () => {
                     <PaymentsTable
                         openConfirmationDialog={openConfirmationDialog}
                         openEditDialog={openEditDialog}
+                        openSplitDialog={openSplitDialog}
                         payments={payments}
                         handleTableSort={handleTableSort}
                         sortState={sortState}
@@ -69,6 +75,12 @@ const IncomePaymentsView = () => {
                         isVisible={isConfirmationDialogVisible}
                         onHide={closeConfirmationDialog}
                         onConfirm={handleConfirmPayment}
+                        selectedPayment={selectedPayment}
+                    />
+                    <IncomeSplitPaymentDialog
+                        isVisible={isSplitDialogVisible}
+                        onHide={closeSplitDialog}
+                        onConfirm={handleSplitPayment}
                         selectedPayment={selectedPayment}
                     />
                     <IncomeEditPaymentDialog

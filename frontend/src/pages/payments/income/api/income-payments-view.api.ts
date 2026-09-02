@@ -1,7 +1,7 @@
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {queryClient} from "../../../../main.tsx";
 import {client} from "../../../../api/client.ts";
-import {PaymentConfirmationDTO, type PaymentEdit} from "../../../../api/generated";
+import {PaymentConfirmationDTO, PaymentSplitDTO, type PaymentEdit} from "../../../../api/generated";
 import {PAYMENTS_MUTATIONS_KEYS} from "../../../../api/keys/payments.ts";
 import {useToast} from "../../../../components/commons/ToastProvider.tsx";
 import {dateToStringWithYearMonth} from "../../../../components/commons/dateFormatter.ts";
@@ -79,6 +79,36 @@ export const useGenerateNewMonthPayments = (dateSelected?: Date) => {
         }
     });
 }
+
+export const useSplitPayment = () => {
+    const {showToast} = useToast();
+
+    return useMutation({
+            mutationFn: async (request: PaymentSplitDTO) =>
+                client.paymentsApi.splitPayment({paymentSplitDTO: request}),
+            onSuccess: async () => {
+                await queryClient.invalidateQueries({
+                    queryKey: [PAYMENTS_MUTATIONS_KEYS.PAYMENTS]
+                })
+                await queryClient.invalidateQueries({
+                    queryKey: [PAYMENTS_MUTATIONS_KEYS.PAYMENT_SPLITS]
+                })
+                showToast('success', 'Pomyślnie zapisano częściową wpłatę');
+            },
+            onError: (error: Error) => {
+                showToast('error', `Nie udało się zapisać częściowej wpłaty: ${error.message}`);
+            }
+        }
+    )
+}
+
+export const useGetPaymentSplits = (paymentId?: number) => {
+    return useQuery({
+        queryKey: [PAYMENTS_MUTATIONS_KEYS.PAYMENT_SPLITS, paymentId ?? null],
+        queryFn: () => client.paymentsApi.getPaymentSplits({id: paymentId!}),
+        enabled: !!paymentId,
+    });
+};
 
 export const useEditPayment = () => {
     const {showToast} = useToast();

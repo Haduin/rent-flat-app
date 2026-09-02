@@ -15,6 +15,8 @@ export * from './PaymentConfirmationDTO';
 export * from './PaymentEdit';
 export * from './PaymentHistoryWithPersonDTO';
 export * from './PaymentSortableField';
+export * from './PaymentSplitDTO';
+export * from './PaymentSplitEntryDTO';
 export * from './PaymentStatus';
 export * from './PersonDTO';
 export * from './PersonSmallDetailsDTO';

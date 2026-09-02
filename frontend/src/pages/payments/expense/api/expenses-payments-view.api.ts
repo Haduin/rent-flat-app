@@ -1,6 +1,6 @@
 import {queryClient} from "../../../../main.tsx";
 import {client} from "../../../../api/client.ts";
-import {OperationalExpenseDTO} from "../../../../api/generated";
+import {OperationalExpenseDTO, UpdateOperationalExpenseDTO} from "../../../../api/generated";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {dateToStringWithYearMonth} from "../../../../components/commons/dateFormatter.ts";
 import {useMemo} from "react";
@@ -44,6 +44,25 @@ export function useRemoveExpense() {
             showToast("error", "Wystąpił błąd podczas usuwania wydatku");
         },
         mutationKey: [PAYMENTS_MUTATIONS_KEYS.REMOVE_EXPENSE],
+    });
+}
+
+export function useUpdateExpense() {
+    const {showToast} = useToast();
+
+    return useMutation({
+        mutationFn: (updateOperationalExpenseDTO: UpdateOperationalExpenseDTO) =>
+            client.expensesApi.updateExpense({updateOperationalExpenseDTO}),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: [PAYMENTS_QUERY_KEYS.EXPENSES_BY_MONTH_QUERY_KEY],
+                refetchType: "active",
+            });
+            showToast("success", "Edycja wydatku zakończona pomyślnie");
+        },
+        onError: () => {
+            showToast("error", "Wystąpił błąd podczas edycji wydatku");
+        },
     });
 }
 

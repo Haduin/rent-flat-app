@@ -19,6 +19,8 @@ import type {
   PaymentEdit,
   PaymentHistoryWithPersonDTO,
   PaymentSortableField,
+  PaymentSplitDTO,
+  PaymentSplitEntryDTO,
   SortOrder,
 } from '../models/index';
 import {
@@ -30,6 +32,10 @@ import {
     PaymentHistoryWithPersonDTOToJSON,
     PaymentSortableFieldFromJSON,
     PaymentSortableFieldToJSON,
+    PaymentSplitDTOFromJSON,
+    PaymentSplitDTOToJSON,
+    PaymentSplitEntryDTOFromJSON,
+    PaymentSplitEntryDTOToJSON,
     SortOrderFromJSON,
     SortOrderToJSON,
 } from '../models/index';
@@ -42,10 +48,18 @@ export interface EditPaymentRequest {
     paymentEdit?: PaymentEdit;
 }
 
+export interface GetPaymentSplitsRequest {
+    id: number;
+}
+
 export interface GetPaymentsForMonthRequest {
     mouth: string;
     sortField?: PaymentSortableField;
     sortOrder?: SortOrder;
+}
+
+export interface SplitPaymentRequest {
+    paymentSplitDTO?: PaymentSplitDTO;
 }
 
 /**
@@ -135,6 +149,39 @@ export class PaymentsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get the recorded split payments (instalments) for a payment
+     */
+    async getPaymentSplitsRaw(requestParameters: GetPaymentSplitsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PaymentSplitEntryDTO>>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling getPaymentSplits().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/payments/{id}/splits`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PaymentSplitEntryDTOFromJSON));
+    }
+
+    /**
+     * Get the recorded split payments (instalments) for a payment
+     */
+    async getPaymentSplits(requestParameters: GetPaymentSplitsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PaymentSplitEntryDTO>> {
+        const response = await this.getPaymentSplitsRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Get payments for given month with sorting
      */
     async getPaymentsForMonthRaw(requestParameters: GetPaymentsForMonthRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PaymentHistoryWithPersonDTO>>> {
@@ -173,6 +220,34 @@ export class PaymentsApi extends runtime.BaseAPI {
     async getPaymentsForMonth(requestParameters: GetPaymentsForMonthRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PaymentHistoryWithPersonDTO>> {
         const response = await this.getPaymentsForMonthRaw(requestParameters, initOverrides);
         return await response.value();
+    }
+
+    /**
+     * Record a partial (split) payment towards a payment\'s due amount
+     */
+    async splitPaymentRaw(requestParameters: SplitPaymentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/payments/split`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PaymentSplitDTOToJSON(requestParameters['paymentSplitDTO']),
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Record a partial (split) payment towards a payment\'s due amount
+     */
+    async splitPayment(requestParameters: SplitPaymentRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.splitPaymentRaw(requestParameters, initOverrides);
     }
 
 }

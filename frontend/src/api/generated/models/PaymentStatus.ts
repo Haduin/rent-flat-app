@@ -21,7 +21,8 @@ export const PaymentStatus = {
     Pending: 'PENDING',
     Paid: 'PAID',
     Late: 'LATE',
-    Cancelled: 'CANCELLED'
+    Cancelled: 'CANCELLED',
+    PartiallyPaid: 'PARTIALLY_PAID'
 } as const;
 export type PaymentStatus = typeof PaymentStatus[keyof typeof PaymentStatus];
 

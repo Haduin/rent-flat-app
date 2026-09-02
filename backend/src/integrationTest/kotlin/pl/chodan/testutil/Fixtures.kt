@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import pl.chodan.database.OperationalExpenseTemplate
 import pl.chodan.database.Payment
+import pl.chodan.database.PaymentSplit
 import pl.chodan.database.PaymentStatus
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
@@ -52,4 +53,12 @@ fun Database.insertPayment(
         it[Payment.status] = status
         it[Payment.payedDate] = payedDate?.let { d -> LocalDate.parse(d) }
     } get Payment.id
+}
+
+fun Database.insertPaymentSplit(paymentId: Int, amount: Double, paymentDate: String): Int = transaction(this) {
+    PaymentSplit.insert {
+        it[PaymentSplit.paymentId] = paymentId
+        it[PaymentSplit.amount] = amount.toBigDecimal()
+        it[PaymentSplit.paymentDate] = LocalDate.parse(paymentDate)
+    } get PaymentSplit.id
 }

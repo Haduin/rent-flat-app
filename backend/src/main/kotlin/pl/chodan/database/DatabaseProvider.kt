@@ -33,6 +33,7 @@ class DatabaseProvider : DatabaseProviderContract, KoinComponent {
                 Person,
                 Contract,
                 Payment,
+                PaymentSplit,
                 OperationalExpenseTemplate,
                 OperationalExpense
             )

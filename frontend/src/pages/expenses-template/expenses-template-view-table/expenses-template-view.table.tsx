@@ -11,7 +11,8 @@ import {categorySeverity} from "./expenses-template-view.table.consts.ts";
 export const ExpensesTable = ({
                                   items,
                                   loading,
-                                  handleOnExpenseEdit
+                                  handleOnExpenseEdit,
+                                  handleOnDelete
                               }: ExpensesTableProps) => {
 
 
@@ -56,6 +57,9 @@ export const ExpensesTable = ({
                 icon="pi pi-trash"
                 severity="danger"
                 className="p-button-sm"
+                onClick={() => {
+                    handleOnDelete(row)
+                }}
             />
         </div>
     );

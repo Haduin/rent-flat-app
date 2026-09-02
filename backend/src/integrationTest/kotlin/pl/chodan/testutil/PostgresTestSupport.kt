@@ -19,6 +19,7 @@ import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.OperationalExpense
 import pl.chodan.database.OperationalExpenseTemplate
 import pl.chodan.database.Payment
+import pl.chodan.database.PaymentSplit
 import pl.chodan.database.Person
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
@@ -41,7 +42,7 @@ object PostgresTestContainer {
 
 // Same set DatabaseProvider creates in production, ordered parent-before-child for creation.
 private val allTables = arrayOf(
-    Apartment, Room, Person, Contract, Payment, OperationalExpenseTemplate, OperationalExpense
+    Apartment, Room, Person, Contract, Payment, PaymentSplit, OperationalExpenseTemplate, OperationalExpense
 )
 
 /** Connects Exposed to the shared container and (re)creates the `flat` schema and tables. */

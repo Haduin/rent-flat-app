@@ -2,5 +2,7 @@ import {OperationalExpenseDTO} from "../../../../api/generated";
 
 export interface ExpensesPaymentsViewTableProps {
     expenses: OperationalExpenseDTO[];
-    removeAction: (operationId: number) => void;
+    onView: (expense: OperationalExpenseDTO) => void;
+    onEdit: (expense: OperationalExpenseDTO) => void;
+    onDelete: (expense: OperationalExpenseDTO) => void;
 }

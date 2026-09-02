@@ -13,6 +13,8 @@ import pl.chodan.model.expenses.service.ExpenseTemplateService
 import pl.chodan.model.payments.dto.PaymentDTO
 import pl.chodan.model.payments.dto.PaymentEdit
 import pl.chodan.model.payments.dto.PaymentHistoryWithPersonDTO
+import pl.chodan.model.payments.dto.PaymentSplitDTO
+import pl.chodan.model.payments.dto.PaymentSplitEntryDTO
 import pl.chodan.model.payments.dto.PersonSmallDetailsDTO
 import pl.chodan.model.payments.routing.PaymentSortableField
 import pl.chodan.model.persons.dto.PaymentConfirmationDTO
@@ -181,5 +183,61 @@ class PaymentService : KoinComponent {
             it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
             it[amount] = BigDecimal.valueOf(paymentDto.payedAmount)
         }
+    }
+
+    suspend fun splitPayment(paymentSplitDto: PaymentSplitDTO) = databaseProvider.dbQuery {
+        val payment = Payment.selectAll()
+            .where { Payment.id eq paymentSplitDto.paymentId }
+            .singleOrNull()
+            ?: throw IllegalArgumentException("Nie znaleziono płatności o id ${paymentSplitDto.paymentId}")
+
+        val status = payment[Payment.status]
+        if (status == PaymentStatus.PAID || status == PaymentStatus.CANCELLED) {
+            throw IllegalStateException("Nie można podzielić płatności w statusie $status")
+        }
+
+        if (paymentSplitDto.amount <= 0) {
+            throw IllegalArgumentException("Kwota wpłaty musi być większa od zera")
+        }
+
+        val dueAmount = payment[Payment.amount]
+        val alreadyPaid = PaymentSplit.select(PaymentSplit.amount)
+            .where { PaymentSplit.paymentId eq paymentSplitDto.paymentId }
+            .sumOf { it[PaymentSplit.amount] }
+
+        val remaining = dueAmount - alreadyPaid
+        if (BigDecimal.valueOf(paymentSplitDto.amount) > remaining) {
+            throw IllegalArgumentException("Kwota wpłaty przekracza pozostałą do zapłaty kwotę $remaining")
+        }
+
+        val paymentDate = paymentSplitDto.paymentDate.toLocalDateWithFullPattern()
+
+        PaymentSplit.insert {
+            it[PaymentSplit.paymentId] = paymentSplitDto.paymentId
+            it[PaymentSplit.amount] = BigDecimal.valueOf(paymentSplitDto.amount)
+            it[PaymentSplit.paymentDate] = paymentDate
+        }
+
+        val totalPaid = alreadyPaid + BigDecimal.valueOf(paymentSplitDto.amount)
+        val isFullyPaid = totalPaid >= dueAmount
+
+        Payment.update({ Payment.id eq paymentSplitDto.paymentId }) {
+            it[Payment.status] = if (isFullyPaid) PaymentStatus.PAID else PaymentStatus.PARTIALLY_PAID
+            it[Payment.payedDate] = paymentDate
+        }
+    }
+
+    suspend fun getPaymentSplits(paymentId: Int): List<PaymentSplitEntryDTO> = databaseProvider.dbQuery {
+        PaymentSplit.selectAll()
+            .where { PaymentSplit.paymentId eq paymentId }
+            .orderBy(PaymentSplit.paymentDate)
+            .map { row ->
+                PaymentSplitEntryDTO(
+                    id = row[PaymentSplit.id],
+                    paymentId = row[PaymentSplit.paymentId],
+                    amount = row[PaymentSplit.amount].toDouble(),
+                    paymentDate = row[PaymentSplit.paymentDate].toString()
+                )
+            }
     }
 }

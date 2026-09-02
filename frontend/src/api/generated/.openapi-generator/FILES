@@ -23,6 +23,8 @@ models/PaymentConfirmationDTO.ts
 models/PaymentEdit.ts
 models/PaymentHistoryWithPersonDTO.ts
 models/PaymentSortableField.ts
+models/PaymentSplitDTO.ts
+models/PaymentSplitEntryDTO.ts
 models/PaymentStatus.ts
 models/PersonDTO.ts
 models/PersonSmallDetailsDTO.ts

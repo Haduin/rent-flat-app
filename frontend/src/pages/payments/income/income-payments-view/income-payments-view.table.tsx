@@ -12,6 +12,7 @@ interface PaymentsTableProps {
     payments?: PaymentHistoryWithPersonDTO[],
     openConfirmationDialog: (payment: PaymentHistoryWithPersonDTO) => void,
     openEditDialog: (payment: PaymentHistoryWithPersonDTO) => void,
+    openSplitDialog: (payment: PaymentHistoryWithPersonDTO) => void,
     handleTableSort?: (event: DataTableStateEvent) => void,
     sortState?: { field?: PaymentSortableField; order?: SortOrder }
 }
@@ -20,6 +21,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                                                                 payments,
                                                                 openConfirmationDialog,
                                                                 openEditDialog,
+                                                                openSplitDialog,
                                                                 handleTableSort,
                                                                 sortState
                                                             }) => {
@@ -51,12 +53,20 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
     const actionsTemplate = (rowData: PaymentHistoryWithPersonDTO) => {
         if (rowData.status !== PaymentStatus.Paid && rowData.status !== PaymentStatus.Cancelled) {
             return (
-                <Button
-                    label="Potwierdz"
-                    icon="pi pi-pencil"
-                    onClick={() => openConfirmationDialog(rowData)}
-                    className="p-button-rounded p-button-sm"
-                />
+                <div className="flex gap-2">
+                    <Button
+                        label="Potwierdz"
+                        icon="pi pi-pencil"
+                        onClick={() => openConfirmationDialog(rowData)}
+                        className="p-button-rounded p-button-sm"
+                    />
+                    <Button
+                        label="Podziel płatność"
+                        icon="pi pi-percentage"
+                        onClick={() => openSplitDialog(rowData)}
+                        className="p-button-rounded p-button-sm p-button-outlined"
+                    />
+                </div>
             );
         }
         if (rowData.status === PaymentStatus.Paid || rowData.status === PaymentStatus.Cancelled) {
@@ -130,7 +140,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
             <Column
                 header="Akcje"
                 body={actionsTemplate}
-                style={{width: '15%'}}
+                style={{width: '25%'}}
             />
         </DataTable>
     );

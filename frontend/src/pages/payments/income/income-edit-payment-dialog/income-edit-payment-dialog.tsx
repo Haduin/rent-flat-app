@@ -10,6 +10,7 @@ import {dateToStringFullYearMouthDay} from "../../../../components/commons/dateF
 import {useMemo} from "react";
 import {PaymentStatus} from "../../../../api/generated";
 import {EditPaymentDialogProps} from "./income-edit-payment-dialog.props.ts";
+import {useGetPaymentSplits} from "../api/income-payments-view.api.ts";
 
 
 export const IncomeEditPaymentDialog = ({
@@ -19,6 +20,11 @@ export const IncomeEditPaymentDialog = ({
                                             selectedPayment
                                         }: EditPaymentDialogProps) => {
 
+    const {data: splits} = useGetPaymentSplits(selectedPayment?.id);
+    const paidSoFar = useMemo(
+        () => (splits ?? []).reduce((sum, split) => sum + split.amount, 0),
+        [splits]
+    );
 
     const defaultValues = useMemo(() => ({
         payedDate: selectedPayment?.payedDate ? new Date(selectedPayment.payedDate) : new Date(),
@@ -49,7 +55,8 @@ export const IncomeEditPaymentDialog = ({
         {label: "Opłacone", value: "PAID", status: PaymentStatus.Paid},
         {label: "Oczekujące", value: "PENDING", status: PaymentStatus.Pending},
         {label: "Spóźnione", value: "LATE", status: PaymentStatus.Late},
-        {label: "Anulowane", value: "CANCELLED", status: PaymentStatus.Cancelled}
+        {label: "Anulowane", value: "CANCELLED", status: PaymentStatus.Cancelled},
+        {label: "Częściowo opłacone", value: "PARTIALLY_PAID", status: PaymentStatus.PartiallyPaid}
     ];
 
     if (!isVisible)
@@ -61,6 +68,20 @@ export const IncomeEditPaymentDialog = ({
                onClose={onHide}
                content={
                    <form>
+                       {splits && splits.length > 0 && (
+                           <div className="flex flex-column gap-1 mb-3">
+                               <span className="text-sm font-medium">Historia wpłat częściowych</span>
+                               {splits.map((split) => (
+                                   <div key={split.id} className="text-sm">
+                                       {split.paymentDate} — {split.amount}
+                                   </div>
+                               ))}
+                               <span className="text-sm font-medium mt-1">
+                                   Wpłacono łącznie: {paidSoFar} / {selectedPayment?.amount}
+                               </span>
+                           </div>
+                       )}
+
                        <DateSelector name="payedDate" label="Data wpływu" formik={formik}/>
                        <TextField name="amount" label="Kwota" formik={formik} inputType="number"/>
                        <StatusSelectField

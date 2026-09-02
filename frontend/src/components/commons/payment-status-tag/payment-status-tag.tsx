@@ -20,6 +20,8 @@ const getTagSeverity = (status: PaymentStatus): "warning" | "success" | "danger"
             return 'success';
         case PaymentStatus.Cancelled:
             return 'danger';
+        case PaymentStatus.PartiallyPaid:
+            return 'info';
         default:
             return 'info';
     }

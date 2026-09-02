@@ -5,4 +5,5 @@ export const statusMap: Record<PaymentStatus, string> = {
     [PaymentStatus.Paid]: 'Zapłacono',
     [PaymentStatus.Late]: 'Spóźnione',
     [PaymentStatus.Cancelled]: 'Anulowano',
+    [PaymentStatus.PartiallyPaid]: 'Częściowo opłacone',
 };

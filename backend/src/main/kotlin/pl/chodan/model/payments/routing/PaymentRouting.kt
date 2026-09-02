@@ -13,6 +13,8 @@ import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 import pl.chodan.model.payments.dto.PaymentEdit
 import pl.chodan.model.payments.dto.PaymentHistoryWithPersonDTO
+import pl.chodan.model.payments.dto.PaymentSplitDTO
+import pl.chodan.model.payments.dto.PaymentSplitEntryDTO
 import pl.chodan.model.payments.service.PaymentService
 import pl.chodan.model.persons.dto.PaymentConfirmationDTO
 import pl.chodan.routing.SortOrder
@@ -102,6 +104,48 @@ fun Application.configurePaymentRouting() {
                         call.respond(
                             HttpStatusCode.BadRequest, mapOf("error" to "Failed to edit payment: ${e.message}")
                         )
+                    }
+                }
+
+                post("/split", {
+                    description = "Record a partial (split) payment towards a payment's due amount"
+                    operationId = "splitPayment"
+                    request { body<PaymentSplitDTO> { description = "Split payment payload" } }
+                    response {
+                        code(HttpStatusCode.OK) { description = "Split payment recorded" }
+                        code(HttpStatusCode.BadRequest) { description = "Split failed" }
+                    }
+                }) {
+                    val request = call.receive<PaymentSplitDTO>()
+                    try {
+                        paymentService.splitPayment(request)
+                        call.respond(HttpStatusCode.OK, mapOf("message" to "Split payment recorded successfully"))
+                    } catch (e: Exception) {
+                        call.respond(
+                            HttpStatusCode.BadRequest, mapOf("error" to "Failed to split payment: ${e.message}")
+                        )
+                    }
+                }
+
+                get("/{id}/splits", {
+                    description = "Get the recorded split payments (instalments) for a payment"
+                    operationId = "getPaymentSplits"
+                    request {
+                        pathParameter<Int>("id") { description = "Payment id" }
+                    }
+                    response {
+                        code(HttpStatusCode.OK) {
+                            description = "Split payments for the given payment"
+                            body<List<PaymentSplitEntryDTO>>()
+                        }
+                        code(HttpStatusCode.BadRequest) { description = "Invalid payment id" }
+                    }
+                }) {
+                    val paymentId = call.parameters["id"]?.toIntOrNull()
+                    if (paymentId == null) {
+                        call.respond(HttpStatusCode.BadRequest, "Id parameter is required")
+                    } else {
+                        call.respond(paymentService.getPaymentSplits(paymentId))
                     }
                 }
             }
