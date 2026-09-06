@@ -6,4 +6,5 @@ export interface ContractTableProps {
     handleOpenEditDialog: (contract: ContractDTO) => void;
     handleOpenDeleteDialog: (contract: ContractDTO) => void;
     handleOpenDetailsDialog: (contract: ContractDTO) => void;
+    handleOpenHistoryDialog: (contract: ContractDTO) => void;
 }

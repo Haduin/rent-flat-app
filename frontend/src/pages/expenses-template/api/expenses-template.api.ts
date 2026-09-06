@@ -63,3 +63,19 @@ export const editExpensesTemplate = (
         onError: () => showToast('error', 'Wystąpił błąd podczas edycji szablonu wydatku')
     })
 }
+
+export const removeExpensesTemplate = () => {
+    const {showToast} = useToast();
+    return useMutation({
+        mutationKey: [
+            EXPENSES_TEMPLATE_MUTATIONS.REMOVE_EXPENSE_TEMPLATE,
+            EXPENSES_TEMPLATE_QUERIES.ALL_EXPENSES_TEMPLATE
+        ],
+        mutationFn: (expenseTemplateId: number) => client.expenseTemplatesApi.deleteExpenseTemplate({expenseTemplateId}),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({queryKey: [EXPENSES_TEMPLATE_QUERIES.ALL_EXPENSES_TEMPLATE]});
+            showToast('success', 'Poprawnie usunięto szablon')
+        },
+        onError: () => showToast('error', 'Wystąpił błąd podczas usuwania szablonu wydatku')
+    })
+}

@@ -88,10 +88,19 @@ fun Application.configureExpenseTemplateRouting() {
                     request {
                         pathParameter<Int>("expenseTemplateId") { description = "Expense template id" }
                     }
-                }) {
-                    call.parameters["expenseTemplateId"]?.let { expenseTemplateId ->
-                        expenseTemplateService.deleteExpenseTemplate(expenseTemplateId.toInt())
+                    response {
+                        code(HttpStatusCode.OK) { description = "Template deleted" }
+                        code(HttpStatusCode.NotFound) { description = "Expense template not found" }
                     }
+                }) {
+                    val id = call.parameters["expenseTemplateId"]?.toIntOrNull()
+                    if (id == null) {
+                        call.respond(HttpStatusCode.NotFound)
+                        return@delete
+                    }
+
+                    expenseTemplateService.deleteExpenseTemplate(id)
+                    call.respond(HttpStatusCode.OK)
                 }
 
             }

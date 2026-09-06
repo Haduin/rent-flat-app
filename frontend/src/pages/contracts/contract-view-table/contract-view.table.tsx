@@ -1,6 +1,7 @@
 import {Column} from "primereact/column";
 import {ContractStatus} from "../../../components/commons/types.ts";
 import {Button} from "primereact/button";
+import {Tag} from "primereact/tag";
 import {DataTable} from "primereact/datatable";
 import {ContractDTO} from "../../../api/generated";
 import {ContractTableProps} from "./contract-view-table.props.ts";
@@ -11,7 +12,8 @@ export const ContractTable = ({
                                   showContracts,
                                   handleOpenEditDialog,
                                   handleOpenDeleteDialog,
-                                  handleOpenDetailsDialog
+                                  handleOpenDetailsDialog,
+                                  handleOpenHistoryDialog
                               }: ContractTableProps) => {
     return (
         <DataTable value={showContracts()} paginator rows={10} stripedRows header={renderHeader()}>
@@ -25,15 +27,16 @@ export const ContractTable = ({
             <Column field="endDate"
                     header="Do kiedy"
                     body={(rowData: ContractDTO) => (
-                        <div>
+                        <div className="flex gap-2 items-center">
                             {rowData.terminationDate ? (
-                                <div className="flex gap-2 items-center">
+                                <>
                                     <span className="line-through">{rowData.endDate}</span>
                                     <span className="text-red-500">{rowData.terminationDate}</span>
-                                </div>
+                                </>
                             ) : (
-                                rowData.endDate
+                                <span>{rowData.endDate}</span>
                             )}
+                            {rowData.expiringSoon && <Tag severity="warning" value="Kończy się wkrótce"/>}
                         </div>
                     )}
             />
@@ -48,6 +51,11 @@ export const ContractTable = ({
                             <Button label="Edytuj"
                                     icon="pi pi-eye"
                                     onClick={() => handleOpenEditDialog(rowData)}
+                                    className="p-button-rounded p-button-sm"/>
+                            <Button label="Historia"
+                                    icon="pi pi-history"
+                                    severity="info"
+                                    onClick={() => handleOpenHistoryDialog(rowData)}
                                     className="p-button-rounded p-button-sm"/>
                             <Button label="Zakończ"
                                     severity="warning"

@@ -16,6 +16,7 @@
 import * as runtime from '../runtime';
 import type {
   ContractDTO,
+  ContractHistoryDTO,
   DeleteContractDTO,
   NewContractDTO,
   UpdateContractDetails,
@@ -23,6 +24,8 @@ import type {
 import {
     ContractDTOFromJSON,
     ContractDTOToJSON,
+    ContractHistoryDTOFromJSON,
+    ContractHistoryDTOToJSON,
     DeleteContractDTOFromJSON,
     DeleteContractDTOToJSON,
     NewContractDTOFromJSON,
@@ -41,6 +44,10 @@ export interface DeleteContractRequest {
 
 export interface GenerateMonthlyPaymentsRequest {
     month: string;
+}
+
+export interface GetContractHistoryRequest {
+    id: number;
 }
 
 export interface UpdateContractRequest {
@@ -163,6 +170,39 @@ export class ContractsApi extends runtime.BaseAPI {
      */
     async getAllContracts(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ContractDTO>> {
         const response = await this.getAllContractsRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Get the change history (snapshots) of a contract, oldest first
+     */
+    async getContractHistoryRaw(requestParameters: GetContractHistoryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ContractHistoryDTO>>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling getContractHistory().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/contracts/{id}/history`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ContractHistoryDTOFromJSON));
+    }
+
+    /**
+     * Get the change history (snapshots) of a contract, oldest first
+     */
+    async getContractHistory(requestParameters: GetContractHistoryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ContractHistoryDTO>> {
+        const response = await this.getContractHistoryRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

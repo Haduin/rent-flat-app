@@ -5,6 +5,7 @@ import {client} from "../../../api/client.ts";
 import {CONTRACTS_QUERY_KEY} from "../../../api/keys/contracts.ts";
 import {
     ContractDTO,
+    ContractHistoryDTO,
     GetNonOccupiedRoomsRequest,
     PersonDTO,
     type RoomWithApartmentDTO,
@@ -52,6 +53,14 @@ export const useUnassignedRooms = (params?: GetNonOccupiedRoomsRequest) => {
     });
 };
 
+
+export const useContractHistoryQuery = (contractId: number | null) => {
+    return useQuery<ContractHistoryDTO[]>({
+        queryKey: [CONTRACTS_QUERY_KEY.CONTRACT_HISTORY, contractId],
+        queryFn: () => client.contractsApi.getContractHistory({id: contractId!}),
+        enabled: contractId != null,
+    });
+};
 
 export const useAddContractMutation = ({onSuccess, onError}: UseAddContractProps) => {
     const {showToast} = useToast();

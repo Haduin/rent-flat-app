@@ -24,6 +24,7 @@ import pl.chodan.database.Person
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
+import pl.chodan.model.contract.database.ContractHistory
 import pl.chodan.model.expenses.service.ExpenseTemplateService
 
 private class KPostgresContainer(image: String) : PostgreSQLContainer<KPostgresContainer>(DockerImageName.parse(image))
@@ -42,7 +43,8 @@ object PostgresTestContainer {
 
 // Same set DatabaseProvider creates in production, ordered parent-before-child for creation.
 private val allTables = arrayOf(
-    Apartment, Room, Person, Contract, Payment, PaymentSplit, OperationalExpenseTemplate, OperationalExpense
+    Apartment, Room, Person, Contract, ContractHistory, Payment, PaymentSplit, OperationalExpenseTemplate,
+    OperationalExpense
 )
 
 /** Connects Exposed to the shared container and (re)creates the `flat` schema and tables. */

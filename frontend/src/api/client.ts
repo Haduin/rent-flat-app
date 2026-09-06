@@ -8,7 +8,8 @@ import {
     ExpenseTemplatesApi,
     PaymentsApi,
     PersonsApi,
-    RoomsApi
+    RoomsApi,
+    StatisticsApi
 } from './generated'
 
 class ApiClientFactory {
@@ -56,4 +57,5 @@ export const client = {
     expensesApi: ApiClientFactory.build(ExpensesApi),
     expenseTemplatesApi: ApiClientFactory.build(ExpenseTemplatesApi),
     apartmentApi: ApiClientFactory.build(ApartmentsApi),
+    statisticsApi: ApiClientFactory.build(StatisticsApi),
 }

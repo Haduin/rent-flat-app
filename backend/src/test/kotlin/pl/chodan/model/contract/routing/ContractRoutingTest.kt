@@ -9,8 +9,11 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.koin.dsl.module
 import pl.chodan.model.contract.dto.ContractDTO
+import pl.chodan.model.contract.dto.ContractHistoryDTO
 import pl.chodan.model.contract.dto.DeleteContractDTO
 import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.dto.UpdateContractDetails
@@ -65,7 +68,8 @@ class ContractRoutingTest {
         deposit = 2000.0,
         depositReturned = null,
         description = null,
-        status = "ACTIVE"
+        status = "ACTIVE",
+        expiringSoon = false
     )
 
     @Test
@@ -87,6 +91,55 @@ class ContractRoutingTest {
         val response = client.get("/contracts")
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun `GET contracts history returns the change history oldest first`() = testApplication {
+        setup()
+        val history = listOf(
+            ContractHistoryDTO(
+                id = 1, contractId = 1, changeType = "CREATED", changedAt = "2026-01-01T10:00:00",
+                roomId = 10, amount = 1500.0, deposit = 1500.0, depositReturned = null,
+                startDate = "2026-01-01", endDate = "2026-12-31", terminationDate = null,
+                description = null, status = "ACTIVE", payedTillDayOfMonth = "10"
+            ),
+            ContractHistoryDTO(
+                id = 2, contractId = 1, changeType = "UPDATED", changedAt = "2026-02-01T10:00:00",
+                roomId = 10, amount = 1700.0, deposit = 1500.0, depositReturned = null,
+                startDate = "2026-01-01", endDate = "2026-12-31", terminationDate = null,
+                description = null, status = "ACTIVE", payedTillDayOfMonth = "10"
+            ),
+        )
+        coEvery { contractService.getContractHistory(1) } returns history
+
+        val response = client.get("/contracts/1/history") { testAuthHeader() }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        val body = Json.parseToJsonElement(response.bodyAsText()).jsonArray
+        assertEquals(2, body.size)
+        assertEquals("CREATED", body[0].jsonObject["changeType"]!!.jsonPrimitive.content)
+        assertEquals("UPDATED", body[1].jsonObject["changeType"]!!.jsonPrimitive.content)
+        assertEquals(1700.0, body[1].jsonObject["amount"]!!.jsonPrimitive.content.toDouble())
+    }
+
+    @Test
+    fun `GET contracts history with a non numeric id returns bad request`() = testApplication {
+        setup()
+
+        val response = client.get("/contracts/abc/history") { testAuthHeader() }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        coVerify(exactly = 0) { contractService.getContractHistory(any()) }
+    }
+
+    @Test
+    fun `GET contracts history without an authenticated user is rejected`() = testApplication {
+        setup()
+
+        val response = client.get("/contracts/1/history")
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        coVerify(exactly = 0) { contractService.getContractHistory(any()) }
     }
 
     @Test
@@ -167,7 +220,7 @@ class ContractRoutingTest {
             contractId = 1, roomId = null, amount = 2200.0, deposit = null,
             startDate = null, endDate = null, payedTillDayOfMonth = null
         )
-        coEvery { contractService.updateContract(dto) } returns 1
+        coEvery { contractService.updateContract(dto) } returns Unit
 
         val response = client.put("/contracts") {
             testAuthHeader()

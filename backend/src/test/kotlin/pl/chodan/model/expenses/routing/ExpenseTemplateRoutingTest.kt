@@ -169,16 +169,34 @@ class ExpenseTemplateRoutingTest {
         coVerify(exactly = 0) { expenseTemplateService.updateExpenseTemplate(any(), any()) }
     }
 
-    // The delete handler never calls call.respond, so Ktor's routing falls back to its default
-    // "no response produced" handling instead of an explicit 200/204.
     @Test
-    fun `DELETE expense-template calls the service even though the route sends no explicit response`() = testApplication {
+    fun `DELETE expense-template deactivates the template`() = testApplication {
         setup()
         coEvery { expenseTemplateService.deleteExpenseTemplate(5) } returns 1
 
         val response = client.delete("/expense-template/5") { testAuthHeader() }
 
-        assertEquals(HttpStatusCode.NotFound, response.status)
+        assertEquals(HttpStatusCode.OK, response.status)
         coVerify(exactly = 1) { expenseTemplateService.deleteExpenseTemplate(5) }
+    }
+
+    @Test
+    fun `DELETE expense-template with a non numeric id returns not found`() = testApplication {
+        setup()
+
+        val response = client.delete("/expense-template/abc") { testAuthHeader() }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+        coVerify(exactly = 0) { expenseTemplateService.deleteExpenseTemplate(any()) }
+    }
+
+    @Test
+    fun `DELETE expense-template without an authenticated user is rejected`() = testApplication {
+        setup()
+
+        val response = client.delete("/expense-template/5")
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+        coVerify(exactly = 0) { expenseTemplateService.deleteExpenseTemplate(any()) }
     }
 }

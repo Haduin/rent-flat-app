@@ -59,6 +59,8 @@ dependencies {
     implementation("io.ktor:ktor-server-html-builder:$ktor_version")
     implementation("io.ktor:ktor-server-cors:$ktor_version")
     implementation("org.postgresql:postgresql:42.7.2")
+    implementation("org.flywaydb:flyway-core:10.20.1")
+    implementation("org.flywaydb:flyway-database-postgresql:10.20.1")
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml-jvm")

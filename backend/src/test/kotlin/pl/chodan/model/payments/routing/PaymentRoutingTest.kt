@@ -110,35 +110,55 @@ class PaymentRoutingTest {
     }
 
     @Test
-    fun `GET payments for month with an invalid sort field is not handled and results in a server error`() =
-        testApplication {
-            setup()
+    fun `GET payments for month with an invalid sort field returns bad request`() = testApplication {
+        setup()
 
-            val response = client.get("/payments/2026-08?sortField=NOT_A_FIELD") { testAuthHeader() }
+        val response = client.get("/payments/2026-08?sortField=NOT_A_FIELD") { testAuthHeader() }
 
-            assertEquals(HttpStatusCode.InternalServerError, response.status)
-        }
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        coVerify(exactly = 0) { paymentService.getPaymentsForMouth(any(), any(), any()) }
+    }
 
-    // The confirm-payment handler instantiates `PaymentService()` directly instead of using the
-    // Koin-injected instance, so the mocked service is never invoked. The freshly constructed
-    // service fails to resolve its own dependencies from the test Koin module, which is caught by
-    // the generic try/catch and surfaces as a 400 rather than the OK response the happy path implies.
     @Test
-    fun `POST payments confirm ignores the injected mock and fails to resolve its own dependencies`() =
-        testApplication {
-            setup()
-            val dto = PaymentConfirmationDTO(paymentId = 1, paymentDate = "2026-08-04", payedAmount = 2000.0)
-            coEvery { paymentService.confirmPayment(dto) } returns 1
+    fun `GET payments for month with an invalid sort order returns bad request`() = testApplication {
+        setup()
 
-            val response = client.post("/payments/confirm") {
-                testAuthHeader()
-                contentType(ContentType.Application.Json)
-                setBody(Json.encodeToString(PaymentConfirmationDTO.serializer(), dto))
-            }
+        val response = client.get("/payments/2026-08?sortOrder=NOT_AN_ORDER") { testAuthHeader() }
 
-            assertEquals(HttpStatusCode.BadRequest, response.status)
-            coVerify(exactly = 0) { paymentService.confirmPayment(any()) }
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        coVerify(exactly = 0) { paymentService.getPaymentsForMouth(any(), any(), any()) }
+    }
+
+    @Test
+    fun `POST payments confirm confirms a payment`() = testApplication {
+        setup()
+        val dto = PaymentConfirmationDTO(paymentId = 1, paymentDate = "2026-08-04", payedAmount = 2000.0)
+        coEvery { paymentService.confirmPayment(dto) } returns 1
+
+        val response = client.post("/payments/confirm") {
+            testAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(PaymentConfirmationDTO.serializer(), dto))
         }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        coVerify(exactly = 1) { paymentService.confirmPayment(dto) }
+    }
+
+    @Test
+    fun `POST payments confirm returns bad request when the service throws`() = testApplication {
+        setup()
+        val dto = PaymentConfirmationDTO(paymentId = 1, paymentDate = "2026-08-04", payedAmount = 2000.0)
+        coEvery { paymentService.confirmPayment(dto) } throws IllegalStateException("boom")
+
+        val response = client.post("/payments/confirm") {
+            testAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(PaymentConfirmationDTO.serializer(), dto))
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
 
     @Test
     fun `PUT payments edit updates a payment`() = testApplication {

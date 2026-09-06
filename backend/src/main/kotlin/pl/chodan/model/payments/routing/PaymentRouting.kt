@@ -55,16 +55,27 @@ fun Application.configurePaymentRouting() {
                         code(HttpStatusCode.BadRequest) { description = "Invalid parameters" }
                     }
                 }) {
-                    call.parameters["mouth"]?.let { mouth ->
-                        val sortFieldName =
-                            call.request.queryParameters["sortField"]?.let { PaymentSortableField.valueOf(it) }
-                                ?: PaymentSortableField.ID
-                        val sortOrder =
-                            call.request.queryParameters["sortOrder"]?.let { SortOrder.valueOf(it) } ?: SortOrder.ASC
+                    val mouth = call.parameters["mouth"]
+                    if (mouth == null) {
+                        call.respond(HttpStatusCode.BadRequest, "Mouth parameter is required")
+                        return@get
+                    }
 
-                        val response = paymentService.getPaymentsForMouth(mouth, sortFieldName, sortOrder)
-                        call.respond(response)
-                    } ?: call.respond(HttpStatusCode.BadRequest, "Mouth parameter is required")
+                    val sortFieldName = try {
+                        call.request.queryParameters["sortField"]?.let { PaymentSortableField.valueOf(it) }
+                            ?: PaymentSortableField.ID
+                    } catch (e: IllegalArgumentException) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid sortField parameter")
+                        return@get
+                    }
+                    val sortOrder = try {
+                        call.request.queryParameters["sortOrder"]?.let { SortOrder.valueOf(it) } ?: SortOrder.ASC
+                    } catch (e: IllegalArgumentException) {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid sortOrder parameter")
+                        return@get
+                    }
+
+                    call.respond(paymentService.getPaymentsForMouth(mouth, sortFieldName, sortOrder))
 
                 }
                 post("/confirm", {
@@ -78,7 +89,7 @@ fun Application.configurePaymentRouting() {
                 }) {
                     val request = call.receive<PaymentConfirmationDTO>()
                     try {
-                        PaymentService().confirmPayment(request)
+                        paymentService.confirmPayment(request)
                         call.respond(HttpStatusCode.OK, mapOf("message" to "Payment confirmed successfully"))
                     } catch (e: Exception) {
                         call.respond(

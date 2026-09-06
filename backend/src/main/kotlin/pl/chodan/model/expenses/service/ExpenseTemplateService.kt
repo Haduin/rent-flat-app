@@ -1,7 +1,6 @@
 package pl.chodan.model.expenses.service
 
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.leftJoin
 import org.jetbrains.exposed.sql.selectAll
@@ -89,7 +88,14 @@ class ExpenseTemplateService : KoinComponent {
         }
     }
 
+    // Soft-delete: szablony z już wygenerowanymi wydatkami są powiązane przez FK
+    // (operational_expense.template_id), więc twardy DELETE naruszałby integralność
+    // historii płatności. Dezaktywacja zatrzymuje dalsze generowanie kosztów
+    // (patrz filtr `active eq true` w ExpenseService.generateExpensesFromTemplates)
+    // i jest odzwierciedlana w UI przez istniejący status "Nieaktywny".
     suspend fun deleteExpenseTemplate(id: Int) = databaseProvider.dbQuery {
-        OperationalExpenseTemplate.deleteWhere { OperationalExpenseTemplate.id eq id }
+        OperationalExpenseTemplate.update({ OperationalExpenseTemplate.id eq id }) {
+            it[active] = false
+        }
     }
 }

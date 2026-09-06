@@ -22,7 +22,8 @@ const AddContractView = ({
         initialValues: {
             personId: '',
             roomId: '',
-            dates: [] as Date[],
+            startDate: undefined as Date | undefined,
+            endDate: undefined as Date | undefined,
             amount: '',
             deposit: '',
             payedDate: ''
@@ -31,8 +32,8 @@ const AddContractView = ({
             const newContract: NewContract = {
                 personId: Number(values.personId),
                 roomId: Number(values.roomId),
-                startDate: dateToStringFullYearMouthDay(values.dates[0]),
-                endDate: dateToStringFullYearMouthDay(values.dates[1]),
+                startDate: dateToStringFullYearMouthDay(values.startDate!),
+                endDate: dateToStringFullYearMouthDay(values.endDate!),
                 amount: Number(values.amount),
                 deposit: Number(values.amount),
                 payedDate: Number(values.payedDate),
@@ -43,7 +44,10 @@ const AddContractView = ({
         validationSchema: Yup.object().shape({
             personId: Yup.string().required('Osoba musi być wymagana'),
             roomId: Yup.string().required('Pokój jest wymagany'),
-            dates: Yup.array().required('Data kontraktu jest wymagana'),
+            startDate: Yup.date().required('Data rozpoczęcia jest wymagana'),
+            endDate: Yup.date()
+                .required('Data zakończenia jest wymagana')
+                .min(Yup.ref('startDate'), 'Data zakończenia musi być późniejsza niż data rozpoczęcia'),
             amount: Yup.number().required('Kwota jest wymagana'),
             deposit: Yup.number().required('Kaucja jest wymagana'),
             payedDate: Yup.string().required('Data płatności jest wymagana'),
@@ -52,8 +56,8 @@ const AddContractView = ({
 
 
     const {data: unassignedRooms, isLoading: roomsLoading} = useUnassignedRooms({
-        startDate: dateToStringFullYearMouthDay(formik.values.dates[0]),
-        endDate: dateToStringFullYearMouthDay(formik.values.dates[1]),
+        startDate: formik.values.startDate ? dateToStringFullYearMouthDay(formik.values.startDate) : '',
+        endDate: formik.values.endDate ? dateToStringFullYearMouthDay(formik.values.endDate) : '',
     })
 
     if (!isVisible)
@@ -80,19 +84,31 @@ const AddContractView = ({
 
                        <SelectField
                            label="Pokój" name="roomId"
-                           options={formik.values.dates && unassignedRooms ? unassignedRooms.map((room) => ({
+                           options={formik.values.startDate && formik.values.endDate && unassignedRooms ? unassignedRooms.map((room) => ({
                                label: `${room.apartment} ${room.number}`,
                                value: room.id
                            })) : []}
                            disabled={unassignedRooms?.length === 0 || roomsLoading}
                            formik={formik}/>
 
-                       <DateSelector
-                           label="Data kontraktu"
-                           name="dates"
-                           selectionMode="range"
-                           formik={formik}
-                       />
+                       <div className="flex gap-3">
+                           <div className="flex-1">
+                               <DateSelector
+                                   formik={formik}
+                                   name="startDate"
+                                   label="Data rozpoczęcia"
+                                   selectionMode="single"
+                               />
+                           </div>
+                           <div className="flex-1">
+                               <DateSelector
+                                   formik={formik}
+                                   name="endDate"
+                                   label="Data zakończenia"
+                                   selectionMode="single"
+                               />
+                           </div>
+                       </div>
                        <TextField
                            formik={formik}
                            label="Data płatności"

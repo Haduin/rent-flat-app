@@ -125,8 +125,11 @@ class ExpenseTemplateServiceIntegrationTest {
         }
     }
 
+    // Soft-delete: templates that already generated real expenses are linked via a FK
+    // (operational_expense.template_id) with no cascade, so a hard DELETE would blow up on those.
+    // deleteExpenseTemplate deactivates the row instead - it stays in findAll() with active=false.
     @Test
-    fun `deleteExpenseTemplate removes the row`() = runBlocking {
+    fun `deleteExpenseTemplate deactivates the template instead of removing it`() = runBlocking {
         val service = ExpenseTemplateService()
         service.createExpenseTemplate(
             AddExpenseTemplateRequest(
@@ -138,6 +141,8 @@ class ExpenseTemplateServiceIntegrationTest {
 
         service.deleteExpenseTemplate(id)
 
-        assertTrue(service.findAll().isEmpty())
+        val template = service.findAll().single()
+        assertEquals(id, template.id)
+        assertTrue(!template.active)
     }
 }

@@ -44,6 +44,7 @@ const IncomePaymentsView = () => {
                               value={dateSelected}
                               onChange={(e) => handleDateSelectAndFetchPayments(e.value as Date)}
                               view="month"
+                              locale="pl"
                               dateFormat="yy-mm"/>
 
                     {dateSelected && (

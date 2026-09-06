@@ -52,6 +52,16 @@ const NavigationComponent = () => {
             label: 'Wydatki',
             icon: 'pi pi-wallet',
             url: '/protected/wydatki'
+        },
+        {
+            label: 'Statystyki',
+            icon: 'pi pi-chart-bar',
+            url: '/protected/statystyki'
+        },
+        {
+            label: 'Nowy UI (beta)',
+            icon: 'pi pi-sparkles',
+            url: '/protected/v2/dashboard'
         }
     ];
     const nav = useNavigate();

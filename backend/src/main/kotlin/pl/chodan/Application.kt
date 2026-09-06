@@ -23,6 +23,8 @@ import pl.chodan.model.persons.routing.configurePersonRouting
 import pl.chodan.model.persons.service.PersonService
 import pl.chodan.model.room.routing.configureRoomRouting
 import pl.chodan.model.room.service.RoomService
+import pl.chodan.model.statistics.routing.configureStatisticsRouting
+import pl.chodan.model.statistics.service.StatisticsService
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -45,6 +47,7 @@ fun Application.module() {
     configurePaymentRouting()
     configureExpenseRouting()
     configureExpenseTemplateRouting()
+    configureStatisticsRouting()
 }
 
 val appModule = { config: Config ->
@@ -60,6 +63,7 @@ val appModule = { config: Config ->
         singleOf(::PaymentService)
         singleOf(::ExpenseService)
         singleOf(::ExpenseTemplateService)
+        singleOf(::StatisticsService)
 
     }
 }

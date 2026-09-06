@@ -17,9 +17,8 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
         initialValues: {
             personName: selectedContract?.person?.firstName + " " + selectedContract?.person?.lastName || '',
             roomId: Number(selectedContract?.room?.id),
-            dates: selectedContract?.startDate && selectedContract?.endDate
-                ? [new Date(selectedContract.startDate), new Date(selectedContract.endDate)]
-                : [],
+            startDate: selectedContract?.startDate ? new Date(selectedContract.startDate) : undefined,
+            endDate: selectedContract?.endDate ? new Date(selectedContract.endDate) : undefined,
             amount: Number(selectedContract?.amount),
             deposit: selectedContract?.deposit + "" || null,
             payedTillDayOfMonth: Number(selectedContract?.payedTillDayOfMonth),
@@ -33,8 +32,8 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
                 deposit: Number(values.deposit),
                 roomId: values.roomId,
                 payedTillDayOfMonth: values.payedTillDayOfMonth + "",
-                startDate: values.dates?.[0]?.toISOString().split('T')[0],
-                endDate: values.dates?.[1]?.toISOString().split('T')[0],
+                startDate: values.startDate?.toISOString().split('T')[0],
+                endDate: values.endDate?.toISOString().split('T')[0],
             };
             onSave.mutate({...updatedContract});
             formik.resetForm();
@@ -69,12 +68,24 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
                         options={mappedRooms}
                         name="roomId"
                         formik={formik}/>
-                    <DateSelector
-                        formik={formik}
-                        name="dates"
-                        label="Daty kontraktu"
-                        selectionMode="range"
-                    />
+                    <div className="flex gap-3">
+                        <div className="flex-1">
+                            <DateSelector
+                                formik={formik}
+                                name="startDate"
+                                label="Data rozpoczęcia"
+                                selectionMode="single"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <DateSelector
+                                formik={formik}
+                                name="endDate"
+                                label="Data zakończenia"
+                                selectionMode="single"
+                            />
+                        </div>
+                    </div>
                     <TextField
                         formik={formik}
                         label="kwota"

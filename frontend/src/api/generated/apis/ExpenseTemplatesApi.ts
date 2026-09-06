@@ -32,6 +32,10 @@ export interface CreateExpenseTemplateRequest {
     addExpenseTemplateRequest?: AddExpenseTemplateRequest;
 }
 
+export interface DeleteExpenseTemplateRequest {
+    expenseTemplateId: number;
+}
+
 export interface UpdateExpenseTemplateRequest {
     expenseTemplateId: number;
     updateExpenseTemplate?: UpdateExpenseTemplate;
@@ -68,6 +72,38 @@ export class ExpenseTemplatesApi extends runtime.BaseAPI {
      */
     async createExpenseTemplate(requestParameters: CreateExpenseTemplateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.createExpenseTemplateRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Deletes an existing expense template
+     */
+    async deleteExpenseTemplateRaw(requestParameters: DeleteExpenseTemplateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['expenseTemplateId'] == null) {
+            throw new runtime.RequiredError(
+                'expenseTemplateId',
+                'Required parameter "expenseTemplateId" was null or undefined when calling deleteExpenseTemplate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/expense-template/{expenseTemplateId}`.replace(`{${"expenseTemplateId"}}`, encodeURIComponent(String(requestParameters['expenseTemplateId']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Deletes an existing expense template
+     */
+    async deleteExpenseTemplate(requestParameters: DeleteExpenseTemplateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.deleteExpenseTemplateRaw(requestParameters, initOverrides);
     }
 
     /**

@@ -4,4 +4,5 @@ export const EXPENSES_TEMPLATE_QUERIES = {
 export const EXPENSES_TEMPLATE_MUTATIONS = {
     ADD_EXPENSE_TEMPLATE: "add-expense-template",
     EDIT_EXPENSE_TEMPLATE: "edit-expense-template",
+    REMOVE_EXPENSE_TEMPLATE: "remove-expense-template",
 }

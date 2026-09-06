@@ -2,8 +2,12 @@
 /* eslint-disable */
 export * from './AddExpenseTemplateRequest';
 export * from './ApartmentResponse';
+export * from './ApartmentStatisticsDTO';
 export * from './ApartmentWithRooms';
+export * from './ApartmentsStatisticsOverviewDTO';
+export * from './ApartmentsStatisticsResponse';
 export * from './ContractDTO';
+export * from './ContractHistoryDTO';
 export * from './CreatedPersonDTO';
 export * from './DeleteContractDTO';
 export * from './ExpenseCategory';

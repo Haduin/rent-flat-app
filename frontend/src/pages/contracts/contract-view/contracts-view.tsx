@@ -7,6 +7,7 @@ import {Checkbox} from "primereact/checkbox";
 import {ContractTable} from "../contract-view-table/contract-view.table.tsx";
 import {UpdateContractModal} from "../update-contract-modal/update-contract-modal.tsx";
 import ContractDetailsModal from "../contract-details/contract-details-modal.tsx";
+import ContractHistoryDialog from "../contract-history/contract-history-dialog.tsx";
 
 const ContractsView = () => {
 
@@ -33,6 +34,10 @@ const ContractsView = () => {
         handleOpenDeleteDialog,
         handleCloseDeleteDialog,
         deleteContractMutation,
+
+        isHistoryDialogVisible,
+        handleOpenHistoryDialog,
+        handleCloseHistoryDialog,
 
         showOnlyActiveContracts,
         setShowOnlyActiveContracts,
@@ -79,6 +84,7 @@ const ContractsView = () => {
                         handleOpenEditDialog={handleOpenEditDialog}
                         handleOpenDetailsDialog={handleOpenDetailsDialog}
                         handleOpenDeleteDialog={handleOpenDeleteDialog}
+                        handleOpenHistoryDialog={handleOpenHistoryDialog}
                     />
 
                     {isDeleteDialogVisible && (
@@ -108,6 +114,13 @@ const ContractsView = () => {
                             isVisible={isEditContractVisible}
                             onHide={handleCloseEditDialog}
                             onSave={editContractMutation}
+                        />
+                    )}
+                    {isHistoryDialogVisible && (
+                        <ContractHistoryDialog
+                            selectedContract={selectedContract}
+                            visible={isHistoryDialogVisible}
+                            onHide={handleCloseHistoryDialog}
                         />
                     )}
                 </div>

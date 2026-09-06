@@ -17,6 +17,7 @@ export const useContractsView = () => {
     const {isOpen: isDetailsDialogVisible, setOpen: setIsDetailsDialogVisible} = useModal()
     const {isOpen: isEditContractVisible, setOpen: setIsEditContractVisible} = useModal()
     const {isOpen: isDeleteDialogVisible, setOpen: setIsDeleteDialogVisible} = useModal()
+    const {isOpen: isHistoryDialogVisible, setOpen: setIsHistoryDialogVisible} = useModal()
 
     const handleOpenDetailsDialog = (selectedContract: ContractDTO) => {
         setIsDetailsDialogVisible(true);
@@ -53,6 +54,16 @@ export const useContractsView = () => {
 
     const handleCloseDeleteDialog = () => {
         setIsDeleteDialogVisible(false);
+        setSelectedContract(null);
+    }
+
+    const handleOpenHistoryDialog = (contract: ContractDTO) => {
+        setSelectedContract(contract);
+        setIsHistoryDialogVisible(true);
+    }
+
+    const handleCloseHistoryDialog = () => {
+        setIsHistoryDialogVisible(false);
         setSelectedContract(null);
     }
 
@@ -98,6 +109,11 @@ export const useContractsView = () => {
         handleOpenDeleteDialog,
         handleCloseDeleteDialog,
         deleteContractMutation,
+
+        isHistoryDialogVisible,
+        handleOpenHistoryDialog,
+        handleCloseHistoryDialog,
+
         showOnlyActiveContracts, setShowOnlyActiveContracts,
         showContracts
     }

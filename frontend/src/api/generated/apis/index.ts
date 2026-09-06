@@ -7,3 +7,4 @@ export * from './ExpensesApi';
 export * from './PaymentsApi';
 export * from './PersonsApi';
 export * from './RoomsApi';
+export * from './StatisticsApi';

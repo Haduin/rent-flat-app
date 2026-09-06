@@ -13,6 +13,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 import pl.chodan.model.contract.dto.ContractDTO
+import pl.chodan.model.contract.dto.ContractHistoryDTO
 import pl.chodan.model.contract.dto.DeleteContractDTO
 import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.dto.UpdateContractDetails
@@ -41,6 +42,27 @@ fun Application.configureContractRouting() {
                     }
                 }) {
                     call.respond(contractService.getAllContractsWithRoomAndPersonDetails())
+                }
+                get("/{id}/history", {
+                    description = "Get the change history (snapshots) of a contract, oldest first"
+                    operationId = "getContractHistory"
+                    request {
+                        pathParameter<Int>("id") { description = "Contract id" }
+                    }
+                    response {
+                        code(HttpStatusCode.OK) {
+                            description = "Returns the contract's change history"
+                            body<List<ContractHistoryDTO>>()
+                        }
+                        code(HttpStatusCode.BadRequest) { description = "Invalid contract id" }
+                    }
+                }) {
+                    val contractId = call.parameters["id"]?.toIntOrNull()
+                    if (contractId == null) {
+                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Nieprawidłowe id kontraktu"))
+                        return@get
+                    }
+                    call.respond(contractService.getContractHistory(contractId))
                 }
                 post("/generateMonthlyPayments/{month}", {
                     description = "Generate monthly payments for active contracts"

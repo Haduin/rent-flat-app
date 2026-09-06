@@ -1,4 +1,3 @@
-.openapi-generator-ignore
 apis/ApartmentsApi.ts
 apis/ContractsApi.ts
 apis/ExpenseTemplatesApi.ts
@@ -6,12 +5,17 @@ apis/ExpensesApi.ts
 apis/PaymentsApi.ts
 apis/PersonsApi.ts
 apis/RoomsApi.ts
+apis/StatisticsApi.ts
 apis/index.ts
 index.ts
 models/AddExpenseTemplateRequest.ts
 models/ApartmentResponse.ts
+models/ApartmentStatisticsDTO.ts
 models/ApartmentWithRooms.ts
+models/ApartmentsStatisticsOverviewDTO.ts
+models/ApartmentsStatisticsResponse.ts
 models/ContractDTO.ts
+models/ContractHistoryDTO.ts
 models/CreatedPersonDTO.ts
 models/DeleteContractDTO.ts
 models/ExpenseCategory.ts

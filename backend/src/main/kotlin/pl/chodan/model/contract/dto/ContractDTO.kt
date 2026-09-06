@@ -18,4 +18,5 @@ data class ContractDTO(
     val depositReturned: Boolean?,
     val description: String?,
     val status: String,
+    val expiringSoon: Boolean,
 )

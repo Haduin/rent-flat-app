@@ -1,9 +1,10 @@
 import * as Yup from 'yup';
 
 export const updateContractValidationSchema = Yup.object().shape({
-    dates: Yup.array()
-        .required('Zakres dat musi zostać podany')
-        .min(2, 'Zakres dat wymaga dwóch terminów'),
+    startDate: Yup.date().required('Data rozpoczęcia jest wymagana'),
+    endDate: Yup.date()
+        .required('Data zakończenia jest wymagana')
+        .min(Yup.ref('startDate'), 'Data zakończenia musi być późniejsza niż data rozpoczęcia'),
     amount: Yup.number().required('Kwota jest wymagana'),
     deposit: Yup.number().required('Kaucja jest wymagana'),
     payedTillDayOfMonth: Yup.string().required(
