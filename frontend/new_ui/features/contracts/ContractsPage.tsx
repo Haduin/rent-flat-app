@@ -84,6 +84,7 @@ const ContractsPage = () => {
                     contract.endDate
                 )}
             </span>
+            {contract.alreadyExpired && <Badge tone="danger">Już się skończył</Badge>}
             {contract.expiringSoon && <Badge tone="warning">Kończy się wkrótce</Badge>}
         </div>
     );
@@ -92,24 +93,47 @@ const ContractsPage = () => {
     const depositBody = (contract: ContractDTO) => (contract.deposit != null ? formatCurrency(contract.deposit) : "—");
 
     const statusBody = (contract: ContractDTO) => (
-        <Badge tone={contract.status === "ACTIVE" ? "success" : "neutral"}>
+        <Badge tone={contract.status === "ACTIVE" ? "success" : "ended"}>
             {contract.status === "ACTIVE" ? "Aktywna" : "Zakończona"}
         </Badge>
     );
 
     const actionsBody = (contract: ContractDTO) => (
         <div style={{display: "flex", gap: 6, justifyContent: "flex-end"}}>
-            <Button variant="secondary" size="small" icon="pi pi-eye" onClick={() => handleOpenDetailsDialog(contract)}/>
-            <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => handleOpenEditDialog(contract)}/>
-            <Button variant="secondary" size="small" icon="pi pi-history" onClick={() => handleOpenHistoryDialog(contract)}/>
-            {contract.status === "ACTIVE" && (
-                <Button
-                    variant="danger-outline"
-                    size="small"
-                    icon="pi pi-times"
-                    onClick={() => handleOpenDeleteDialog(contract)}
-                />
-            )}
+            <Button
+                variant="secondary"
+                size="small"
+                icon="pi pi-eye"
+                tooltip="Szczegóły"
+                tooltipOptions={{position: "top"}}
+                onClick={() => handleOpenDetailsDialog(contract)}
+            />
+            <Button
+                variant="secondary"
+                size="small"
+                icon="pi pi-pencil"
+                tooltip="Edytuj"
+                tooltipOptions={{position: "top"}}
+                disabled={contract.status !== "ACTIVE"}
+                onClick={() => handleOpenEditDialog(contract)}
+            />
+            <Button
+                variant="secondary"
+                size="small"
+                icon="pi pi-history"
+                tooltip="Historia"
+                tooltipOptions={{position: "top"}}
+                onClick={() => handleOpenHistoryDialog(contract)}
+            />
+            <Button
+                variant="danger-outline"
+                size="small"
+                icon="pi pi-times"
+                tooltip="Zakończ kontrakt"
+                tooltipOptions={{position: "top"}}
+                disabled={contract.status !== "ACTIVE"}
+                onClick={() => handleOpenDeleteDialog(contract)}
+            />
         </div>
     );
 

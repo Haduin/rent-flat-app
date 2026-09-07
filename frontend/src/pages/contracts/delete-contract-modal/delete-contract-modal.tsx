@@ -27,13 +27,11 @@ export const DeleteContractModal = ({isVisible, onHide, selectedContract, onConf
         }),
         onSubmit: (values) => {
             onConfirm.mutate({
-                    details: {
-                        contractId: values.contractId,
-                        depositReturned: values.depositReturned,
-                        terminationDate: dateToStringFullYearMouthDay(values.terminationDate),
-                        description: values.description,
-                        positiveCancel: values.positiveCancel
-                    }
+                    contractId: values.contractId,
+                    depositReturned: values.depositReturned,
+                    terminationDate: dateToStringFullYearMouthDay(values.terminationDate),
+                    description: values.description,
+                    positiveCancel: values.positiveCancel
                 }, {
                     onSuccess: () => {
                         onHide();

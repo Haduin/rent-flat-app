@@ -147,29 +147,37 @@ fun Application.configureContractRouting() {
                     request { body<DeleteContractDTO> { description = "Contract delete details" } }
                     response {
                         code(HttpStatusCode.OK) { description = "Contract finished" }
+                        code(HttpStatusCode.BadRequest) { description = "Invalid delete details" }
                         code(HttpStatusCode.InternalServerError) { description = "Deletion failed" }
                         code(HttpStatusCode.NotFound) { description = "Contract not found" }
                     }
                 }) {
-                    val details = call.receive<DeleteContractDTO>()
+                    try {
+                        val details = call.receive<DeleteContractDTO>()
 
-                    when (val result = contractService.deleteContract(details)) {
-                        is ContractDeleteResult.Success -> {
+                        when (val result = contractService.deleteContract(details)) {
+                            is ContractDeleteResult.Success -> {
 
-                            call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zakończony")
+                                call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zakończony")
+                            }
+
+                            is ContractDeleteResult.PaymentUpdateError -> {
+                                call.respond(HttpStatusCode.InternalServerError, result.message)
+                            }
+
+                            is ContractDeleteResult.ContractUpdateError -> {
+                                call.respond(HttpStatusCode.InternalServerError, result.message)
+                            }
+
+                            ContractDeleteResult.NotFound -> {
+                                call.respond(HttpStatusCode.NotFound, "Nie znaleziono kontraktu")
+                            }
                         }
-
-                        is ContractDeleteResult.PaymentUpdateError -> {
-                            call.respond(HttpStatusCode.InternalServerError, result.message)
-                        }
-
-                        is ContractDeleteResult.ContractUpdateError -> {
-                            call.respond(HttpStatusCode.InternalServerError, result.message)
-                        }
-
-                        ContractDeleteResult.NotFound -> {
-                            call.respond(HttpStatusCode.NotFound, "Nie znaleziono kontraktu")
-                        }
+                    } catch (e: Exception) {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            mapOf("error" to "Failed to delete contract: ${e.message}")
+                        )
                     }
                 }
 

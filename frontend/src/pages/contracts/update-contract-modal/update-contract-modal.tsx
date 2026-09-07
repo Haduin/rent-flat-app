@@ -1,4 +1,5 @@
 import {useFormik} from "formik";
+import {dateToStringFullYearMouthDay} from "../../../components/commons/dateFormatter.ts";
 import {Modal} from "../../../components/modal/modal.tsx";
 import {TextField} from "../../../components/text-field/text-field.tsx";
 import {DateSelector} from "../../../components/date-selector/date-selector.tsx";
@@ -32,8 +33,8 @@ export const UpdateContractModal = ({selectedContract, isVisible, onHide, onSave
                 deposit: Number(values.deposit),
                 roomId: values.roomId,
                 payedTillDayOfMonth: values.payedTillDayOfMonth + "",
-                startDate: values.startDate?.toISOString().split('T')[0],
-                endDate: values.endDate?.toISOString().split('T')[0],
+                startDate: values.startDate && dateToStringFullYearMouthDay(values.startDate),
+                endDate: values.endDate && dateToStringFullYearMouthDay(values.endDate),
             };
             onSave.mutate({...updatedContract});
             formik.resetForm();

@@ -36,6 +36,7 @@ export const ContractTable = ({
                             ) : (
                                 <span>{rowData.endDate}</span>
                             )}
+                            {rowData.alreadyExpired && <Tag severity="danger" value="Już się skończył"/>}
                             {rowData.expiringSoon && <Tag severity="warning" value="Kończy się wkrótce"/>}
                         </div>
                     )}
@@ -50,6 +51,7 @@ export const ContractTable = ({
                                     className="p-button-rounded p-button-sm"/>
                             <Button label="Edytuj"
                                     icon="pi pi-eye"
+                                    disabled={rowData.status === ContractStatus.TERMINATED}
                                     onClick={() => handleOpenEditDialog(rowData)}
                                     className="p-button-rounded p-button-sm"/>
                             <Button label="Historia"

@@ -19,4 +19,5 @@ data class ContractDTO(
     val description: String?,
     val status: String,
     val expiringSoon: Boolean,
+    val alreadyExpired: Boolean,
 )

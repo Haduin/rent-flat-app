@@ -110,6 +110,12 @@ export interface ContractDTO {
      * @memberof ContractDTO
      */
     expiringSoon: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ContractDTO
+     */
+    alreadyExpired: boolean;
 }
 
 /**
@@ -119,6 +125,7 @@ export function instanceOfContractDTO(value: object): value is ContractDTO {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('status' in value) || value['status'] === undefined) return false;
     if (!('expiringSoon' in value) || value['expiringSoon'] === undefined) return false;
+    if (!('alreadyExpired' in value) || value['alreadyExpired'] === undefined) return false;
     return true;
 }
 
@@ -145,6 +152,7 @@ export function ContractDTOFromJSONTyped(json: any, ignoreDiscriminator: boolean
         'description': json['description'] == null ? undefined : json['description'],
         'status': json['status'],
         'expiringSoon': json['expiringSoon'],
+        'alreadyExpired': json['alreadyExpired'],
     };
 }
 
@@ -167,6 +175,7 @@ export function ContractDTOToJSON(value?: ContractDTO | null): any {
         'description': value['description'],
         'status': value['status'],
         'expiringSoon': value['expiringSoon'],
+        'alreadyExpired': value['alreadyExpired'],
     };
 }
 

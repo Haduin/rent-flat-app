@@ -1,16 +1,31 @@
 package pl.chodan.model.contract.service
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
-import pl.chodan.database.*
+import pl.chodan.database.DatabaseProviderContract
+import pl.chodan.database.Payment
+import pl.chodan.database.PaymentStatus
+import pl.chodan.database.Person
+import pl.chodan.database.PersonStatus
+import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
 import pl.chodan.model.contract.database.ContractChangeType
 import pl.chodan.model.contract.database.ContractHistory
 import pl.chodan.model.contract.database.ContractStatus
-import pl.chodan.model.contract.dto.*
+import pl.chodan.model.contract.dto.ContractDB
+import pl.chodan.model.contract.dto.ContractDTO
+import pl.chodan.model.contract.dto.ContractHistoryDTO
+import pl.chodan.model.contract.dto.DeleteContractDTO
+import pl.chodan.model.contract.dto.NewContractDTO
+import pl.chodan.model.contract.dto.UpdateContractDetails
 import pl.chodan.model.persons.dto.PersonDTO
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 import pl.chodan.toLocalDateWithFullPattern
@@ -57,6 +72,13 @@ class ContractService : KoinComponent {
     }
 
     suspend fun updateContract(contractDetails: UpdateContractDetails) = databaseProvider.dbQuery {
+        val currentStatus = Contract.select(Contract.status)
+            .where { Contract.id eq contractDetails.contractId }
+            .singleOrNull()?.get(Contract.status)
+        check(currentStatus != ContractStatus.TERMINATED) {
+            "Kontrakt jest zakończony i nie można go edytować"
+        }
+
         Contract.update({ Contract.id eq contractDetails.contractId }) {
             contractDetails.roomId?.let { value -> it[roomId] = value }
             contractDetails.amount?.let { value -> it[amount] = value.toBigDecimal() }
@@ -132,6 +154,9 @@ class ContractService : KoinComponent {
                         Apartment.name
             )
             .map { row ->
+                val isActive = row[Contract.status] == ContractStatus.ACTIVE
+                val endDate = row[Contract.endDate]
+                val today = LocalDate.now()
                 ContractDTO(
                     id = row[Contract.id],
                     person = PersonDTO(
@@ -148,7 +173,7 @@ class ContractService : KoinComponent {
                         apartment = row[Apartment.name]
                     ),
                     startDate = row[Contract.startDate].toString(),
-                    endDate = row[Contract.endDate].toString(),
+                    endDate = endDate.toString(),
                     amount = row[Contract.amount].toDouble(),
                     deposit = row[Contract.deposit].toDouble(),
                     status = row[Contract.status].name,
@@ -156,8 +181,8 @@ class ContractService : KoinComponent {
                     payedTillDayOfMonth = row[Contract.payedTillDayOfMonth],
                     depositReturned = row[Contract.depositReturned],
                     description = row[Contract.description],
-                    expiringSoon = row[Contract.status] == ContractStatus.ACTIVE &&
-                            !row[Contract.endDate].isAfter(LocalDate.now().plusMonths(2))
+                    expiringSoon = isActive && !endDate.isBefore(today) && !endDate.isAfter(today.plusMonths(2)),
+                    alreadyExpired = isActive && endDate.isBefore(today)
                 )
             }
     }
@@ -194,6 +219,7 @@ class ContractService : KoinComponent {
                     recordContractHistory(details.contractId, ContractChangeType.TERMINATED)
                     ContractDeleteResult.Success(details.contractId)
                 }
+
                 0 -> ContractDeleteResult.ContractUpdateError("Nie znaleziono kontraktu do aktualizacji")
 
                 else -> ContractDeleteResult.ContractUpdateError(

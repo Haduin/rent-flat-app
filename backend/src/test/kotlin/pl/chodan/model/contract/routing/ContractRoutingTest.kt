@@ -69,7 +69,8 @@ class ContractRoutingTest {
         depositReturned = null,
         description = null,
         status = "ACTIVE",
-        expiringSoon = false
+        expiringSoon = false,
+        alreadyExpired = false
     )
 
     @Test
@@ -322,5 +323,19 @@ class ContractRoutingTest {
         }
 
         assertEquals(HttpStatusCode.InternalServerError, response.status)
+    }
+
+    @Test
+    fun `DELETE contracts returns bad request for a malformed body instead of failing unhandled`() = testApplication {
+        setup()
+
+        val response = client.delete("/contracts") {
+            testAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody("{}")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        coVerify(exactly = 0) { contractService.deleteContract(any()) }
     }
 }

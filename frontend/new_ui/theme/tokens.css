@@ -27,6 +27,8 @@
     --ku-warning-soft: oklch(96% 0.05 80);
     --ku-danger: oklch(48% 0.16 25);
     --ku-danger-soft: oklch(95% 0.04 25);
+    --ku-ended: oklch(38% 0.13 18);
+    --ku-ended-soft: oklch(93% 0.025 18);
     --ku-neutral: oklch(50% 0.01 260);
     --ku-neutral-soft: oklch(95% 0.006 90);
 
@@ -99,12 +101,12 @@ body[data-ku-theme='a'] .p-button {
     padding: 9px 16px;
 }
 
-body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined) {
+body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary) {
     background: oklch(55% 0.16 260);
     border-color: oklch(55% 0.16 260);
 }
 
-body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined):not(:disabled):hover {
+body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary):not(:disabled):hover {
     background: oklch(46% 0.16 260);
     border-color: oklch(46% 0.16 260);
 }
@@ -119,7 +121,7 @@ body[data-ku-theme='a'] .p-button.p-button-secondary:not(:disabled):hover {
     background: oklch(97% 0.004 90);
 }
 
-body[data-ku-theme='a'] .p-button.p-button-outlined {
+body[data-ku-theme='a'] .p-button.p-button-outlined:not(.p-button-danger) {
     color: oklch(55% 0.16 260);
     border-color: oklch(90% 0.02 260);
 }
@@ -150,6 +152,11 @@ body[data-ku-theme='a'] .p-tag.p-tag-warning {
 body[data-ku-theme='a'] .p-tag.p-tag-danger {
     background: oklch(95% 0.04 25);
     color: oklch(48% 0.16 25);
+}
+
+body[data-ku-theme='a'] .p-tag.ku-tag-ended {
+    background: var(--ku-ended-soft);
+    color: var(--ku-ended);
 }
 
 body[data-ku-theme='a'] .p-tag.p-tag-info {
