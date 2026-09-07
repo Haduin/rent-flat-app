@@ -45,7 +45,7 @@ class StatisticsService : KoinComponent {
             .select(Contract.amount, Contract.status, Contract.startDate, Contract.endDate, Room.id, Room.apartmentId)
             .mapNotNull { row ->
                 val apartmentId = row[Room.apartmentId] ?: return@mapNotNull null
-                val isActive = row[Contract.status] == ContractStatus.ACTIVE &&
+                val isActive = ContractStatus.ACTIVE == row[Contract.status] &&
                         row[Contract.startDate] <= today && row[Contract.endDate] >= today
                 ContractRow(apartmentId, row[Room.id], row[Contract.amount], isActive)
             }
@@ -85,7 +85,7 @@ class StatisticsService : KoinComponent {
                 if (contracts.isNotEmpty()) contracts.sumOf { it.amount }.toDouble() / contracts.size else 0.0
 
             val payments = paymentsByApartment[apartmentId].orEmpty()
-            val paidPayments = payments.filter { it.status == PaymentStatus.PAID || it.status == PaymentStatus.PARTIALLY_PAID }
+            val paidPayments = payments.filter { PaymentStatus.PAID == it.status || PaymentStatus.PARTIALLY_PAID == it.status }
             val totalIncomeCollected = paidPayments.sumOf { it.amount }.toDouble()
             val currentMonthIncomeCollected =
                 paidPayments.filter { it.scopeDate == currentMonth }.sumOf { it.amount }.toDouble()

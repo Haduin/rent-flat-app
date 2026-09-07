@@ -5,6 +5,7 @@ import {Tag} from "primereact/tag";
 import {DataTable} from "primereact/datatable";
 import {ContractDTO} from "../../../api/generated";
 import {ContractTableProps} from "./contract-view-table.props.ts";
+import {isEqual} from "../../../utils/typeguards";
 
 
 export const ContractTable = ({
@@ -51,7 +52,7 @@ export const ContractTable = ({
                                     className="p-button-rounded p-button-sm"/>
                             <Button label="Edytuj"
                                     icon="pi pi-eye"
-                                    disabled={rowData.status === ContractStatus.TERMINATED}
+                                    disabled={isEqual(ContractStatus.TERMINATED, rowData.status)}
                                     onClick={() => handleOpenEditDialog(rowData)}
                                     className="p-button-rounded p-button-sm"/>
                             <Button label="Historia"
@@ -61,7 +62,7 @@ export const ContractTable = ({
                                     className="p-button-rounded p-button-sm"/>
                             <Button label="Zakończ"
                                     severity="warning"
-                                    disabled={rowData.status === ContractStatus.TERMINATED}
+                                    disabled={isEqual(ContractStatus.TERMINATED, rowData.status)}
                                     onClick={() => handleOpenDeleteDialog(rowData)}
                                     icon="pi pi-trash"
                                     className="p-button-rounded p-button-sm"/>

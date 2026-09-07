@@ -130,6 +130,39 @@ body[data-ku-theme='a'] .p-button.p-button-rounded {
     border-radius: 999px;
 }
 
+/* Disabled must read as "off" on its own - PrimeReact's default 0.6 opacity barely
+   registers on small icon-only buttons, especially against our own solid-colored
+   secondary/danger-outline variants above. Flatten every variant to the same muted
+   gray instead of just fading it. */
+body[data-ku-theme='a'] .p-button:disabled,
+body[data-ku-theme='a'] .p-button.p-disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    background: oklch(95% 0.004 90);
+    border-color: oklch(90% 0.006 90);
+    color: oklch(72% 0.006 90);
+}
+
+/* SelectButton (e.g. the contracts list activity filter) - PrimeReact renders each
+   option as a plain .p-button, so without this it inherits the solid accent fill from
+   the default-button rule above and both options look identical/selected. The extra
+   :not(.p-highlight)/.p-component qualifiers only exist to out-specificity that rule. */
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component:not(.p-highlight) {
+    background: #ffffff;
+    border-color: oklch(90% 0.006 90);
+    color: oklch(50% 0.01 260);
+}
+
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component:not(.p-highlight):not(:disabled):hover {
+    background: oklch(97% 0.004 90);
+}
+
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component.p-highlight {
+    background: oklch(55% 0.16 260);
+    border-color: oklch(55% 0.16 260);
+    color: #ffffff;
+}
+
 /* Tags / badges */
 body[data-ku-theme='a'] .p-tag {
     font-family: 'Public Sans', system-ui, sans-serif;

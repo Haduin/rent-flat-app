@@ -4,8 +4,8 @@ import {Column} from "primereact/column";
 import {InputText} from "primereact/inputtext";
 import {IconField} from "primereact/iconfield";
 import {InputIcon} from "primereact/inputicon";
-import {Checkbox} from "primereact/checkbox";
-import {useContractsView} from "../../../src/pages/contracts/contract-view/contracts-view.hook.tsx";
+import {SelectButton} from "primereact/selectbutton";
+import {ContractStatusFilter, useContractsView} from "../../../src/pages/contracts/contract-view/contracts-view.hook.tsx";
 import AddContractView from "../../../src/pages/contracts/add-contract-view/add-contract-view.tsx";
 import {DeleteContractModal} from "../../../src/pages/contracts/delete-contract-modal/delete-contract-modal.tsx";
 import {UpdateContractModal} from "../../../src/pages/contracts/update-contract-modal/update-contract-modal.tsx";
@@ -18,6 +18,13 @@ import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {IconPlus} from "../../components/ui/icons.tsx";
 import type {ContractDTO} from "../../../src/api/generated";
+import {isNotEqual} from "../../../src/utils/typeguards";
+
+const STATUS_FILTER_OPTIONS: { label: string; value: ContractStatusFilter }[] = [
+    {label: "Aktywne", value: "ACTIVE"},
+    {label: "Zakończone", value: "TERMINATED"},
+    {label: "Wszystkie", value: "ALL"},
+];
 
 const ContractsPage = () => {
     const {
@@ -48,8 +55,8 @@ const ContractsPage = () => {
         handleOpenHistoryDialog,
         handleCloseHistoryDialog,
 
-        showOnlyActiveContracts,
-        setShowOnlyActiveContracts,
+        contractStatusFilter,
+        setContractStatusFilter,
         showContracts,
     } = useContractsView();
 
@@ -93,8 +100,8 @@ const ContractsPage = () => {
     const depositBody = (contract: ContractDTO) => (contract.deposit != null ? formatCurrency(contract.deposit) : "—");
 
     const statusBody = (contract: ContractDTO) => (
-        <Badge tone={contract.status === "ACTIVE" ? "success" : "ended"}>
-            {contract.status === "ACTIVE" ? "Aktywna" : "Zakończona"}
+        <Badge tone={"ACTIVE" === contract.status ? "success" : "ended"}>
+            {"ACTIVE" === contract.status ? "Aktywna" : "Zakończona"}
         </Badge>
     );
 
@@ -114,7 +121,7 @@ const ContractsPage = () => {
                 icon="pi pi-pencil"
                 tooltip="Edytuj"
                 tooltipOptions={{position: "top"}}
-                disabled={contract.status !== "ACTIVE"}
+                disabled={isNotEqual("ACTIVE", contract.status)}
                 onClick={() => handleOpenEditDialog(contract)}
             />
             <Button
@@ -131,7 +138,7 @@ const ContractsPage = () => {
                 icon="pi pi-times"
                 tooltip="Zakończ kontrakt"
                 tooltipOptions={{position: "top"}}
-                disabled={contract.status !== "ACTIVE"}
+                disabled={isNotEqual("ACTIVE", contract.status)}
                 onClick={() => handleOpenDeleteDialog(contract)}
             />
         </div>
@@ -158,10 +165,16 @@ const ContractsPage = () => {
                         style={{width: "100%"}}
                     />
                 </IconField>
-                <label style={{display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 500, cursor: "pointer"}}>
-                    <Checkbox checked={showOnlyActiveContracts} onChange={() => setShowOnlyActiveContracts(!showOnlyActiveContracts)}/>
-                    Tylko aktywne
-                </label>
+                <SelectButton
+                    value={contractStatusFilter}
+                    onChange={(event) => {
+                        if (event.value !== null) setContractStatusFilter(event.value);
+                    }}
+                    options={STATUS_FILTER_OPTIONS}
+                    optionLabel="label"
+                    optionValue="value"
+                    allowEmpty={false}
+                />
             </Card>
 
             <Card padding={0} style={{overflow: "hidden"}}>

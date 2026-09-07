@@ -7,6 +7,7 @@ import {fieldMapping} from "./income-payments-view.hook.ts";
 import {PaymentSortableField} from "./income-payments.model.ts";
 import {SortOrder} from "primereact/api";
 import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../../api/generated";
+import {isNotEqual} from "../../../../utils/typeguards";
 
 interface PaymentsTableProps {
     payments?: PaymentHistoryWithPersonDTO[],
@@ -32,7 +33,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
         `${rowData.room?.apartment}`
 
     const amountTemplate = (rowData: PaymentHistoryWithPersonDTO) =>
-        rowData.status === PaymentStatus.Cancelled ?
+        PaymentStatus.Cancelled === rowData.status ?
             <span className="line-through">{rowData.amount}</span> :
             <div>{rowData.amount}</div>;
 
@@ -51,7 +52,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
         <PaymentStatusTag status={rowData.status}/>;
 
     const actionsTemplate = (rowData: PaymentHistoryWithPersonDTO) => {
-        if (rowData.status !== PaymentStatus.Paid && rowData.status !== PaymentStatus.Cancelled) {
+        if (isNotEqual(PaymentStatus.Paid, rowData.status) && isNotEqual(PaymentStatus.Cancelled, rowData.status)) {
             return (
                 <div className="flex gap-2">
                     <Button
@@ -69,7 +70,7 @@ export const PaymentsTable: React.FC<PaymentsTableProps> = ({
                 </div>
             );
         }
-        if (rowData.status === PaymentStatus.Paid || rowData.status === PaymentStatus.Cancelled) {
+        if (PaymentStatus.Paid === rowData.status || PaymentStatus.Cancelled === rowData.status) {
             return (
                 <Button
                     label="Edytuj"

@@ -6,7 +6,7 @@ import {
     TableState,
     useReactTable as useTanstackTable,
 } from "@tanstack/react-table";
-import {isNonEmpty} from "../../utils/is-non-empty";
+import {isNonEmpty} from "../../utils/typeguards";
 
 export const DEFAULT_PAGINATION: PaginationState = {pageIndex: 0, pageSize: 10};
 

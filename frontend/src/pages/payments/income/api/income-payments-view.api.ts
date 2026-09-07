@@ -45,7 +45,7 @@ export const usePaymentsQuery = (
         queryFn: async () => {
             if (!dateSelected) return [];
 
-            const newSortOrder = sortOrder === SortOrder.ASC ? SortOrderEnum.Asc : SortOrderEnum.Desc;
+            const newSortOrder = SortOrder.ASC === sortOrder ? SortOrderEnum.Asc : SortOrderEnum.Desc;
 
             return client.paymentsApi.getPaymentsForMonth({
                 mouth: dateToStringWithYearMonth(dateSelected),

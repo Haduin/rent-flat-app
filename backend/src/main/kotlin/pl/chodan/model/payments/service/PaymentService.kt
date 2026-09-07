@@ -1,10 +1,21 @@
 package pl.chodan.model.payments.service
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
-import pl.chodan.database.*
+import pl.chodan.database.DatabaseProviderContract
+import pl.chodan.database.Payment
+import pl.chodan.database.PaymentSplit
+import pl.chodan.database.PaymentStatus
+import pl.chodan.database.Person
+import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
 import pl.chodan.model.contract.database.ContractStatus
@@ -192,7 +203,7 @@ class PaymentService : KoinComponent {
             ?: throw IllegalArgumentException("Nie znaleziono płatności o id ${paymentSplitDto.paymentId}")
 
         val status = payment[Payment.status]
-        if (status == PaymentStatus.PAID || status == PaymentStatus.CANCELLED) {
+        if (PaymentStatus.PAID == status || PaymentStatus.CANCELLED == status) {
             throw IllegalStateException("Nie można podzielić płatności w statusie $status")
         }
 

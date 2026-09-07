@@ -1,4 +1,4 @@
-import {isNullable} from "../typeguards/is-nullable.ts";
+import {isNullable} from "./is-nullable.ts";
 
 export const isNonEmpty = <Value>(
     value: Value | undefined | null | unknown,

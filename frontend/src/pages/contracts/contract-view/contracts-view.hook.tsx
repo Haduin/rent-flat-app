@@ -9,9 +9,18 @@ import {
 } from "../api/contracts.api.ts";
 import {ContractDTO} from "../../../api/generated";
 
+export type ContractStatusFilter = "ACTIVE" | "TERMINATED" | "ALL";
+
 export const useContractsView = () => {
     const [selectedContract, setSelectedContract] = useState<ContractDTO | null>(null);
-    const [showOnlyActiveContracts, setShowOnlyActiveContracts] = useState<boolean>(true);
+    const [contractStatusFilter, setContractStatusFilter] = useState<ContractStatusFilter>("ACTIVE");
+
+    // Kept for the legacy checkbox-driven UI, derived from the 3-way filter used by
+    // the new UI's SelectButton so both consumers share this one hook without either
+    // one needing to know about the other's representation of "which contracts to show".
+    const showOnlyActiveContracts = "ACTIVE" === contractStatusFilter;
+    const setShowOnlyActiveContracts = (onlyActive: boolean) =>
+        setContractStatusFilter(onlyActive ? "ACTIVE" : "ALL");
 
     const {isOpen: isAddContractDialogVisible, setOpen: setIsAddContractDialogVisible} = useModal()
     const {isOpen: isDetailsDialogVisible, setOpen: setIsDetailsDialogVisible} = useModal()
@@ -84,8 +93,9 @@ export const useContractsView = () => {
 
 
     const showContracts = useCallback(() => {
-        return showOnlyActiveContracts ? contracts?.filter((contract) => contract.status === 'ACTIVE') : contracts
-    }, [showOnlyActiveContracts, contracts])
+        if ("ALL" === contractStatusFilter) return contracts;
+        return contracts?.filter((contract) => contractStatusFilter === contract.status)
+    }, [contractStatusFilter, contracts])
 
     return {
         contracts,
@@ -115,6 +125,7 @@ export const useContractsView = () => {
         handleCloseHistoryDialog,
 
         showOnlyActiveContracts, setShowOnlyActiveContracts,
+        contractStatusFilter, setContractStatusFilter,
         showContracts
     }
 }

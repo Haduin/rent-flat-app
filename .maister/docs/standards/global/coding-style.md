@@ -23,3 +23,24 @@ Avoid extra code paths for backward compatibility unless explicitly needed.
 
 ### DRY (Don't Repeat Yourself)
 Extract repeated logic into reusable functions or modules.
+
+### Constant-First Equality Comparisons
+Avoid comparisons shaped like `variable === Enum.VALUE` / `variable !== Enum.VALUE` (including string-literal constants like `"ACTIVE"`). Put the constant/enum member first (Yoda-style): `Enum.VALUE === variable`. Applies across both Kotlin (backend) and TypeScript (frontend). Does not apply to Exposed DSL query builders (`Column eq value`), `switch`/`when`/`case` branches, or comparisons between two variables. Rationale: puts the fixed, known-correct side first for readability ("is status X" reads naturally) and guards against an accidental single `=` typo in languages where that would silently become an assignment.
+
+On the frontend specifically, prefer the typeguard helpers in `frontend/src/utils/typeguards/` (`isEqual(expected, actual)` / `isNotEqual(expected, actual)`) over the raw operator. See the frontend coding-style standard for details on that utils/typeguards module.
+
+```typescript
+// Before
+if (rowData.status === ContractStatus.TERMINATED) { ... }
+
+// After
+if (isEqual(ContractStatus.TERMINATED, rowData.status)) { ... }
+```
+
+```kotlin
+// Before
+if (row[Contract.status] == ContractStatus.TERMINATED) { ... }
+
+// After
+if (ContractStatus.TERMINATED == row[Contract.status]) { ... }
+```

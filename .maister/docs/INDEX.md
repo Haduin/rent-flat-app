@@ -46,7 +46,7 @@ Server-side validation as the source of truth (client-side for UX only), early i
 Predictable file/directory structure, up-to-date READMEs, clean version control (commit messages, feature branches, PR descriptions), environment variables for config/secrets, minimal/lean dependencies, consistent code review process, defined test coverage expectations, feature flags over long-lived branches, changelog maintenance, and avoiding speculative "just in case" code.
 
 #### Coding Style (`standards/global/coding-style.md`)
-Consistent naming across variables/functions/classes/files, automatic formatting tools, descriptive (non-cryptic) names, small focused functions, uniform indentation, no dead code, no unnecessary backward-compatibility paths, and DRY extraction of repeated logic.
+Consistent naming across variables/functions/classes/files, automatic formatting tools, descriptive (non-cryptic) names, small focused functions, uniform indentation, no dead code, no unnecessary backward-compatibility paths, DRY extraction of repeated logic, and constant-first (Yoda-style) equality comparisons against enum/constant values (`Enum.VALUE === variable`, with frontend `isEqual`/`isNotEqual` typeguards preferred over the raw operator) instead of `variable === Enum.VALUE`.
 
 #### Commenting (`standards/global/commenting.md`)
 Prefer self-explanatory code over comments, comment sparingly and only where logic isn't self-evident, and avoid changelog-style "recent fix" comments in favor of timeless explanations.
@@ -71,7 +71,7 @@ Layered feature-module structure (`generated-api/`, `api/`, `features/<domain>/`
 Strict compiler settings (`strict: true`, no unused locals/params, exhaustive switch checks, no unacknowledged side-effect imports), and `interface` for object/prop/DTO shapes vs. `type` for unions and simple aliases.
 
 #### Coding Style (`standards/frontend/coding-style.md`)
-ESLint built on TS-recommended plus React Hooks/Refresh rule sets, `tsc -b` type-checking gating the production build before Vite bundles, kebab-case file names with dotted role suffixes (`.props.ts`, `.hook.tsx`, `.api.ts`), and relative imports with explicit file extensions (no path alias).
+ESLint built on TS-recommended plus React Hooks/Refresh rule sets, `tsc -b` type-checking gating the production build before Vite bundles, kebab-case file names with dotted role suffixes (`.props.ts`, `.hook.tsx`, `.api.ts`), relative imports with explicit file extensions (no path alias), and centralized `frontend/src/utils/typeguards/` predicates (`isNull`, `isNullable`, `isNotNullable`, `isNonEmpty`, `isEmpty`, `isEqual`, `isNotEqual`) preferred over ad-hoc inline null/equality checks.
 
 #### CSS (`standards/frontend/css.md`)
 Stick to one consistent styling methodology (Tailwind, BEM, CSS modules, etc.), work with the framework rather than overriding it excessively, establish documented design tokens for color/spacing/typography, minimize custom CSS in favor of framework utilities, optimize production builds via CSS purging/tree-shaking, and combine Tailwind utilities with PrimeReact/primeflex/primeicons rather than CSS Modules or styled-components.

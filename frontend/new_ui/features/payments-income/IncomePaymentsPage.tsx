@@ -12,6 +12,7 @@ import {Card} from "../../components/ui/Card.tsx";
 import {Badge, BadgeTone} from "../../components/ui/Badge.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../src/api/generated";
+import {isNotEqual} from "../../../src/utils/typeguards";
 
 const STATUS_LABEL: Record<string, string> = {
     [PaymentStatus.Pending]: "Oczekuje",
@@ -61,8 +62,8 @@ const IncomePaymentsPage = () => {
         <span
             style={{
                 fontWeight: 600,
-                textDecoration: payment.status === PaymentStatus.Cancelled ? "line-through" : "none",
-                color: payment.status === PaymentStatus.Cancelled ? "var(--ku-text-muted)" : "inherit",
+                textDecoration: PaymentStatus.Cancelled === payment.status ? "line-through" : "none",
+                color: PaymentStatus.Cancelled === payment.status ? "var(--ku-text-muted)" : "inherit",
             }}
         >
             {formatCurrency(payment.amount)}
@@ -74,7 +75,7 @@ const IncomePaymentsPage = () => {
     );
 
     const actionsBody = (payment: PaymentHistoryWithPersonDTO) => {
-        const canConfirm = payment.status !== PaymentStatus.Paid && payment.status !== PaymentStatus.Cancelled;
+        const canConfirm = isNotEqual(PaymentStatus.Paid, payment.status) && isNotEqual(PaymentStatus.Cancelled, payment.status);
         return canConfirm ? (
             <div style={{display: "flex", flexWrap: "nowrap", gap: 8, justifyContent: "flex-end"}}>
                 <Button

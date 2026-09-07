@@ -143,7 +143,7 @@ export const AddEditExpensesTemplateDialog = ({
 
     return (
         <Modal isOpen={isVisible}
-               title={mode === ViewMode.CREATE ? "Dodaj wydatek" : "Edytuj wydatek"}
+               title={ViewMode.CREATE === mode ? "Dodaj wydatek" : "Edytuj wydatek"}
                onClose={onHide}
                content={
                    <form onSubmit={formik.handleSubmit}>
@@ -197,7 +197,7 @@ export const AddEditExpensesTemplateDialog = ({
                }
                footer={
                    <ModalFooter cancelLabel="Anuluj"
-                                confirmLabel={mode === ViewMode.CREATE ? "Dodaj wydatek" : "Zapisz zmiany"}
+                                confirmLabel={ViewMode.CREATE === mode ? "Dodaj wydatek" : "Zapisz zmiany"}
                                 onConfirm={formik.handleSubmit}
                                 onCancel={onHide}/>
                }

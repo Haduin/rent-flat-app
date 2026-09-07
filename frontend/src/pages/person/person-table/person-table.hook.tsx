@@ -50,7 +50,7 @@ const usePersonTable = () => {
 
 
     const showPeople = useCallback(() => {
-        return showOnlyActivePeople ? persons?.filter((person) => person.status === 'RESIDENT') : persons
+        return showOnlyActivePeople ? persons?.filter((person) => 'RESIDENT' === person.status) : persons
     }, [showOnlyActivePeople, persons]);
 
     return {

@@ -48,8 +48,8 @@ const PersonsPage = () => {
     }, [showPeople, search]);
 
     const statusBody = (person: PersonDTO) => (
-        <Badge tone={person.status === "RESIDENT" ? "success" : "neutral"}>
-            {person.status === "RESIDENT" ? "Aktualny" : person.status}
+        <Badge tone={"RESIDENT" === person.status ? "success" : "neutral"}>
+            {"RESIDENT" === person.status ? "Aktualny" : person.status}
         </Badge>
     );
 

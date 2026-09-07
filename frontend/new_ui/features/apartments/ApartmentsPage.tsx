@@ -22,7 +22,7 @@ const ApartmentsPage = () => {
     const occupancyByRoomId = useMemo(() => {
         const map = new Map<number, RoomOccupant>();
         contracts
-            ?.filter((contract) => contract.status === "ACTIVE" && contract.room)
+            ?.filter((contract) => "ACTIVE" === contract.status && contract.room)
             .forEach((contract) => {
                 map.set(contract.room!.id, {
                     tenantName: `${contract.person?.firstName ?? ""} ${contract.person?.lastName ?? ""}`.trim(),

@@ -15,3 +15,15 @@ Non-generated frontend files use kebab-case file names, frequently with a dotted
 ### Relative Imports with Explicit File Extensions
 All sampled frontend files use relative imports (no path alias) and include the explicit `.ts`/`.tsx` extension on local module imports.
 *Evidence: 251 relative imports sampled across 42 files, no `@/` alias in tsconfig (confidence 80)*
+
+### Typeguard Utilities for Comparisons
+`frontend/src/utils/typeguards/` (barrel-exported via its `index.ts`) centralizes small type/value-check predicates instead of inlining raw checks at call sites: `isNull`, `isNullable`, `isNotNullable`, `isNonEmpty`, `isEmpty`, `isEqual(expected, actual)`, `isNotEqual(expected, actual)`. Prefer importing from this module over writing ad-hoc `=== null`, `!== undefined`, or enum/constant equality checks inline. In particular, use `isEqual`/`isNotEqual` for comparisons against an enum member or string-literal status constant rather than a raw `===`/`!==` — see the global coding-style standard's "Constant-First Equality Comparisons" entry for the full rationale. Add new predicates to this same directory rather than creating a new one-off utils location.
+
+```typescript
+// Before
+rowData.status === ContractStatus.TERMINATED
+
+// After
+isEqual(ContractStatus.TERMINATED, rowData.status)
+```
+*Evidence: frontend/src/utils/typeguards/ (is-null.ts, is-nullable.ts, is-not-nullable.ts, is-non-empty.ts, is-empty.ts, is-equal.ts, is-not-equal.ts, index.ts) — introduced and consolidated into a single directory in this session*

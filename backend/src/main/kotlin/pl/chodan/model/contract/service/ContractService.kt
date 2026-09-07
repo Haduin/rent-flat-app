@@ -75,7 +75,7 @@ class ContractService : KoinComponent {
         val currentStatus = Contract.select(Contract.status)
             .where { Contract.id eq contractDetails.contractId }
             .singleOrNull()?.get(Contract.status)
-        check(currentStatus != ContractStatus.TERMINATED) {
+        check(ContractStatus.TERMINATED != currentStatus) {
             "Kontrakt jest zakończony i nie można go edytować"
         }
 
@@ -154,7 +154,7 @@ class ContractService : KoinComponent {
                         Apartment.name
             )
             .map { row ->
-                val isActive = row[Contract.status] == ContractStatus.ACTIVE
+                val isActive = ContractStatus.ACTIVE == row[Contract.status]
                 val endDate = row[Contract.endDate]
                 val today = LocalDate.now()
                 ContractDTO(
