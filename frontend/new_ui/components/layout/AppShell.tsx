@@ -2,7 +2,9 @@ import {ReactNode, useEffect} from "react";
 import {NavLink} from "react-router";
 import {Menubar} from "primereact/menubar";
 import {MenuItem, MenuItemOptions} from "primereact/menuitem";
+import {confirmDialog} from "primereact/confirmdialog";
 import {IconHome} from "../ui/icons.tsx";
+import {useOidc} from "../../../src/oidc.tsx";
 import "../../theme/tokens.css";
 
 interface NavEntry {
@@ -21,6 +23,15 @@ const NAV_ENTRIES: NavEntry[] = [
 ];
 
 export const AppShell = ({children}: { children: ReactNode }) => {
+    const {logout, decodedIdToken} = useOidc({assert: "user logged in"});
+    const initials = decodedIdToken.name
+        .trim()
+        .split(/\s+/)
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+
     useEffect(() => {
         document.body.dataset.kuTheme = "a";
         return () => {
@@ -66,23 +77,44 @@ export const AppShell = ({children}: { children: ReactNode }) => {
         </div>
     );
 
+    const handleLogout = () => {
+        confirmDialog({
+            message: "Czy na pewno chcesz się wylogować?",
+            header: "Ekran wylogowywania",
+            defaultFocus: "reject",
+            acceptLabel: "Tak",
+            rejectLabel: "Nie",
+            accept() {
+                logout({redirectTo: "current page"});
+            },
+        });
+    };
+
     const end = (
-        <div
+        <button
+            type="button"
+            onClick={handleLogout}
+            title="Wyloguj się"
             style={{
                 width: 34,
                 height: 34,
                 borderRadius: "var(--ku-radius-pill)",
                 background: "var(--ku-accent-soft)",
+                border: "none",
+                cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 13,
                 fontWeight: 600,
                 color: "var(--ku-accent)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                flexShrink: 0,
             }}
         >
-            MW
-        </div>
+            {initials}
+        </button>
     );
 
     return (
