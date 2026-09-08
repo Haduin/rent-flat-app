@@ -5,13 +5,24 @@ import {getOidc} from "../oidc.tsx";
 import ApartmentPage from "../pages/apartment/apartment-page.tsx";
 import {UtilityPage} from "../pages/utility/utility-page.tsx";
 
+const ExpensesTemplateView = lazy(() => import("../pages/expenses-template/expenses-template-view/expenses-template-view.tsx"));
 const PublicPage = lazy(() => import("../pages/PublicPage"));
 const NavigationComponent = lazy(() => import("../pages/NavigationComponent.tsx"));
 const HomePage = lazy(() => import ("../pages/home/home-page.tsx"))
 const ApartmentsPage = lazy(() => import ("../pages/apartment/apartments-page.tsx"))
-const PersonTable = lazy(() => import ("../pages/person/person-table.tsx"))
+const PersonTable = lazy(() => import ("../pages/person/person-table/person-table.tsx"))
 const PaymentsView = lazy(() => import ("../pages/payments/payments-view.tsx"))
-const ContractsView = lazy(() => import ("../pages/contracts/contracts-view.tsx"))
+const ContractsView = lazy(() => import ("../pages/contracts/contract-view/contracts-view.tsx"))
+const StatisticsPage = lazy(() => import ("../pages/statistics/statistics-page.tsx"))
+
+const NewUiLayout = lazy(() => import("../../new_ui/pages/NewUiLayout.tsx"))
+const NewUiDashboardPage = lazy(() => import("../../new_ui/features/dashboard/DashboardPage.tsx"))
+const NewUiApartmentsPage = lazy(() => import("../../new_ui/features/apartments/ApartmentsPage.tsx"))
+const NewUiContractsPage = lazy(() => import("../../new_ui/features/contracts/ContractsPage.tsx"))
+const NewUiPersonsPage = lazy(() => import("../../new_ui/features/persons/PersonsPage.tsx"))
+const NewUiIncomePaymentsPage = lazy(() => import("../../new_ui/features/payments-income/IncomePaymentsPage.tsx"))
+const NewUiExpensePaymentsPage = lazy(() => import("../../new_ui/features/payments-expense/ExpensePaymentsPage.tsx"))
+const NewUiExpenseTemplatesPage = lazy(() => import("../../new_ui/features/expense-templates/ExpenseTemplatesPage.tsx"))
 
 
 export const router = createBrowserRouter([
@@ -56,6 +67,54 @@ export const router = createBrowserRouter([
                     {
                         path: "/protected/koszta",
                         element: <UtilityPage/>,
+                    },
+                    {
+                        path: "/protected/wydatki",
+                        element: <ExpensesTemplateView/>,
+                    },
+                    {
+                        path: "/protected/statystyki",
+                        element: <StatisticsPage/>,
+                    },
+                ],
+            },
+            {
+                path: "/protected/v2",
+                loader: async ({request}) => {
+                    await enforceLogin(request);
+
+                    return null;
+                },
+                element: <NewUiLayout/>,
+                children: [
+                    {
+                        index: true,
+                        path: "/protected/v2/dashboard",
+                        element: <NewUiDashboardPage/>,
+                    },
+                    {
+                        path: "/protected/v2/mieszkania",
+                        element: <NewUiApartmentsPage/>,
+                    },
+                    {
+                        path: "/protected/v2/kontrakty",
+                        element: <NewUiContractsPage/>,
+                    },
+                    {
+                        path: "/protected/v2/platnosci/wplaty",
+                        element: <NewUiIncomePaymentsPage/>,
+                    },
+                    {
+                        path: "/protected/v2/platnosci/koszty",
+                        element: <NewUiExpensePaymentsPage/>,
+                    },
+                    {
+                        path: "/protected/v2/szablony-kosztow",
+                        element: <NewUiExpenseTemplatesPage/>,
+                    },
+                    {
+                        path: "/protected/v2/osoby",
+                        element: <NewUiPersonsPage/>,
                     },
                 ],
             },

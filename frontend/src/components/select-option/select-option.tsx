@@ -1,5 +1,5 @@
 import {Dropdown} from "primereact/dropdown";
-import StatusTag from "../commons/status-tag/status-tag.tsx";
+import PaymentStatusTag from "../commons/payment-status-tag/payment-status-tag.tsx";
 import {StatusSelectFieldOption, StatusSelectFieldProps} from "./select-option.types.ts";
 import {useEffect, useState} from "react";
 
@@ -20,12 +20,12 @@ export const StatusSelectField = ({
     }, [options, name]);
 
     const optionTemplate = (option: StatusSelectFieldOption) => {
-        return <StatusTag status={option.status}/>;
+        return <PaymentStatusTag status={option.status}/>;
     };
 
     const valueTemplate = () => {
         if (selectedOption) {
-            return <StatusTag className="ml-6" status={selectedOption.status}/>;
+            return <PaymentStatusTag className="ml-6" status={selectedOption.status}/>;
         }
         return <span style={{color: '#6b7280'}}>{placeholder}</span>;
     };

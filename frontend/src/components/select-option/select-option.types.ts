@@ -1,10 +1,10 @@
-import {Status} from "../commons/types.ts";
 import {FormikProps} from "formik";
+import {PaymentStatus} from "../../api/generated";
 
 export type StatusSelectFieldOption = {
     label: string;
     value: number | string;
-    status: Status;
+    status: PaymentStatus;
 }
 
 export type StatusSelectFieldProps = {

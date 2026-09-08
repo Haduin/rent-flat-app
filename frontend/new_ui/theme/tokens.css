@@ -1,0 +1,397 @@
+/*
+  Design tokens for "Kierunek A" (clean minimal SaaS) — the direction chosen
+  from the UI inspiration canvas. Scoped under .kwatera-a (layout/typography)
+  and body[data-ku-theme='a'] (PrimeReact components, incl. portaled overlays
+  like Dialog/Calendar/Toast which render under <body>, not inside .kwatera-a).
+*/
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap');
+
+.kwatera-a {
+    --ku-bg: oklch(98.3% 0.004 90);
+    --ku-surface: #ffffff;
+    --ku-border: oklch(93% 0.006 90);
+    --ku-border-strong: oklch(90% 0.006 90);
+
+    --ku-text: oklch(22% 0.012 260);
+    --ku-text-secondary: oklch(50% 0.01 260);
+    --ku-text-muted: oklch(60% 0.008 260);
+
+    --ku-accent: oklch(55% 0.16 260);
+    --ku-accent-hover: oklch(46% 0.16 260);
+    --ku-accent-soft: oklch(95% 0.03 260);
+    --ku-accent-contrast: #ffffff;
+
+    --ku-success: oklch(45% 0.14 150);
+    --ku-success-soft: oklch(95% 0.04 150);
+    --ku-warning: oklch(45% 0.14 70);
+    --ku-warning-soft: oklch(96% 0.05 80);
+    --ku-danger: oklch(48% 0.16 25);
+    --ku-danger-soft: oklch(95% 0.04 25);
+    --ku-ended: oklch(38% 0.13 18);
+    --ku-ended-soft: oklch(93% 0.025 18);
+    --ku-neutral: oklch(50% 0.01 260);
+    --ku-neutral-soft: oklch(95% 0.006 90);
+
+    --ku-ink: oklch(22% 0.012 260);
+
+    --ku-radius-sm: 8px;
+    --ku-radius-md: 12px;
+    --ku-radius-lg: 16px;
+    --ku-radius-pill: 999px;
+
+    --ku-shadow-sm: 0 1px 2px rgba(20, 20, 40, 0.04);
+    --ku-shadow-md: 0 8px 24px -14px rgba(20, 20, 40, 0.18);
+
+    --ku-font-display: 'Sora', 'Public Sans', system-ui, -apple-system, sans-serif;
+    --ku-font-body: 'Public Sans', system-ui, -apple-system, sans-serif;
+
+    font-family: var(--ku-font-body);
+    color: var(--ku-text);
+    background: var(--ku-bg);
+}
+
+.kwatera-a h1, .kwatera-a h2, .kwatera-a h3, .kwatera-a h4 {
+    font-family: var(--ku-font-display);
+    margin: 0;
+}
+
+.kwatera-a a {
+    color: var(--ku-accent);
+    text-decoration: none;
+}
+
+.kwatera-a a:hover {
+    color: var(--ku-accent-hover);
+}
+
+.kwatera-a *, .kwatera-a *::before, .kwatera-a *::after {
+    box-sizing: border-box;
+}
+
+/* Intl currency formatting joins the number and "zł" with a non-breaking
+   space, which otherwise blows out narrow grid/flex tracks on phones
+   (the unbreakable run forces the track wider than its minmax(), pushing
+   the page into horizontal scroll). overflow-wrap is inherited, so this
+   one rule fixes every KPI tile / card / table cell at once. */
+.kwatera-a {
+    overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------------- *
+ * PrimeReact overrides, scoped to routes rendering the new UI. Reused
+ * dialogs/forms/DataTables from the legacy app pick these up automatically
+ * because they render while body[data-ku-theme="a"] is set (AppShell sets
+ * it on mount) — including portaled overlays (Dialog, Calendar panel,
+ * Toast, ConfirmDialog), which attach directly under <body>.
+ * ---------------------------------------------------------------------- */
+
+body[data-ku-theme='a'] {
+    --p-primary-color: oklch(55% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-component {
+    font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* Buttons */
+body[data-ku-theme='a'] .p-button {
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13.5px;
+    padding: 9px 16px;
+}
+
+body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary) {
+    background: oklch(55% 0.16 260);
+    border-color: oklch(55% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary):not(:disabled):hover {
+    background: oklch(46% 0.16 260);
+    border-color: oklch(46% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-secondary {
+    background: #ffffff;
+    border-color: oklch(90% 0.006 90);
+    color: oklch(22% 0.012 260);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-secondary:not(:disabled):hover {
+    background: oklch(97% 0.004 90);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-outlined:not(.p-button-danger) {
+    color: oklch(55% 0.16 260);
+    border-color: oklch(90% 0.02 260);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-rounded {
+    border-radius: 999px;
+}
+
+/* Disabled must read as "off" on its own - PrimeReact's default 0.6 opacity barely
+   registers on small icon-only buttons, especially against our own solid-colored
+   secondary/danger-outline variants above. Flatten every variant to the same muted
+   gray instead of just fading it. */
+body[data-ku-theme='a'] .p-button:disabled,
+body[data-ku-theme='a'] .p-button.p-disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    background: oklch(95% 0.004 90);
+    border-color: oklch(90% 0.006 90);
+    color: oklch(72% 0.006 90);
+}
+
+/* SelectButton (e.g. the contracts list activity filter) - PrimeReact renders each
+   option as a plain .p-button, so without this it inherits the solid accent fill from
+   the default-button rule above and both options look identical/selected. The extra
+   :not(.p-highlight)/.p-component qualifiers only exist to out-specificity that rule. */
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component:not(.p-highlight) {
+    background: #ffffff;
+    border-color: oklch(90% 0.006 90);
+    color: oklch(50% 0.01 260);
+}
+
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component:not(.p-highlight):not(:disabled):hover {
+    background: oklch(97% 0.004 90);
+}
+
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component.p-highlight {
+    background: oklch(55% 0.16 260);
+    border-color: oklch(55% 0.16 260);
+    color: #ffffff;
+}
+
+/* Tags / badges */
+body[data-ku-theme='a'] .p-tag {
+    font-family: 'Public Sans', system-ui, sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 4px 10px;
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-success {
+    background: oklch(95% 0.04 150);
+    color: oklch(45% 0.14 150);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-warning {
+    background: oklch(96% 0.05 80);
+    color: oklch(45% 0.14 70);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-danger {
+    background: oklch(95% 0.04 25);
+    color: oklch(48% 0.16 25);
+}
+
+body[data-ku-theme='a'] .p-tag.ku-tag-ended {
+    background: var(--ku-ended-soft);
+    color: var(--ku-ended);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-info {
+    background: oklch(95% 0.03 260);
+    color: oklch(55% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-secondary {
+    background: oklch(95% 0.006 90);
+    color: oklch(50% 0.01 260);
+}
+
+/* Cards */
+body[data-ku-theme='a'] .p-card {
+    border-radius: 12px;
+    border: 1px solid oklch(93% 0.006 90);
+    box-shadow: none;
+}
+
+body[data-ku-theme='a'] .p-card .p-card-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 16px;
+}
+
+/* Inputs */
+body[data-ku-theme='a'] .p-inputtext,
+body[data-ku-theme='a'] .p-dropdown,
+body[data-ku-theme='a'] .p-multiselect,
+body[data-ku-theme='a'] .p-calendar .p-inputtext {
+    border-radius: 8px;
+    border-color: oklch(90% 0.006 90);
+    font-size: 13.5px;
+}
+
+body[data-ku-theme='a'] .p-inputtext:enabled:focus,
+body[data-ku-theme='a'] .p-dropdown:not(.p-disabled).p-focus {
+    border-color: oklch(55% 0.16 260);
+    box-shadow: 0 0 0 1px oklch(55% 0.16 260 / 0.3);
+}
+
+/* DataTable */
+body[data-ku-theme='a'] .p-datatable {
+    font-family: 'Public Sans', system-ui, sans-serif;
+    font-size: 13.5px;
+}
+
+body[data-ku-theme='a'] .p-datatable .p-datatable-thead > tr > th {
+    background: oklch(97% 0.004 90);
+    color: oklch(50% 0.01 260);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-color: oklch(93% 0.006 90);
+    padding: 12px 16px;
+}
+
+body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr {
+    background: #ffffff;
+}
+
+body[data-ku-theme='a'] .p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+    background: oklch(98% 0.003 90);
+}
+
+body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td {
+    padding: 13px 16px;
+    border-color: oklch(94% 0.006 90);
+    color: oklch(22% 0.012 260);
+}
+
+body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr:hover {
+    background: oklch(97% 0.02 260);
+}
+
+body[data-ku-theme='a'] .p-paginator {
+    border-radius: 0 0 12px 12px;
+    background: #ffffff;
+    border-color: oklch(93% 0.006 90);
+}
+
+body[data-ku-theme='a'] .p-paginator .p-paginator-page.p-highlight {
+    background: oklch(55% 0.16 260);
+    color: #ffffff;
+}
+
+/* Dialog */
+body[data-ku-theme='a'] .p-dialog {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+body[data-ku-theme='a'] .p-dialog .p-dialog-header {
+    font-family: 'Sora', sans-serif;
+}
+
+/* Checkbox */
+body[data-ku-theme='a'] .p-checkbox .p-checkbox-box.p-highlight {
+    background: oklch(55% 0.16 260);
+    border-color: oklch(55% 0.16 260);
+}
+
+/* Menubar (top nav) */
+body[data-ku-theme='a'] .p-menubar {
+    background: #ffffff;
+    border-color: oklch(93% 0.006 90);
+    align-items: center;
+}
+
+body[data-ku-theme='a'] .p-menubar .p-menuitem-link {
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: oklch(50% 0.01 260);
+}
+
+body[data-ku-theme='a'] .p-menubar .p-menuitem-link:not(.p-disabled):hover {
+    background: oklch(97% 0.02 260);
+}
+
+body[data-ku-theme='a'] .p-menubar .p-menuitem-link.ku-nav-active {
+    background: oklch(95% 0.03 260);
+    color: oklch(46% 0.16 260);
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------- *
+ * Responsive layout helpers (mobile-first: the app is used mostly on
+ * phones, so every page must reflow down to ~360px viewport widths).
+ * ---------------------------------------------------------------------- */
+
+.ku-shell-header {
+    padding: 0 40px;
+}
+
+.ku-shell-content {
+    padding: 36px 40px 56px;
+}
+
+@media (max-width: 720px) {
+    .ku-shell-header {
+        padding: 0 14px;
+    }
+
+    .ku-shell-content {
+        padding: 18px 14px 40px;
+    }
+}
+
+.ku-split-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 860px) {
+    .ku-split-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ku-search-input {
+    width: 100%;
+    max-width: 320px;
+}
+
+@media (max-width: 520px) {
+    .ku-search-input {
+        max-width: none;
+    }
+}
+
+/* DataTable stacked (card) layout on narrow viewports — mirrors the
+   `breakpoint` prop passed to every DataTable in new_ui (860px). Only
+   cosmetic polish on top of PrimeReact's own stack-mode CSS, so it is
+   gated behind the same media query rather than a permanent class. */
+@media screen and (max-width: 860px) {
+    body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr {
+        border: 1px solid oklch(93% 0.006 90);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        display: block;
+        padding: 6px 0;
+    }
+
+    body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        gap: 12px;
+        border: none;
+        padding: 8px 16px;
+    }
+
+    body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td .p-column-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: oklch(50% 0.01 260);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+}

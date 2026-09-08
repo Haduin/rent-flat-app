@@ -30,4 +30,7 @@ export const dateToStringWithYearMonth = (date: Date): string => {
     }
     return dayString;
 }
-
+export const dateToStringWithDay = (date: Date): string => {
+    const day = date.getDate();
+    return day.toString();
+}

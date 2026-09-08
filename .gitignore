@@ -45,3 +45,5 @@ out/
 /frontend/dist
 /frontend/node_modules
 /prod
+/.playwright-mcp
+/design

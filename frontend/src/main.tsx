@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import {RouterProvider} from "react-router";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {router} from "./router/router.tsx";
-import {OidcProvider} from "./oidc.tsx";
+import {OidcInitializationGate} from "./oidc";
 
 import './index.css'
 import "primereact/resources/themes/lara-light-cyan/theme.css";
@@ -32,8 +32,8 @@ addLocale('pl', {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <OidcProvider
-            // fallback={<h1>Initializing OIDC...</h1>}
+        <OidcInitializationGate
+            fallback={<h1>Initializing OIDC...</h1>}
         >
             <PrimeReactProvider>
                 <ToastProvider>
@@ -42,6 +42,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                     </QueryClientProvider>
                 </ToastProvider>
             </PrimeReactProvider>
-        </OidcProvider>
+        </OidcInitializationGate>
     </React.StrictMode>
 );

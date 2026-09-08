@@ -1,15 +1,15 @@
 import {Card} from 'primereact/card';
 import {Button} from "primereact/button";
-import {api} from "../../api/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {ProgressSpinner} from "primereact/progressspinner";
 import {Link} from "react-router";
+import {client} from "../../api/client";
 
 const ApartmentsPage = () => {
 
     const {data, isLoading} = useQuery({
         queryKey: ["apartments"],
-        queryFn: api.apartmentsApi.getApartments,
+        queryFn: () => client.apartmentApi.getAllApartments()
     })
 
     return (
