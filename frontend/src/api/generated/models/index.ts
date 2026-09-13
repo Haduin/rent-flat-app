@@ -11,6 +11,7 @@ export * from './ContractHistoryDTO';
 export * from './CreatedPersonDTO';
 export * from './DeleteContractDTO';
 export * from './ExpenseCategory';
+export * from './ExpenseConfirmationDTO';
 export * from './NewContractDTO';
 export * from './NewOperationalExpenseDTO';
 export * from './OperationalExpenseDTO';

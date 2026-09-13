@@ -14,8 +14,10 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.koin.dsl.module
 import pl.chodan.database.ExpenseCategory
+import pl.chodan.database.PaymentStatus
 import pl.chodan.model.apartment.dto.ApartmentResponse
 import pl.chodan.model.apartment.dto.RoomDetails
+import pl.chodan.model.expenses.dto.ExpenseConfirmationDTO
 import pl.chodan.model.expenses.dto.NewOperationalExpenseDTO
 import pl.chodan.model.expenses.dto.OperationalExpenseDTO
 import pl.chodan.model.expenses.dto.UpdateOperationalExpenseDTO
@@ -57,8 +59,10 @@ class ExpenseRoutingTest {
             roomDetails = RoomDetails(roomId = 20, roomName = "Pokój 1", apartmentId = 10),
             insertDate = "2026-08-01",
             costDate = null,
+            paidDate = null,
             amount = 150.0,
             category = ExpenseCategory.UTILITY_ELECTRICITY,
+            status = PaymentStatus.PENDING,
             description = "Prąd",
             invoiceNumber = null,
             templateId = null
@@ -93,6 +97,37 @@ class ExpenseRoutingTest {
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
         coVerify(exactly = 0) { expenseService.getExpenses(any(), any(), any()) }
+    }
+
+    @Test
+    fun `POST expenses confirm confirms an expense`() = testApplication {
+        setup()
+        val dto = ExpenseConfirmationDTO(expenseId = 1, paidDate = "2026-08-04", payedAmount = 150.0)
+        coEvery { expenseService.confirmExpense(dto) } returns 1
+
+        val response = client.post("/expenses/confirm") {
+            testAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(ExpenseConfirmationDTO.serializer(), dto))
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        coVerify(exactly = 1) { expenseService.confirmExpense(dto) }
+    }
+
+    @Test
+    fun `POST expenses confirm returns bad request when the service throws`() = testApplication {
+        setup()
+        val dto = ExpenseConfirmationDTO(expenseId = 1, paidDate = "2026-08-04", payedAmount = 150.0)
+        coEvery { expenseService.confirmExpense(dto) } throws IllegalStateException("boom")
+
+        val response = client.post("/expenses/confirm") {
+            testAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(ExpenseConfirmationDTO.serializer(), dto))
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
     }
 
     @Test

@@ -1,4 +1,3 @@
-import {DataTable} from "primereact/datatable";
 import {Column} from "primereact/column";
 import {Calendar} from "primereact/calendar";
 import {usePaymentsView} from "../../../src/pages/payments/income/income-payments-view/income-payments-view.hook.ts";
@@ -9,6 +8,7 @@ import {dateToStringWithYearMonth} from "../../../src/components/commons/dateFor
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
 import {Card} from "../../components/ui/Card.tsx";
+import {DataTableCard} from "../../components/ui/DataTableCard.tsx";
 import {Badge, BadgeTone} from "../../components/ui/Badge.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../src/api/generated";
@@ -131,26 +131,14 @@ const IncomePaymentsPage = () => {
                 )}
             </Card>
 
-            <Card padding={0} style={{overflow: "hidden"}}>
-                <DataTable
-                    value={payments ?? []}
-                    loading={loading}
-                    paginator
-                    rows={10}
-                    rowsPerPageOptions={[10, 20, 50]}
-                    stripedRows
-                    responsiveLayout="stack"
-                    breakpoint="860px"
-                    emptyMessage="Wybierz miesiąc, aby zobaczyć płatności"
-                >
-                    <Column header="Płatnik" body={payerBody}/>
-                    <Column header="Mieszkanie" body={(row: PaymentHistoryWithPersonDTO) => row.room?.apartment}/>
-                    <Column header="Kwota" body={amountBody}/>
-                    <Column header="Data" body={(row: PaymentHistoryWithPersonDTO) => row.payedDate ?? "—"}/>
-                    <Column header="Status" body={statusBody}/>
-                    <Column header="" body={actionsBody} style={{width: 260}}/>
-                </DataTable>
-            </Card>
+            <DataTableCard value={payments ?? []} loading={loading} emptyMessage="Wybierz miesiąc, aby zobaczyć płatności">
+                <Column header="Płatnik" body={payerBody}/>
+                <Column header="Mieszkanie" body={(row: PaymentHistoryWithPersonDTO) => row.room?.apartment}/>
+                <Column header="Kwota" body={amountBody}/>
+                <Column header="Data" body={(row: PaymentHistoryWithPersonDTO) => row.payedDate ?? "—"}/>
+                <Column header="Status" body={statusBody}/>
+                <Column header="" body={actionsBody} style={{width: 260}}/>
+            </DataTableCard>
 
             <IncomeConfirmPaymentDialog
                 isVisible={isConfirmationDialogVisible}

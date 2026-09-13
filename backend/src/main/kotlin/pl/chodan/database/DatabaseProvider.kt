@@ -2,7 +2,10 @@ package pl.chodan.database
 
 import kotlinx.coroutines.Dispatchers
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -15,13 +18,11 @@ class DatabaseProvider : DatabaseProviderContract, KoinComponent {
     init {
         exposedLogger.info("Connecting to database")
 
-        // baselineOnMigrate: on an existing (pre-Flyway) production DB, the `flat` schema is
-        // already populated, so Flyway marks V1 as already applied instead of re-running it and
-        // failing on "table already exists" - no data is touched. On a fresh DB, V1 runs normally.
         Flyway.configure()
             .dataSource(config.ktor.database.url, config.ktor.database.user, config.ktor.database.password)
             .schemas("flat")
             .baselineOnMigrate(true)
+            .validateMigrationNaming(true)
             .load()
             .migrate()
 

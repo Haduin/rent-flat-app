@@ -19,6 +19,7 @@ models/ContractHistoryDTO.ts
 models/CreatedPersonDTO.ts
 models/DeleteContractDTO.ts
 models/ExpenseCategory.ts
+models/ExpenseConfirmationDTO.ts
 models/NewContractDTO.ts
 models/NewOperationalExpenseDTO.ts
 models/OperationalExpenseDTO.ts

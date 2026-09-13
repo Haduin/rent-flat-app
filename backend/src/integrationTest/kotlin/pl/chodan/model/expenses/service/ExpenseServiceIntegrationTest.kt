@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import pl.chodan.database.ExpenseCategory
+import pl.chodan.database.PaymentStatus
 import pl.chodan.model.expenses.dto.AddExpenseTemplateRequest
+import pl.chodan.model.expenses.dto.ExpenseConfirmationDTO
 import pl.chodan.model.expenses.dto.NewOperationalExpenseDTO
 import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase
@@ -59,6 +61,24 @@ class ExpenseServiceIntegrationTest {
         assertEquals(150.0, saved.amount)
         assertEquals(ExpenseCategory.UTILITY_ELECTRICITY, saved.category)
         assertEquals("Prąd - sierpień", saved.description)
+    }
+
+    @Test
+    fun `confirmExpense marks the expense as paid with the given date and amount`() = runBlocking {
+        val service = ExpenseService()
+        val id = service.addExpense(
+            NewOperationalExpenseDTO(
+                apartmentId = null, roomId = null, insertDate = "2026-08-04", costDate = null,
+                amount = 150.0, category = ExpenseCategory.UTILITY_ELECTRICITY, description = null, invoiceNumber = null
+            )
+        )
+
+        service.confirmExpense(ExpenseConfirmationDTO(expenseId = id, paidDate = "2026-08-10", payedAmount = 145.0))
+
+        val confirmed = service.getExpenses(YearMonthString.parse("2026-08"), null, null).single()
+        assertEquals(PaymentStatus.PAID, confirmed.status)
+        assertEquals("2026-08-10", confirmed.paidDate)
+        assertEquals(145.0, confirmed.amount)
     }
 
     @Test
