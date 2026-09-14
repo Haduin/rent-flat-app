@@ -28,7 +28,7 @@ const ApartmentsPage = () => {
                     {data?.map((apartment, id) => (
                         <Card key={id} className="flex flex-col w-3">
                             <p>Mieszkanie: {apartment.apartmentName}</p>
-                            <p>Ilość pokoi: {apartment.roomName}</p>
+                            <p>Ilość pokoi: {apartment.rooms.length}</p>
                             <Link to={`/protected/mieszkanie/${id}`}>Detale</Link>
                         </Card>
                     ))}

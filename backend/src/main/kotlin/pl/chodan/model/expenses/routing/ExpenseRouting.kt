@@ -8,6 +8,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import pl.chodan.model.expenses.dto.ExpenseConfirmationDTO
 import pl.chodan.model.expenses.dto.NewOperationalExpenseDTO
 import pl.chodan.model.expenses.dto.OperationalExpenseDTO
 import pl.chodan.model.expenses.dto.UpdateOperationalExpenseDTO
@@ -85,6 +86,25 @@ fun Application.configureExpenseRouting() {
                         call.respond(
                             HttpStatusCode.BadRequest,
                             mapOf("error" to (e.message ?: "Failed to update expense"))
+                        )
+                    }
+                }
+                post("/confirm", {
+                    description = "Confirm an operational expense as paid"
+                    operationId = "confirmExpense"
+                    request { body<ExpenseConfirmationDTO> { description = "Expense confirmation payload" } }
+                    response {
+                        code(HttpStatusCode.OK) { description = "Expense confirmed" }
+                        code(HttpStatusCode.BadRequest) { description = "Confirmation failed" }
+                    }
+                }) {
+                    val request = call.receive<ExpenseConfirmationDTO>()
+                    try {
+                        expenseService.confirmExpense(request)
+                        call.respond(HttpStatusCode.OK, mapOf("message" to "Expense confirmed successfully"))
+                    } catch (e: Exception) {
+                        call.respond(
+                            HttpStatusCode.BadRequest, mapOf("error" to "Failed to confirm expense: ${e.message}")
                         )
                     }
                 }

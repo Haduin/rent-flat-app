@@ -15,11 +15,18 @@ object OperationalExpense : Table("flat.operational_expense") {
     val roomId = (integer("room_id") references Room.id).nullable()
     val insertDate = date("insert_date")
     val costDate = date("cost_date").nullable()
+    val paidDate = date("paid_date").nullable()
     val amount = decimal("amount", 10, 2)
     val category = customEnumeration(
         name = "category",
         sql = "VARCHAR(50)",
         fromDb = { value -> ExpenseCategory.valueOf(value as String) },
+        toDb = { value -> value.name }
+    )
+    val status = customEnumeration(
+        name = "status",
+        sql = "VARCHAR(50)",
+        fromDb = { value -> PaymentStatus.valueOf(value as String) },
         toDb = { value -> value.name }
     )
     val description = varchar("description", 255).nullable()

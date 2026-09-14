@@ -1,5 +1,4 @@
 import {useState} from "react";
-import {DataTable} from "primereact/datatable";
 import {Column} from "primereact/column";
 import {Tag} from "primereact/tag";
 import {getExpensesTemplate, removeExpensesTemplate} from "../../../src/pages/expenses-template/api/expenses-template.api.ts";
@@ -11,7 +10,7 @@ import {getExpenseCategoryLabel} from "../../../src/pages/expenses-template/enum
 import {categorySeverity} from "../../../src/pages/expenses-template/expenses-template-view-table/expenses-template-view.table.consts.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {Card} from "../../components/ui/Card.tsx";
+import {DataTableCard} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {IconPlus} from "../../components/ui/icons.tsx";
@@ -82,27 +81,15 @@ const ExpenseTemplatesPage = () => {
                 }
             />
 
-            <Card padding={0} style={{overflow: "hidden"}}>
-                <DataTable
-                    value={expensesTemplates}
-                    loading={isLoading}
-                    paginator
-                    rows={10}
-                    rowsPerPageOptions={[10, 20, 50]}
-                    stripedRows
-                    responsiveLayout="stack"
-                    breakpoint="860px"
-                    emptyMessage="Brak wydatków do wyświetlenia"
-                >
-                    <Column header="Mieszkanie" body={(row: OperationalExpenseTemplateResponse) => row.apartment?.name ?? "-"} sortable/>
-                    <Column header="Pokój" body={(row: OperationalExpenseTemplateResponse) => row.room?.name ?? "-"} sortable/>
-                    <Column header="Kategoria" body={categoryBody} sortable field="category"/>
-                    <Column header="Kwota" body={(row: OperationalExpenseTemplateResponse) => formatCurrency(row.amount)} sortable field="amount"/>
-                    <Column header="Dzień płatności" body={(row: OperationalExpenseTemplateResponse) => `${row.dayOfMonth} dzień miesiąca`} sortable field="dayOfMonth"/>
-                    <Column header="Status" body={statusBody} sortable field="active"/>
-                    <Column header="" body={actionsBody} style={{width: 110}}/>
-                </DataTable>
-            </Card>
+            <DataTableCard value={expensesTemplates} loading={isLoading} emptyMessage="Brak wydatków do wyświetlenia">
+                <Column header="Mieszkanie" body={(row: OperationalExpenseTemplateResponse) => row.apartment?.name ?? "-"} sortable/>
+                <Column header="Pokój" body={(row: OperationalExpenseTemplateResponse) => row.room?.name ?? "-"} sortable/>
+                <Column header="Kategoria" body={categoryBody} sortable field="category"/>
+                <Column header="Kwota" body={(row: OperationalExpenseTemplateResponse) => formatCurrency(row.amount)} sortable field="amount"/>
+                <Column header="Dzień płatności" body={(row: OperationalExpenseTemplateResponse) => `${row.dayOfMonth} dzień miesiąca`} sortable field="dayOfMonth"/>
+                <Column header="Status" body={statusBody} sortable field="active"/>
+                <Column header="" body={actionsBody} style={{width: 110}}/>
+            </DataTableCard>
 
             <AddEditExpensesTemplateDialog mode={mode} isVisible={isExpensesModalOpen} onHide={handleClose} selectedExpense={selectedExpense}/>
             <ConfirmationDialog

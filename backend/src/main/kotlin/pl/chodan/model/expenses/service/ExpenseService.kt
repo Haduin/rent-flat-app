@@ -7,10 +7,12 @@ import org.koin.core.component.inject
 import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.OperationalExpense
 import pl.chodan.database.OperationalExpenseTemplate
+import pl.chodan.database.PaymentStatus
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.apartment.dto.ApartmentResponse
 import pl.chodan.model.apartment.dto.RoomDetails
+import pl.chodan.model.expenses.dto.ExpenseConfirmationDTO
 import pl.chodan.model.expenses.dto.NewOperationalExpenseDTO
 import pl.chodan.model.expenses.dto.OperationalExpenseDTO
 import pl.chodan.model.expenses.dto.UpdateOperationalExpenseDTO
@@ -31,6 +33,7 @@ class ExpenseService : KoinComponent {
             it[costDate] = dto.costDate?.toLocalDateWithFullPattern()
             it[amount] = dto.amount.toBigDecimal()
             it[category] = dto.category
+            it[status] = dto.status
             it[description] = dto.description
             it[invoiceNumber] = dto.invoiceNumber
             it[templateId] = dto.templateId
@@ -75,8 +78,10 @@ class ExpenseService : KoinComponent {
                         },
                         insertDate = row[OperationalExpense.insertDate].toString(),
                         costDate = row[OperationalExpense.costDate]?.toString(),
+                        paidDate = row[OperationalExpense.paidDate]?.toString(),
                         amount = row[OperationalExpense.amount].toDouble(),
                         category = row[OperationalExpense.category],
+                        status = row[OperationalExpense.status],
                         description = row[OperationalExpense.description],
                         invoiceNumber = row[OperationalExpense.invoiceNumber],
                         templateId = row[OperationalExpense.templateId]
@@ -127,9 +132,18 @@ class ExpenseService : KoinComponent {
                     it[OperationalExpense.costDate] = null
                     it[OperationalExpense.amount] = row[OperationalExpenseTemplate.amount]
                     it[OperationalExpense.category] = row[OperationalExpenseTemplate.category]
+                    it[OperationalExpense.status] = PaymentStatus.PENDING
                     it[OperationalExpense.invoiceNumber] = null
                 } get OperationalExpense.id
             }
+        }
+    }
+
+    suspend fun confirmExpense(dto: ExpenseConfirmationDTO) = databaseProvider.dbQuery {
+        OperationalExpense.update({ OperationalExpense.id eq dto.expenseId }) {
+            it[status] = PaymentStatus.PAID
+            it[paidDate] = dto.paidDate.toLocalDateWithFullPattern()
+            it[amount] = dto.payedAmount.toBigDecimal()
         }
     }
 

@@ -1,5 +1,4 @@
 import {useMemo, useState} from "react";
-import {DataTable} from "primereact/datatable";
 import {Column} from "primereact/column";
 import {InputText} from "primereact/inputtext";
 import {IconField} from "primereact/iconfield";
@@ -14,6 +13,7 @@ import ContractHistoryDialog from "../../../src/pages/contracts/contract-history
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
 import {Card} from "../../components/ui/Card.tsx";
+import {DataTableCard} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {IconPlus} from "../../components/ui/icons.tsx";
@@ -177,27 +177,15 @@ const ContractsPage = () => {
                 />
             </Card>
 
-            <Card padding={0} style={{overflow: "hidden"}}>
-                <DataTable
-                    value={contracts}
-                    loading={loading}
-                    paginator
-                    rows={10}
-                    rowsPerPageOptions={[10, 20, 50]}
-                    stripedRows
-                    responsiveLayout="stack"
-                    breakpoint="860px"
-                    emptyMessage="Brak kontraktów do wyświetlenia"
-                >
-                    <Column header="Najemca" body={tenantBody} sortable field="person.lastName"/>
-                    <Column header="Mieszkanie / pokój" body={roomBody}/>
-                    <Column header="Okres" body={periodBody}/>
-                    <Column header="Czynsz" body={amountBody} sortable field="amount"/>
-                    <Column header="Kaucja" body={depositBody}/>
-                    <Column header="Status" body={statusBody} sortable field="status"/>
-                    <Column header="" body={actionsBody} style={{width: 140}}/>
-                </DataTable>
-            </Card>
+            <DataTableCard value={contracts} loading={loading} emptyMessage="Brak kontraktów do wyświetlenia">
+                <Column header="Najemca" body={tenantBody} sortable field="person.lastName"/>
+                <Column header="Mieszkanie / pokój" body={roomBody}/>
+                <Column header="Okres" body={periodBody}/>
+                <Column header="Czynsz" body={amountBody} sortable field="amount"/>
+                <Column header="Kaucja" body={depositBody}/>
+                <Column header="Status" body={statusBody} sortable field="status"/>
+                <Column header="" body={actionsBody} style={{width: 140}}/>
+            </DataTableCard>
 
             {isDeleteDialogVisible && (
                 <DeleteContractModal

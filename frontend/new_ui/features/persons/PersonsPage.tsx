@@ -1,5 +1,4 @@
 import {useMemo, useState} from "react";
-import {DataTable} from "primereact/datatable";
 import {Column} from "primereact/column";
 import {InputText} from "primereact/inputtext";
 import {IconField} from "primereact/iconfield";
@@ -12,6 +11,7 @@ import type {Person} from "../../../src/pages/person/person-table/person-table.t
 import type {PersonDTO} from "../../../src/api/generated";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
 import {Card} from "../../components/ui/Card.tsx";
+import {DataTableCard} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {IconPlus} from "../../components/ui/icons.tsx";
@@ -87,26 +87,14 @@ const PersonsPage = () => {
                 </label>
             </Card>
 
-            <Card padding={0} style={{overflow: "hidden"}}>
-                <DataTable
-                    value={people}
-                    loading={loading}
-                    paginator
-                    rows={10}
-                    rowsPerPageOptions={[10, 20, 50]}
-                    stripedRows
-                    responsiveLayout="stack"
-                    breakpoint="860px"
-                    emptyMessage="Brak danych do wyświetlenia"
-                >
-                    <Column field="firstName" header="Imię" sortable/>
-                    <Column field="lastName" header="Nazwisko" sortable/>
-                    <Column field="documentNumber" header="Numer dokumentu" sortable/>
-                    <Column field="nationality" header="Narodowość" sortable/>
-                    <Column header="Status" body={statusBody} sortable field="status"/>
-                    <Column header="" body={actionsBody} style={{width: 110}}/>
-                </DataTable>
-            </Card>
+            <DataTableCard value={people} loading={loading} emptyMessage="Brak danych do wyświetlenia">
+                <Column field="firstName" header="Imię" sortable/>
+                <Column field="lastName" header="Nazwisko" sortable/>
+                <Column field="documentNumber" header="Numer dokumentu" sortable/>
+                <Column field="nationality" header="Narodowość" sortable/>
+                <Column header="Status" body={statusBody} sortable field="status"/>
+                <Column header="" body={actionsBody} style={{width: 110}}/>
+            </DataTableCard>
 
             <AddNewPersonDialog
                 visible={isNewPersonDialogVisible}

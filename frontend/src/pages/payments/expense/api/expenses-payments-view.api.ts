@@ -1,6 +1,6 @@
 import {queryClient} from "../../../../main.tsx";
 import {client} from "../../../../api/client.ts";
-import {OperationalExpenseDTO, UpdateOperationalExpenseDTO} from "../../../../api/generated";
+import {ExpenseConfirmationDTO, OperationalExpenseDTO, UpdateOperationalExpenseDTO} from "../../../../api/generated";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {dateToStringWithYearMonth} from "../../../../components/commons/dateFormatter.ts";
 import {useMemo} from "react";
@@ -62,6 +62,25 @@ export function useUpdateExpense() {
         },
         onError: () => {
             showToast("error", "Wystąpił błąd podczas edycji wydatku");
+        },
+    });
+}
+
+export function useConfirmExpense() {
+    const {showToast} = useToast();
+
+    return useMutation({
+        mutationFn: (request: ExpenseConfirmationDTO) =>
+            client.expensesApi.confirmExpense({expenseConfirmationDTO: request}),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: [PAYMENTS_QUERY_KEYS.EXPENSES_BY_MONTH_QUERY_KEY],
+                refetchType: "active",
+            });
+            showToast("success", "Pomyślnie potwierdzono koszt");
+        },
+        onError: (error: Error) => {
+            showToast("error", `Nie udało się potwierdzić kosztu: ${error.message}`);
         },
     });
 }

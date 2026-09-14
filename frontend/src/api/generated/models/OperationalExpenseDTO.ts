@@ -31,6 +31,12 @@ import {
     ApartmentResponseFromJSONTyped,
     ApartmentResponseToJSON,
 } from './ApartmentResponse';
+import type { PaymentStatus } from './PaymentStatus';
+import {
+    PaymentStatusFromJSON,
+    PaymentStatusFromJSONTyped,
+    PaymentStatusToJSON,
+} from './PaymentStatus';
 
 /**
  * 
@@ -70,6 +76,12 @@ export interface OperationalExpenseDTO {
     costDate?: string | null;
     /**
      * 
+     * @type {string}
+     * @memberof OperationalExpenseDTO
+     */
+    paidDate?: string | null;
+    /**
+     * 
      * @type {number}
      * @memberof OperationalExpenseDTO
      */
@@ -80,6 +92,12 @@ export interface OperationalExpenseDTO {
      * @memberof OperationalExpenseDTO
      */
     category: ExpenseCategory;
+    /**
+     * 
+     * @type {PaymentStatus}
+     * @memberof OperationalExpenseDTO
+     */
+    status: PaymentStatus;
     /**
      * 
      * @type {string}
@@ -110,6 +128,7 @@ export function instanceOfOperationalExpenseDTO(value: object): value is Operati
     if (!('insertDate' in value) || value['insertDate'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('category' in value) || value['category'] === undefined) return false;
+    if (!('status' in value) || value['status'] === undefined) return false;
     return true;
 }
 
@@ -128,8 +147,10 @@ export function OperationalExpenseDTOFromJSONTyped(json: any, ignoreDiscriminato
         'roomDetails': json['roomDetails'] == null ? undefined : RoomDetailsFromJSON(json['roomDetails']),
         'insertDate': json['insertDate'],
         'costDate': json['costDate'] == null ? undefined : json['costDate'],
+        'paidDate': json['paidDate'] == null ? undefined : json['paidDate'],
         'amount': json['amount'],
         'category': ExpenseCategoryFromJSON(json['category']),
+        'status': PaymentStatusFromJSON(json['status']),
         'description': json['description'] == null ? undefined : json['description'],
         'invoiceNumber': json['invoiceNumber'] == null ? undefined : json['invoiceNumber'],
         'templateId': json['templateId'] == null ? undefined : json['templateId'],
@@ -147,8 +168,10 @@ export function OperationalExpenseDTOToJSON(value?: OperationalExpenseDTO | null
         'roomDetails': RoomDetailsToJSON(value['roomDetails']),
         'insertDate': value['insertDate'],
         'costDate': value['costDate'],
+        'paidDate': value['paidDate'],
         'amount': value['amount'],
         'category': ExpenseCategoryToJSON(value['category']),
+        'status': PaymentStatusToJSON(value['status']),
         'description': value['description'],
         'invoiceNumber': value['invoiceNumber'],
         'templateId': value['templateId'],
