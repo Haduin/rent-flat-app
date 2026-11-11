@@ -264,6 +264,9 @@ body[data-ku-theme='a'] .p-datatable.p-datatable-striped .p-datatable-tbody > tr
 }
 
 body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td {
+    /* break-word (not the inherited `anywhere`) keeps amounts like "1550,00 zł" from
+       being shrunk mid-word by table auto-layout, yet still wraps a value that truly overflows */
+    overflow-wrap: break-word;
     padding: 13px 16px;
     border-color: oklch(94% 0.006 90);
     color: oklch(22% 0.012 260);
@@ -370,13 +373,45 @@ body[data-ku-theme='a'] .p-menubar .p-menuitem-link.ku-nav-active {
     .ku-search-input {
         max-width: none;
     }
+
+    /* filter toggles share one full-width row instead of wrapping one option per line */
+    body[data-ku-theme='a'] .kwatera-a .p-selectbutton {
+        display: flex;
+        width: 100%;
+    }
+
+    body[data-ku-theme='a'] .kwatera-a .p-selectbutton .p-button {
+        flex: 1 1 0;
+        justify-content: center;
+        padding-left: 8px;
+        padding-right: 8px;
+        min-height: 2.75rem;
+    }
 }
 
-/* DataTable stacked (card) layout on narrow viewports — mirrors the
-   `breakpoint` prop passed to every DataTable in new_ui (860px). Only
-   cosmetic polish on top of PrimeReact's own stack-mode CSS, so it is
-   gated behind the same media query rather than a permanent class. */
-@media screen and (max-width: 860px) {
+/* DataTableCard row actions: in table mode the column shrinks to its buttons
+   (width: 1% + nowrap) so pages never hand-tune an actions column width. */
+body[data-ku-theme='a'] .p-datatable .ku-col-actions {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.ku-row-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+@media screen and (max-width: 1024px) {
+    .ku-row-actions {
+        flex-wrap: wrap;
+    }
+}
+
+/* DataTable stacked (card) layout on phones/tablets — mirrors the
+   `breakpoint` prop in DataTableCard (1024px). Polish on top of
+   PrimeReact's own stack-mode CSS, gated behind the same media query. */
+@media screen and (max-width: 1024px) {
     body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr {
         border: 1px solid oklch(93% 0.006 90);
         border-radius: 12px;
@@ -401,5 +436,47 @@ body[data-ku-theme='a'] .p-menubar .p-menuitem-link.ku-nav-active {
         color: oklch(50% 0.01 260);
         text-transform: uppercase;
         letter-spacing: 0.03em;
+        /* the label never shrinks or breaks ("OKRE/S"); the value beside it wraps instead */
+        flex-shrink: 0;
+        white-space: nowrap;
+        overflow-wrap: normal;
+        text-align: left;
+    }
+
+    /* values sit on the right like plain text cells, including flex wrappers (period + badge) */
+    body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td > :not(.p-column-title) {
+        min-width: 0;
+        justify-content: flex-end;
+    }
+
+    /* Actions column (DataTableCard `rowActions`): its label is empty, so drop it
+       and give the buttons their own full-width, right-aligned row. */
+    body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td .p-column-title:empty {
+        display: none;
+    }
+
+    body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td.ku-col-actions {
+        width: auto;
+        white-space: normal;
+        justify-content: flex-end;
+        border-top: 1px solid oklch(94% 0.006 90);
+        margin-top: 6px;
+        padding-top: 12px;
+    }
+
+    /* touch targets (min 44x44px) for row actions and paginator */
+    body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td .p-button,
+    body[data-ku-theme='a'] .p-paginator .p-paginator-element {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+}
+
+/* Low-priority columns (e.g. invoice no. / description on expenses): shown in
+   the stacked card layout and on wide desktops, hidden on mid-size table
+   layouts where they would force the table into horizontal scroll. */
+@media screen and (min-width: 1025px) and (max-width: 1439px) {
+    body[data-ku-theme='a'] .p-datatable .ku-col-optional {
+        display: none;
     }
 }

@@ -1,5 +1,4 @@
 import {useState} from "react";
-import {Column} from "primereact/column";
 import {Tag} from "primereact/tag";
 import {getExpensesTemplate, removeExpensesTemplate} from "../../../src/pages/expenses-template/api/expenses-template.api.ts";
 import {AddEditExpensesTemplateDialog} from "../../../src/pages/expenses-template/add-edit-expenses-template/add-edit-expenses-template-dialog.tsx";
@@ -10,7 +9,7 @@ import {getExpenseCategoryLabel} from "../../../src/pages/expenses-template/enum
 import {categorySeverity} from "../../../src/pages/expenses-template/expenses-template-view-table/expenses-template-view.table.consts.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {DataTableCard} from "../../components/ui/DataTableCard.tsx";
+import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {IconPlus} from "../../components/ui/icons.tsx";
@@ -62,12 +61,21 @@ const ExpenseTemplatesPage = () => {
         <Badge tone={row.active ? "success" : "danger"}>{row.active ? "Aktywny" : "Nieaktywny"}</Badge>
     );
 
-    const actionsBody = (row: OperationalExpenseTemplateResponse) => (
-        <div style={{display: "flex", gap: 6, justifyContent: "flex-end"}}>
+    const rowActions = (row: OperationalExpenseTemplateResponse) => (
+        <>
             <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => handleSelectEditExpense(row)}/>
             <Button variant="danger-outline" size="small" icon="pi pi-trash" onClick={() => handleOnDelete(row)}/>
-        </div>
+        </>
     );
+
+    const columns: DataTableColumn<OperationalExpenseTemplateResponse>[] = [
+        {header: "Mieszkanie", body: (row) => row.apartment?.name ?? "-", sortable: true, field: "apartment.name"},
+        {header: "Pokój", body: (row) => row.room?.name ?? "-", sortable: true, field: "room.name"},
+        {header: "Kategoria", body: categoryBody, sortable: true, field: "category"},
+        {header: "Kwota", body: (row) => formatCurrency(row.amount), sortable: true, field: "amount"},
+        {header: "Dzień płatności", body: (row) => `${row.dayOfMonth} dzień miesiąca`, sortable: true, field: "dayOfMonth"},
+        {header: "Status", body: statusBody, sortable: true, field: "active"},
+    ];
 
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 20}}>
@@ -81,15 +89,13 @@ const ExpenseTemplatesPage = () => {
                 }
             />
 
-            <DataTableCard value={expensesTemplates} loading={isLoading} emptyMessage="Brak wydatków do wyświetlenia">
-                <Column header="Mieszkanie" body={(row: OperationalExpenseTemplateResponse) => row.apartment?.name ?? "-"} sortable/>
-                <Column header="Pokój" body={(row: OperationalExpenseTemplateResponse) => row.room?.name ?? "-"} sortable/>
-                <Column header="Kategoria" body={categoryBody} sortable field="category"/>
-                <Column header="Kwota" body={(row: OperationalExpenseTemplateResponse) => formatCurrency(row.amount)} sortable field="amount"/>
-                <Column header="Dzień płatności" body={(row: OperationalExpenseTemplateResponse) => `${row.dayOfMonth} dzień miesiąca`} sortable field="dayOfMonth"/>
-                <Column header="Status" body={statusBody} sortable field="active"/>
-                <Column header="" body={actionsBody} style={{width: 110}}/>
-            </DataTableCard>
+            <DataTableCard
+                value={expensesTemplates}
+                columns={columns}
+                rowActions={rowActions}
+                loading={isLoading}
+                emptyMessage="Brak wydatków do wyświetlenia"
+            />
 
             <AddEditExpensesTemplateDialog mode={mode} isVisible={isExpensesModalOpen} onHide={handleClose} selectedExpense={selectedExpense}/>
             <ConfirmationDialog

@@ -47,3 +47,6 @@ out/
 /prod
 /.playwright-mcp
 /design
+### Local tooling ###
+.openidea/
+loadtest/raport.html

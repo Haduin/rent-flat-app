@@ -15,10 +15,7 @@ import pl.chodan.context.UserDetails
 fun Route.withUser(block: suspend ApplicationCall.(user: UserDetails) -> Unit) {
     authenticate("auth-jwt") {
         handle {
-            val principal = call.principal<KtorUserDetailsPrincipal>()
-            if (principal != null) {
-                block(call, principal.userDetails)
-            }
+            call.principal<KtorUserDetailsPrincipal>()?.let { block(call, it.userDetails) }
         }
     }
 }

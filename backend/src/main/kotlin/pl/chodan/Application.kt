@@ -1,7 +1,6 @@
 package pl.chodan
 
 import io.ktor.server.application.*
-import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
@@ -26,10 +25,7 @@ import pl.chodan.model.room.service.RoomService
 import pl.chodan.model.statistics.routing.configureStatisticsRouting
 import pl.chodan.model.statistics.service.StatisticsService
 
-fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
-}
+fun main(args: Array<String>) = EngineMain.main(args)
 
 fun Application.module() {
     val config = createConfigFromYaml(environment)

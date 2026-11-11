@@ -1,5 +1,4 @@
 import {useMemo, useState} from "react";
-import {Column} from "primereact/column";
 import {InputText} from "primereact/inputtext";
 import {IconField} from "primereact/iconfield";
 import {InputIcon} from "primereact/inputicon";
@@ -11,7 +10,7 @@ import type {Person} from "../../../src/pages/person/person-table/person-table.t
 import type {PersonDTO} from "../../../src/api/generated";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
 import {Card} from "../../components/ui/Card.tsx";
-import {DataTableCard} from "../../components/ui/DataTableCard.tsx";
+import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {IconPlus} from "../../components/ui/icons.tsx";
@@ -53,12 +52,20 @@ const PersonsPage = () => {
         </Badge>
     );
 
-    const actionsBody = (person: PersonDTO) => (
-        <div style={{display: "flex", gap: 6, justifyContent: "flex-end"}}>
+    const rowActions = (person: PersonDTO) => (
+        <>
             <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => openEditDialog(person as Person)}/>
             <Button variant="danger-outline" size="small" icon="pi pi-trash" disabled onClick={() => handleDeletePerson(person as Person)}/>
-        </div>
+        </>
     );
+
+    const columns: DataTableColumn<PersonDTO>[] = [
+        {header: "Imię", field: "firstName", sortable: true},
+        {header: "Nazwisko", field: "lastName", sortable: true},
+        {header: "Numer dokumentu", field: "documentNumber", sortable: true},
+        {header: "Narodowość", field: "nationality", sortable: true},
+        {header: "Status", body: statusBody, sortable: true, field: "status"},
+    ];
 
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 20}}>
@@ -71,7 +78,7 @@ const PersonsPage = () => {
                 }
             />
 
-            <Card padding={20} style={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12}}>
+            <Card padding={20} contentStyle={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12}}>
                 <IconField iconPosition="left" className="ku-search-input">
                     <InputIcon className="pi pi-search"/>
                     <InputText
@@ -87,14 +94,13 @@ const PersonsPage = () => {
                 </label>
             </Card>
 
-            <DataTableCard value={people} loading={loading} emptyMessage="Brak danych do wyświetlenia">
-                <Column field="firstName" header="Imię" sortable/>
-                <Column field="lastName" header="Nazwisko" sortable/>
-                <Column field="documentNumber" header="Numer dokumentu" sortable/>
-                <Column field="nationality" header="Narodowość" sortable/>
-                <Column header="Status" body={statusBody} sortable field="status"/>
-                <Column header="" body={actionsBody} style={{width: 110}}/>
-            </DataTableCard>
+            <DataTableCard
+                value={people}
+                columns={columns}
+                rowActions={rowActions}
+                loading={loading}
+                emptyMessage="Brak danych do wyświetlenia"
+            />
 
             <AddNewPersonDialog
                 visible={isNewPersonDialogVisible}

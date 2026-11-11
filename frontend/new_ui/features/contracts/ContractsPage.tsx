@@ -1,5 +1,4 @@
 import {useMemo, useState} from "react";
-import {Column} from "primereact/column";
 import {InputText} from "primereact/inputtext";
 import {IconField} from "primereact/iconfield";
 import {InputIcon} from "primereact/inputicon";
@@ -13,7 +12,7 @@ import ContractHistoryDialog from "../../../src/pages/contracts/contract-history
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
 import {Card} from "../../components/ui/Card.tsx";
-import {DataTableCard} from "../../components/ui/DataTableCard.tsx";
+import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {IconPlus} from "../../components/ui/icons.tsx";
@@ -105,8 +104,8 @@ const ContractsPage = () => {
         </Badge>
     );
 
-    const actionsBody = (contract: ContractDTO) => (
-        <div style={{display: "flex", gap: 6, justifyContent: "flex-end"}}>
+    const rowActions = (contract: ContractDTO) => (
+        <>
             <Button
                 variant="secondary"
                 size="small"
@@ -141,8 +140,17 @@ const ContractsPage = () => {
                 disabled={isNotEqual("ACTIVE", contract.status)}
                 onClick={() => handleOpenDeleteDialog(contract)}
             />
-        </div>
+        </>
     );
+
+    const columns: DataTableColumn<ContractDTO>[] = [
+        {header: "Najemca", body: tenantBody, sortable: true, field: "person.lastName"},
+        {header: "Mieszkanie / pokój", body: roomBody},
+        {header: "Okres", body: periodBody},
+        {header: "Czynsz", body: amountBody, sortable: true, field: "amount"},
+        {header: "Kaucja", body: depositBody},
+        {header: "Status", body: statusBody, sortable: true, field: "status"},
+    ];
 
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 20}}>
@@ -155,7 +163,7 @@ const ContractsPage = () => {
                 }
             />
 
-            <Card padding={20} style={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12}}>
+            <Card padding={20} contentStyle={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12}}>
                 <IconField iconPosition="left" className="ku-search-input">
                     <InputIcon className="pi pi-search"/>
                     <InputText
@@ -177,15 +185,13 @@ const ContractsPage = () => {
                 />
             </Card>
 
-            <DataTableCard value={contracts} loading={loading} emptyMessage="Brak kontraktów do wyświetlenia">
-                <Column header="Najemca" body={tenantBody} sortable field="person.lastName"/>
-                <Column header="Mieszkanie / pokój" body={roomBody}/>
-                <Column header="Okres" body={periodBody}/>
-                <Column header="Czynsz" body={amountBody} sortable field="amount"/>
-                <Column header="Kaucja" body={depositBody}/>
-                <Column header="Status" body={statusBody} sortable field="status"/>
-                <Column header="" body={actionsBody} style={{width: 140}}/>
-            </DataTableCard>
+            <DataTableCard
+                value={contracts}
+                columns={columns}
+                rowActions={rowActions}
+                loading={loading}
+                emptyMessage="Brak kontraktów do wyświetlenia"
+            />
 
             {isDeleteDialogVisible && (
                 <DeleteContractModal

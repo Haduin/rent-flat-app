@@ -40,7 +40,11 @@ fun Application.configureModules() {
             verifier(
                 JwkProviderBuilder(URL("${config.keycloak.url}/realms/${config.keycloak.realm}/protocol/openid-connect/certs")).build(),
                 issuer = "${config.keycloak.url}/realms/${config.keycloak.realm}",
-            )
+            ) {
+                // Tolerancja różnicy zegarów między Keycloak a backendem (iat/exp/nbf).
+                // Bez niej świeżo wydany token bywa odrzucany (401), gdy zegar Keycloak się spieszy.
+                acceptLeeway(5)
+            }
             validate { credential ->
                 try {
                     val username = credential.payload.getClaim("preferred_username").asString()

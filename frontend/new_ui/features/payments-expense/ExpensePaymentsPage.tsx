@@ -1,5 +1,4 @@
 import {useState} from "react";
-import {Column} from "primereact/column";
 import {Calendar} from "primereact/calendar";
 import {Tag} from "primereact/tag";
 import {
@@ -24,7 +23,7 @@ import {dateToStringFullYearMouthDay, dateToStringWithYearMonth} from "../../../
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
 import {Card} from "../../components/ui/Card.tsx";
-import {DataTableCard} from "../../components/ui/DataTableCard.tsx";
+import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {OperationalExpenseDTO, PaymentStatus, UpdateOperationalExpenseDTO} from "../../../src/api/generated";
 import {isNotEqual} from "../../../src/utils/typeguards";
@@ -91,10 +90,10 @@ const ExpensePaymentsPage = () => {
         <Tag severity={expenseStatusSeverity(row.status)} value={EXPENSE_STATUS_LABEL[row.status] ?? row.status}/>
     );
 
-    const actionsBody = (row: OperationalExpenseDTO) => {
+    const rowActions = (row: OperationalExpenseDTO) => {
         const canConfirm = isNotEqual(PaymentStatus.Paid, row.status) && isNotEqual(PaymentStatus.Cancelled, row.status);
         return (
-            <div style={{display: "flex", gap: 6, justifyContent: "flex-end", flexWrap: "wrap"}}>
+            <>
                 {canConfirm && (
                     <Button variant="primary" size="small" onClick={() => handleConfirm(row)}>
                         Potwierdź
@@ -103,15 +102,27 @@ const ExpensePaymentsPage = () => {
                 <Button variant="secondary" size="small" icon="pi pi-eye" onClick={() => handleView(row)}/>
                 <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => handleEdit(row)}/>
                 <Button variant="danger-outline" size="small" icon="pi pi-trash" onClick={() => handleDelete(row)}/>
-            </div>
+            </>
         );
     };
+
+    const columns: DataTableColumn<OperationalExpenseDTO>[] = [
+        {header: "Mieszkanie", body: (row) => row.apartmentDetails?.name ?? "-", sortable: true, field: "apartmentDetails.name"},
+        {header: "Pokój", body: (row) => row.roomDetails?.roomName ?? "-", sortable: true, field: "roomDetails.roomName"},
+        {header: "Kategoria", body: categoryBody, sortable: true, field: "category"},
+        {header: "Kwota", body: (row) => formatCurrency(row.amount), sortable: true, field: "amount"},
+        {header: "Termin płatności", body: (row) => row.costDate ?? "-", sortable: true, field: "costDate"},
+        {header: "Data wpływu", body: (row) => row.insertDate ?? "-", sortable: true, field: "insertDate", optional: true},
+        {header: "Status", body: statusBody, sortable: true, field: "status"},
+        {header: "Nr faktury", body: (row) => row.invoiceNumber ?? "-", optional: true},
+        {header: "Opis", body: (row) => row.description ?? "-", optional: true},
+    ];
 
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 20}}>
             <PageHeader title="Koszty operacyjne" subtitle="Media, podatki, czynsz do właściciela"/>
 
-            <Card padding={20} style={{display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap"}}>
+            <Card padding={20} contentStyle={{display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap"}}>
                 <Calendar
                     value={dateSelected}
                     onChange={(event) => setDateSelected(event.value as Date)}
@@ -127,18 +138,7 @@ const ExpensePaymentsPage = () => {
                 )}
             </Card>
 
-            <DataTableCard value={expenses} loading={isLoading} emptyMessage="Brak danych">
-                <Column header="Mieszkanie" body={(row: OperationalExpenseDTO) => row.apartmentDetails?.name ?? "-"} sortable/>
-                <Column header="Pokój" body={(row: OperationalExpenseDTO) => row.roomDetails?.roomName ?? "-"} sortable/>
-                <Column header="Kategoria" body={categoryBody} sortable field="category"/>
-                <Column header="Kwota" body={(row: OperationalExpenseDTO) => formatCurrency(row.amount)} sortable field="amount"/>
-                <Column header="Termin płatności" body={(row: OperationalExpenseDTO) => row.costDate ?? "-"} sortable field="costDate"/>
-                <Column header="Data wpływu" body={(row: OperationalExpenseDTO) => row.insertDate ?? "-"} sortable field="insertDate"/>
-                <Column header="Status" body={statusBody} sortable field="status"/>
-                <Column header="Nr faktury" body={(row: OperationalExpenseDTO) => row.invoiceNumber ?? "-"}/>
-                <Column header="Opis" body={(row: OperationalExpenseDTO) => row.description ?? "-"}/>
-                <Column header="" body={actionsBody} style={{width: 220}}/>
-            </DataTableCard>
+            <DataTableCard value={expenses} columns={columns} rowActions={rowActions} loading={isLoading} emptyMessage="Brak danych"/>
 
             <ExpenseDetailsDialog isVisible={isDetailsDialogVisible} onHide={closeDialogs} selectedExpense={selectedExpense}/>
             <EditExpenseDialog
