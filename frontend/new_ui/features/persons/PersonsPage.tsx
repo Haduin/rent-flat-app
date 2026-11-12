@@ -4,8 +4,7 @@ import {IconField} from "primereact/iconfield";
 import {InputIcon} from "primereact/inputicon";
 import {Checkbox} from "primereact/checkbox";
 import usePersonTable from "../../../src/pages/person/person-table/person-table.hook.tsx";
-import AddNewPersonDialog from "../../../src/pages/person/add-new-person-dialog/add-new-person-dialog.tsx";
-import EditPersonDialog from "../../../src/pages/person/edit-person-dialog/edit-person-dialog.tsx";
+import {PersonDialog} from "./PersonDialog.tsx";
 import type {Person} from "../../../src/pages/person/person-table/person-table.types.ts";
 import type {PersonDTO} from "../../../src/api/generated";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
@@ -48,14 +47,14 @@ const PersonsPage = () => {
 
     const statusBody = (person: PersonDTO) => (
         <Badge tone={"RESIDENT" === person.status ? "success" : "neutral"}>
-            {"RESIDENT" === person.status ? "Aktualny" : person.status}
+            {"RESIDENT" === person.status ? "Aktualny" : "Bez aktywnej umowy"}
         </Badge>
     );
 
     const rowActions = (person: PersonDTO) => (
         <>
-            <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => openEditDialog(person as Person)}/>
-            <Button variant="danger-outline" size="small" icon="pi pi-trash" disabled onClick={() => handleDeletePerson(person as Person)}/>
+            <Button variant="secondary" size="small" icon="pi pi-pencil" aria-label={`Edytuj ${person.firstName} ${person.lastName}`} onClick={() => openEditDialog(person as Person)}/>
+            <Button variant="danger-outline" size="small" icon="pi pi-trash" aria-label="Usuwanie osób jest niedostępne" disabled onClick={() => handleDeletePerson(person as Person)}/>
         </>
     );
 
@@ -84,13 +83,14 @@ const PersonsPage = () => {
                     <InputText
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Szukaj po imieniu, nazwisku, dokumencie..."
+                        placeholder="Szukaj osoby lub dokumentu…"
+                        aria-label="Szukaj po imieniu, nazwisku lub numerze dokumentu"
                         style={{width: "100%"}}
                     />
                 </IconField>
                 <label style={{display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 500, cursor: "pointer"}}>
                     <Checkbox checked={showOnlyActivePeople} onChange={() => setShowOnlyActivePeople(!showOnlyActivePeople)}/>
-                    Pokaż tylko aktualnych
+                    Tylko z aktywną umową
                 </label>
             </Card>
 
@@ -99,19 +99,22 @@ const PersonsPage = () => {
                 columns={columns}
                 rowActions={rowActions}
                 loading={loading}
-                emptyMessage="Brak danych do wyświetlenia"
+                emptyMessage={search.trim() ? "Nikt nie pasuje do wyszukiwania" : "Brak osób w tym widoku"}
             />
 
-            <AddNewPersonDialog
-                visible={isNewPersonDialogVisible}
-                onSave={handleAddPerson}
-                onHide={() => setIsNewPersonDialogVisible(false)}
-            />
-            {selectedPerson && (
-                <EditPersonDialog
+            {isNewPersonDialogVisible && (
+                <PersonDialog
+                    person={null}
+                    saving={handleAddPerson.isPending}
+                    onSave={(values) => handleAddPerson.mutate(values, {onSuccess: () => setIsNewPersonDialogVisible(false)})}
+                    onHide={() => setIsNewPersonDialogVisible(false)}
+                />
+            )}
+            {selectedPerson && isEditDialogVisible && (
+                <PersonDialog
                     person={selectedPerson}
-                    visible={isEditDialogVisible}
-                    onSave={handleEditPerson}
+                    saving={handleEditPerson.isPending}
+                    onSave={(values) => handleEditPerson.mutate({...selectedPerson, ...values}, {onSuccess: () => setEditDialogVisible(false)})}
                     onHide={() => setEditDialogVisible(false)}
                 />
             )}

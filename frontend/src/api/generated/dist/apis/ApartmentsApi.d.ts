@@ -10,14 +10,55 @@
  * Do not edit the class manually.
  */
 import * as runtime from '../runtime';
-import type { ApartmentWithRooms } from '../models/index';
-export interface HelloEndpointRequest {
-    name?: string;
+import type { ApartmentResponse, ApartmentWithRooms, RoomResponse, SaveNameRequest } from '../models/index';
+export interface CreateApartmentRequest {
+    saveNameRequest?: SaveNameRequest;
+}
+export interface CreateRoomRequest {
+    id: number;
+    saveNameRequest?: SaveNameRequest;
+}
+export interface DeleteRoomRequest {
+    id: number;
+    roomId: number;
+}
+export interface RenameApartmentRequest {
+    id: number;
+    saveNameRequest?: SaveNameRequest;
+}
+export interface RenameRoomRequest {
+    id: number;
+    roomId: number;
+    saveNameRequest?: SaveNameRequest;
 }
 /**
  *
  */
 export declare class ApartmentsApi extends runtime.BaseAPI {
+    /**
+     * Create an apartment
+     */
+    createApartmentRaw(requestParameters: CreateApartmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApartmentResponse>>;
+    /**
+     * Create an apartment
+     */
+    createApartment(requestParameters?: CreateApartmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApartmentResponse>;
+    /**
+     * Add a room to an apartment
+     */
+    createRoomRaw(requestParameters: CreateRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RoomResponse>>;
+    /**
+     * Add a room to an apartment
+     */
+    createRoom(requestParameters: CreateRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RoomResponse>;
+    /**
+     * Delete a room that has no contracts, costs or cost templates
+     */
+    deleteRoomRaw(requestParameters: DeleteRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
+    /**
+     * Delete a room that has no contracts, costs or cost templates
+     */
+    deleteRoom(requestParameters: DeleteRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
     /**
      * Get all apartments with their rooms
      */
@@ -27,11 +68,19 @@ export declare class ApartmentsApi extends runtime.BaseAPI {
      */
     getAllApartments(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ApartmentWithRooms>>;
     /**
-     * A simple hello world endpoint
+     * Rename an apartment
      */
-    helloEndpointRaw(requestParameters: HelloEndpointRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>>;
+    renameApartmentRaw(requestParameters: RenameApartmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
     /**
-     * A simple hello world endpoint
+     * Rename an apartment
      */
-    helloEndpoint(requestParameters?: HelloEndpointRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string>;
+    renameApartment(requestParameters: RenameApartmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
+    /**
+     * Rename a room
+     */
+    renameRoomRaw(requestParameters: RenameRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>>;
+    /**
+     * Rename a room
+     */
+    renameRoom(requestParameters: RenameRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void>;
 }

@@ -10,6 +10,7 @@ import {ViewMode} from "../../../commons/view-mode.ts";
 import {ConfirmationDialog} from "../../../components/confirmation-dialog/confirmation-dialog.tsx";
 import {getExpenseCategoryLabel} from "../enum/expenses.enum.ts";
 
+/** @deprecated Legacy UI view, no longer routed — replaced by new_ui/features/expense-templates/ExpenseTemplatesPage.tsx. Kept only until the legacy UI is deleted; do not import. */
 export default function ExpensesTemplateView() {
 
     const [selectedExpense, setSelectedExpense] = useState<OperationalExpenseTemplateResponse | null>(null)

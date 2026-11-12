@@ -36,7 +36,7 @@ export const addExpensesTemplate = ({
             onSuccess();
         },
         onError: () => {
-            showToast('error', 'Nie udalo dodać szablonu wydatku')
+            showToast('error', 'Nie udało się dodać szablonu. Spróbuj ponownie.')
         },
     })
 }
@@ -74,8 +74,8 @@ export const removeExpensesTemplate = () => {
         mutationFn: (expenseTemplateId: number) => client.expenseTemplatesApi.deleteExpenseTemplate({expenseTemplateId}),
         onSuccess: async () => {
             await queryClient.invalidateQueries({queryKey: [EXPENSES_TEMPLATE_QUERIES.ALL_EXPENSES_TEMPLATE]});
-            showToast('success', 'Poprawnie usunięto szablon')
+            showToast('success', 'Szablon wyłączony')
         },
-        onError: () => showToast('error', 'Wystąpił błąd podczas usuwania szablonu wydatku')
+        onError: () => showToast('error', 'Nie udało się wyłączyć szablonu. Spróbuj ponownie.')
     })
 }

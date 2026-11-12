@@ -20,7 +20,7 @@ export const TextField: React.FC<TextFieldProps> = ({
 
     return (
         <div className="flex flex-col">
-            <label className="mr-2 block text-sm font-medium" htmlFor={label}>{label}</label>
+            <label className="mr-2 block text-sm font-medium" htmlFor={name}>{label}</label>
             <InputText
                 disabled={disabled}
                 id={name}

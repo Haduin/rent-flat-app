@@ -8,6 +8,22 @@ import {ConfirmPaymentDialogProps} from "./income-confirm-payment-dialog.props.t
 import {IncomeConfirmPaymentDialogSchema} from "./income-confirm-payment-dialog.schema.ts";
 import {z} from "zod";
 import {useMemo} from "react";
+import {isNullable} from "../../../../utils/typeguards";
+
+/** Today when the payment's month ("YYYY-MM") is the current one; otherwise the 1st of that month, so catching up on old months doesn't stamp today's date. */
+const defaultPaymentDate = (scopeDate?: string | null) => {
+    const today = new Date();
+    if (isNullable(scopeDate)) return today;
+    const [year, month] = scopeDate.split("-").map(Number);
+    const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
+    return isCurrentMonth ? today : new Date(year, month - 1, 1);
+};
+
+const scopeMonthLabel = (scopeDate?: string | null) => {
+    if (isNullable(scopeDate)) return "";
+    const [year, month] = scopeDate.split("-").map(Number);
+    return new Date(year, month - 1, 1).toLocaleDateString("pl-PL", {month: "long", year: "numeric"});
+};
 
 
 export const IncomeConfirmPaymentDialog = ({
@@ -18,16 +34,20 @@ export const IncomeConfirmPaymentDialog = ({
                                            }: ConfirmPaymentDialogProps) => {
 
     const defaultValues: z.infer<typeof IncomeConfirmPaymentDialogSchema> = useMemo(() => ({
-        date: new Date(),
+        date: defaultPaymentDate(selectedPayment?.scopeDate),
         payedAmount: selectedPayment?.amount ?? null,
         paymentId: selectedPayment?.id ?? null,
-    }), [selectedPayment?.amount, selectedPayment?.id])
+    }), [selectedPayment?.amount, selectedPayment?.id, selectedPayment?.scopeDate])
 
     const formik = useFormik<z.infer<typeof IncomeConfirmPaymentDialogSchema>>({
         initialValues: defaultValues,
         enableReinitialize: true,
+        validate: (values) => {
+            const amount = Number(values.payedAmount);
+            return Number.isFinite(amount) && amount > 0 ? {} : {payedAmount: "Kwota musi być liczbą większą od 0"};
+        },
         onSubmit: async (values) => {
-            onConfirm(values.date, values.paymentId!!, values.payedAmount || 0);
+            onConfirm(values.date, values.paymentId!!, Number(values.payedAmount));
         }
     })
 
@@ -36,7 +56,7 @@ export const IncomeConfirmPaymentDialog = ({
 
     return (
         <Modal isOpen={isVisible}
-               title="Potwierdz wpłatne najemcy"
+               title={`Potwierdź wpłatę za ${scopeMonthLabel(selectedPayment?.scopeDate)}`}
                onClose={onHide}
                content={
                    <form>
@@ -49,14 +69,14 @@ export const IncomeConfirmPaymentDialog = ({
                        </div>
 
                        <DateSelector formik={formik} name="date" label="Data wpłaty"/>
-                       <TextField name="payedAmount" label="Kwota" formik={formik}/>
+                       <TextField name="payedAmount" label="Kwota" inputType="number" formik={formik}/>
 
                    </form>
                }
                footer={
                    <ModalFooter
                        cancelLabel="Anuluj"
-                       confirmLabel="Potwierdz wpłatne"
+                       confirmLabel="Potwierdź wpłatę"
                        onConfirm={formik.handleSubmit}
                        onCancel={onHide}
                    />

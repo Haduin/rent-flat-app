@@ -6,7 +6,9 @@
 */
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap');
 
-.kwatera-a {
+/* dialogs portal to <body>, outside .kwatera-a: give them the tokens too */
+.kwatera-a,
+body[data-ku-theme='a'] .p-dialog {
     --ku-bg: oklch(98.3% 0.004 90);
     --ku-surface: #ffffff;
     --ku-border: oklch(93% 0.006 90);
@@ -14,7 +16,7 @@
 
     --ku-text: oklch(22% 0.012 260);
     --ku-text-secondary: oklch(50% 0.01 260);
-    --ku-text-muted: oklch(60% 0.008 260);
+    --ku-text-muted: oklch(55% 0.008 260);
 
     --ku-accent: oklch(55% 0.16 260);
     --ku-accent-hover: oklch(46% 0.16 260);
@@ -48,10 +50,13 @@
     font-family: var(--ku-font-body);
     color: var(--ku-text);
     background: var(--ku-bg);
+    /* unitless, so it scales with each element's font-size instead of inheriting src/index.css's fixed 24px */
+    line-height: 1.5;
 }
 
 .kwatera-a h1, .kwatera-a h2, .kwatera-a h3, .kwatera-a h4 {
     font-family: var(--ku-font-display);
+    line-height: 1.2;
     margin: 0;
 }
 
@@ -101,6 +106,11 @@ body[data-ku-theme='a'] .p-button {
     padding: 9px 16px;
 }
 
+/* Text passed as children (not `label`) gets no icon margin from PrimeReact; gap spaces icon and text. */
+body[data-ku-theme='a'] .p-button:not(:has(> .p-button-label)) {
+    gap: 0.5rem;
+}
+
 body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary) {
     background: oklch(55% 0.16 260);
     border-color: oklch(55% 0.16 260);
@@ -121,9 +131,30 @@ body[data-ku-theme='a'] .p-button.p-button-secondary:not(:disabled):hover {
     background: oklch(97% 0.004 90);
 }
 
+/* Ghost (text) buttons: Ledger Blue, not the base theme's indigo */
+body[data-ku-theme='a'] .p-button.p-button-text:not(.p-button-danger):not(.p-button-secondary) {
+    color: oklch(55% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-text:not(.p-button-danger):not(.p-button-secondary):not(:disabled):hover {
+    background: oklch(97% 0.02 260);
+}
+
 body[data-ku-theme='a'] .p-button.p-button-outlined:not(.p-button-danger) {
     color: oklch(55% 0.16 260);
     border-color: oklch(90% 0.02 260);
+}
+
+/* Solid danger (Zakończ umowę, Usuń...): the theme's red, toned to the palette */
+body[data-ku-theme='a'] .p-button.p-button-danger:not(.p-button-text):not(.p-button-outlined) {
+    background: oklch(48% 0.16 25);
+    border-color: oklch(48% 0.16 25);
+    color: #ffffff;
+}
+
+body[data-ku-theme='a'] .p-button.p-button-danger:not(.p-button-text):not(.p-button-outlined):not(:disabled):hover {
+    background: oklch(41% 0.16 25);
+    border-color: oklch(41% 0.16 25);
 }
 
 body[data-ku-theme='a'] .p-button.p-button-rounded {
@@ -170,6 +201,9 @@ body[data-ku-theme='a'] .p-tag {
     font-weight: 600;
     border-radius: 999px;
     padding: 4px 10px;
+    /* a status pill never breaks mid-word; the text beside it wraps instead */
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 body[data-ku-theme='a'] .p-tag.p-tag-success {
@@ -194,7 +228,7 @@ body[data-ku-theme='a'] .p-tag.ku-tag-ended {
 
 body[data-ku-theme='a'] .p-tag.p-tag-info {
     background: oklch(95% 0.03 260);
-    color: oklch(55% 0.16 260);
+    color: oklch(46% 0.16 260);
 }
 
 body[data-ku-theme='a'] .p-tag.p-tag-secondary {
@@ -207,6 +241,8 @@ body[data-ku-theme='a'] .p-card {
     border-radius: 12px;
     border: 1px solid oklch(93% 0.006 90);
     box-shadow: none;
+    /* the base theme paints card text gray-600; cards carry ink like the page */
+    color: oklch(22% 0.012 260);
 }
 
 body[data-ku-theme='a'] .p-card .p-card-title {
@@ -297,10 +333,57 @@ body[data-ku-theme='a'] .p-dialog .p-dialog-header {
     font-family: 'Sora', sans-serif;
 }
 
-/* Checkbox */
-body[data-ku-theme='a'] .p-checkbox .p-checkbox-box.p-highlight {
+/* ConfirmDialog without an icon: drop the icon gutter so the message lines up with the header */
+body[data-ku-theme='a'] .p-confirm-dialog .p-confirm-dialog-message:first-child {
+    margin-left: 0;
+}
+
+/* Checkbox - PrimeReact 10 puts .p-highlight on the root, not on the box */
+body[data-ku-theme='a'] .p-checkbox.p-highlight .p-checkbox-box {
     background: oklch(55% 0.16 260);
     border-color: oklch(55% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-checkbox:not(.p-disabled):has(.p-checkbox-input:hover) .p-checkbox-box,
+body[data-ku-theme='a'] .p-checkbox:not(.p-disabled):has(.p-checkbox-input:focus-visible) .p-checkbox-box {
+    border-color: oklch(55% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-checkbox:not(.p-disabled):has(.p-checkbox-input:hover).p-highlight .p-checkbox-box {
+    background: oklch(46% 0.16 260);
+    border-color: oklch(46% 0.16 260);
+}
+
+/* Focus ring: one Ledger Blue treatment for every non-text control (text inputs keep
+   the border + soft halo above). Selectors mirror the lara theme's own focus rules;
+   semantic button variants (danger, secondary...) keep their theme rings. */
+body[data-ku-theme='a'] .p-button:focus,
+body[data-ku-theme='a'] .p-link:focus-visible,
+body[data-ku-theme='a'] .p-dialog .p-dialog-header .p-dialog-header-icon:focus-visible,
+body[data-ku-theme='a'] .p-checkbox:not(.p-disabled):has(.p-checkbox-input:focus-visible) .p-checkbox-box,
+body[data-ku-theme='a'] .p-datepicker .p-datepicker-header .p-datepicker-prev:focus-visible,
+body[data-ku-theme='a'] .p-datepicker .p-datepicker-header .p-datepicker-next:focus-visible,
+body[data-ku-theme='a'] .p-datepicker table td > span:focus,
+body[data-ku-theme='a'] .p-datepicker:not(.p-disabled) table td span:not(.p-highlight):not(.p-disabled):focus,
+body[data-ku-theme='a'] .p-datepicker:not(.p-disabled) .p-monthpicker .p-monthpicker-month:not(.p-disabled):focus {
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px oklch(55% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-calendar:not(.p-calendar-disabled).p-focus > .p-inputtext {
+    border-color: oklch(55% 0.16 260);
+    box-shadow: 0 0 0 1px oklch(55% 0.16 260 / 0.3);
+}
+
+/* Selected option in overlays (Dropdown panel, Calendar day/month) */
+body[data-ku-theme='a'] .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight,
+body[data-ku-theme='a'] .p-datepicker table td > span.p-highlight,
+body[data-ku-theme='a'] .p-datepicker .p-monthpicker .p-monthpicker-month.p-highlight {
+    background: oklch(95% 0.03 260);
+    color: oklch(46% 0.16 260);
+}
+
+body[data-ku-theme='a'] .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight.p-focus {
+    background: oklch(91% 0.05 260);
 }
 
 /* Menubar (top nav) */
@@ -326,6 +409,264 @@ body[data-ku-theme='a'] .p-menubar .p-menuitem-link.ku-nav-active {
     background: oklch(95% 0.03 260);
     color: oklch(46% 0.16 260);
     font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------- *
+ * App shell: header (logo + desktop nav + month chip + logout), content, and the bottom
+ * tab bar that replaces the Menubar nav at ≤1024px (Menubar `breakpoint`).
+ * ---------------------------------------------------------------------- */
+
+body[data-ku-theme='a'] .p-menubar.ku-shell-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    min-height: 72px;
+    border-radius: 0;
+    border-width: 0 0 1px;
+}
+
+.kwatera-a .ku-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 28px;
+    border-radius: var(--ku-radius-sm);
+    color: var(--ku-text);
+}
+
+.kwatera-a .ku-brand:hover {
+    color: var(--ku-text);
+}
+
+.ku-brand-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--ku-radius-sm);
+    background: var(--ku-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ku-brand-name {
+    font-family: var(--ku-font-display);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+}
+
+.ku-shell-end {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* Month chip: the shared month Wpłaty and Koszty show (CurrentMonth context). */
+.ku-month-chip {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--ku-border-strong);
+    border-radius: var(--ku-radius-sm);
+    background: var(--ku-surface);
+}
+
+.kwatera-a .ku-month-chip-step {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--ku-radius-sm);
+    background: none;
+    color: var(--ku-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.kwatera-a .ku-month-chip-step:hover {
+    background: var(--ku-bg);
+    color: var(--ku-text);
+}
+
+/* the label is the button that opens the month picker (OverlayPanel) */
+.kwatera-a .ku-month-chip-label {
+    min-width: 8.5rem;
+    height: 36px;
+    padding: 0 4px;
+    border: none;
+    border-radius: var(--ku-radius-sm);
+    background: none;
+    text-align: center;
+    font: 600 13.5px var(--ku-font-body);
+    color: var(--ku-text);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.kwatera-a .ku-month-chip-label:hover {
+    background: var(--ku-bg);
+}
+
+.ku-shell-header a:focus-visible,
+.ku-shell-header button:focus-visible,
+.ku-bottom-nav :focus-visible,
+.ku-more-sheet :focus-visible {
+    outline: 2px solid var(--ku-accent);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+.ku-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    /* nav moves to the bottom bar, so the header no longer needs to follow the scroll */
+    body[data-ku-theme='a'] .p-menubar.ku-shell-header {
+        position: static;
+        min-height: 60px;
+    }
+
+    body[data-ku-theme='a'] .ku-shell-header .p-menubar-button,
+    body[data-ku-theme='a'] .ku-shell-header .p-menubar-root-list {
+        display: none;
+    }
+
+    body[data-ku-theme='a'] .ku-shell-header .p-menubar-end {
+        margin-left: auto;
+    }
+
+    body[data-ku-theme='a'] .ku-shell-header .ku-shell-logout {
+        display: none;
+    }
+
+    .kwatera-a .ku-month-chip-step {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+
+    .kwatera-a .ku-month-chip-label {
+        height: 2.75rem;
+    }
+
+    .ku-bottom-nav {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 2px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 20;
+        padding: 6px 6px max(6px, env(safe-area-inset-bottom));
+        background: var(--ku-surface);
+        border-top: 1px solid var(--ku-border);
+    }
+
+    /* the content's last row must clear the fixed bar */
+    .kwatera-a .ku-shell-content {
+        padding-bottom: calc(40px + 64px + env(safe-area-inset-bottom));
+    }
+}
+
+/* small phones: logo tile alone, so brand + month chip fit at 360px */
+@media (max-width: 520px) {
+    .kwatera-a .ku-brand {
+        margin-right: 12px;
+    }
+
+    .ku-brand-name {
+        display: none;
+    }
+}
+
+/* mid desktops: brand + 7 nav items + month chip + logout need ~1210px at full size, so
+   tighten the header until 1440px instead of letting the nav wrap to a second row */
+@media (min-width: 1025px) and (max-width: 1439px) {
+    body[data-ku-theme='a'] .p-menubar.ku-shell-header {
+        padding: 0 24px;
+    }
+
+    .kwatera-a .ku-brand {
+        margin-right: 16px;
+    }
+
+    .ku-brand-name {
+        display: none;
+    }
+
+    body[data-ku-theme='a'] .ku-shell-header .p-menubar-root-list .p-menuitem-link {
+        padding: 8px 10px;
+    }
+}
+
+.kwatera-a .ku-bottom-nav-item {
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 2px;
+    border: none;
+    border-radius: var(--ku-radius-sm);
+    background: none;
+    color: var(--ku-text-secondary);
+    font: 500 11.5px var(--ku-font-body);
+    overflow-wrap: normal;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.kwatera-a .ku-bottom-nav-item.ku-nav-active {
+    background: var(--ku-accent-soft);
+    color: var(--ku-accent-hover);
+    font-weight: 600;
+}
+
+/* "Więcej" sheet (PrimeReact Sidebar, appendTo="self" so it stays inside .kwatera-a) */
+body[data-ku-theme='a'] .ku-more-sheet.p-sidebar {
+    height: auto;
+    border-radius: var(--ku-radius-lg) var(--ku-radius-lg) 0 0;
+    box-shadow: none;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.ku-more-sheet-title {
+    font-family: var(--ku-font-display);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.kwatera-a .ku-sheet-link {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    border-radius: var(--ku-radius-sm);
+    color: var(--ku-text);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.kwatera-a .ku-sheet-link.ku-nav-active {
+    background: var(--ku-accent-soft);
+    color: var(--ku-accent-hover);
+    font-weight: 600;
+}
+
+.kwatera-a .ku-sheet-logout {
+    width: 100%;
+    margin-top: 8px;
+    border: none;
+    border-top: 1px solid var(--ku-border);
+    border-radius: 0;
+    background: none;
+    font-family: var(--ku-font-body);
+    cursor: pointer;
 }
 
 /* ---------------------------------------------------------------------- *
@@ -369,6 +710,100 @@ body[data-ku-theme='a'] .p-menubar .p-menuitem-link.ku-nav-active {
     max-width: 320px;
 }
 
+/* KPI tiles (StatTile). Three fixed layouts so an amount never wraps
+   ("3100,00 / zł") and the headline (dark) tile is never orphaned on a row:
+   >=1440px one row of five; 861-1439px three columns with the dark tile
+   first, spanning both rows; <=860px a compact ledger, one line per figure,
+   label + caption left, amount right, dark tile first. */
+.ku-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.ku-stat-tile .p-card-body,
+.ku-stat-tile .p-card-content {
+    height: 100%;
+}
+
+.ku-stat-tile .p-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ku-stat-value {
+    font-size: 28px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+@media (min-width: 861px) and (max-width: 1439px) {
+    .ku-stat-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ku-stat-grid .ku-stat-tile-dark {
+        order: -1;
+        grid-row: span 2;
+    }
+
+    /* label at the top, figure + caption anchored to the bottom of the tall tile */
+    .ku-stat-grid .ku-stat-tile-dark .p-card-content > :first-child {
+        margin-bottom: auto;
+    }
+
+    /* grows with the column so a six-digit amount still fits at 861px */
+    .ku-stat-grid .ku-stat-tile-dark .ku-stat-value {
+        font-size: clamp(28px, 3vw, 36px);
+    }
+}
+
+@media (max-width: 860px) {
+    .ku-stat-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .ku-stat-grid .ku-stat-tile-dark {
+        order: -1;
+    }
+
+    .ku-stat-grid .ku-stat-tile .p-card-content {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: auto auto;
+        column-gap: 12px;
+        row-gap: 2px;
+        align-items: center;
+        /* overrides Card's inline content padding */
+        padding: 14px 16px !important;
+    }
+
+    .ku-stat-grid .ku-stat-tile .p-card-content > :nth-child(2) {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        text-align: right;
+    }
+
+    .ku-stat-grid .ku-stat-tile .p-card-content > :nth-child(3) {
+        grid-column: 1;
+    }
+
+    .ku-stat-grid .ku-stat-value {
+        font-size: 18px;
+    }
+
+    .ku-stat-grid .ku-stat-tile-dark .ku-stat-value {
+        font-size: 24px;
+    }
+
+    /* overrides the icon chip's inline display:flex */
+    .ku-stat-grid .ku-stat-icon {
+        display: none !important;
+    }
+}
+
 @media (max-width: 520px) {
     .ku-search-input {
         max-width: none;
@@ -386,6 +821,7 @@ body[data-ku-theme='a'] .p-menubar .p-menuitem-link.ku-nav-active {
         padding-left: 8px;
         padding-right: 8px;
         min-height: 2.75rem;
+        overflow-wrap: normal;
     }
 }
 
@@ -479,4 +915,338 @@ body[data-ku-theme='a'] .p-datatable .ku-col-actions {
     body[data-ku-theme='a'] .p-datatable .ku-col-optional {
         display: none;
     }
+}
+
+/* ---------------------------------------------------------------------- *
+ * Month picker: the header chip's OverlayPanel (portaled under <body>, so the
+ * rules use body[data-ku-theme='a'] and literal token values). Selected month and
+ * focus ring come from the Calendar overrides above.
+ * ---------------------------------------------------------------------- */
+/* the inline datepicker shrink-wraps on its own, so the panel sets the width (three months per row) */
+body[data-ku-theme='a'] .ku-month-picker.p-overlaypanel {
+    width: min(17rem, calc(100vw - 32px));
+    border: 1px solid oklch(90% 0.006 90);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px oklch(22% 0.012 260 / 0.12);
+}
+
+body[data-ku-theme='a'] .ku-month-picker .p-overlaypanel-content {
+    padding: 8px;
+}
+
+body[data-ku-theme='a'] .ku-month-picker .p-calendar {
+    width: 100%;
+}
+
+body[data-ku-theme='a'] .ku-month-picker .p-datepicker-inline {
+    width: 100%;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+body[data-ku-theme='a'] .ku-month-picker .ku-month-picker-today {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+@media (max-width: 1024px) {
+    body[data-ku-theme='a'] .ku-month-picker .p-datepicker-header .p-datepicker-prev,
+    body[data-ku-theme='a'] .ku-month-picker .p-datepicker-header .p-datepicker-next {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+
+    body[data-ku-theme='a'] .ku-month-picker .p-monthpicker-month,
+    body[data-ku-theme='a'] .ku-month-picker .ku-month-picker-today {
+        min-height: 2.75rem;
+    }
+}
+
+/* Dialog footers (all dialogs, incl. legacy ones): 44px touch targets on phone/tablet */
+@media (max-width: 1024px) {
+    body[data-ku-theme='a'] .p-dialog .p-dialog-footer .p-button {
+        min-height: 2.75rem;
+    }
+}
+
+/* Month settlement summary (Wpłaty / Koszty) */
+.kwatera-a .ku-settlement-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kwatera-a .ku-settlement-label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ku-text-secondary);
+}
+
+.kwatera-a .ku-settlement-value {
+    font: 700 20px var(--ku-font-display);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--ku-text);
+}
+
+.kwatera-a .ku-settlement-of {
+    font: 500 13px var(--ku-font-body);
+    color: var(--ku-text-secondary);
+}
+
+/* Whole-tile links (dashboard figures and apartment cards that open the list behind them) */
+.kwatera-a .ku-tile-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--ku-radius-md);
+}
+
+.kwatera-a .ku-tile-link > .p-card {
+    height: 100%;
+    transition: border-color 120ms ease-out;
+}
+
+.kwatera-a .ku-tile-link:hover > .p-card {
+    border-color: var(--ku-border-strong) !important;
+}
+
+.kwatera-a .ku-tile-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px oklch(55% 0.16 260);
+}
+
+/* A selectable card (Mieszkania list): the whole card is one real button */
+.kwatera-a .ku-select-card {
+    all: unset;
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    padding: 18px;
+    cursor: pointer;
+    border-radius: var(--ku-radius-md);
+    color: inherit;
+    font: inherit;
+}
+
+.kwatera-a .ku-select-card:focus-visible {
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px oklch(55% 0.16 260);
+}
+
+/* Form dialogs (new_ui/components/form) */
+body[data-ku-theme='a'] .p-dialog .p-dialog-header .p-dialog-title {
+    font-size: 1.05rem;
+    line-height: 1.35;
+    overflow-wrap: break-word;
+}
+
+body[data-ku-theme='a'] .p-confirm-dialog {
+    width: 28rem;
+    max-width: calc(100vw - 32px);
+}
+
+.ku-form-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+body[data-ku-theme='a'] .p-dialog .p-dialog-footer .ku-form-dialog-footer .p-button {
+    margin: 0;
+}
+
+.ku-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ku-form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.ku-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.ku-field-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ku-text);
+}
+
+.ku-field > .p-inputtext,
+.ku-field > .p-inputnumber,
+.ku-field > .p-calendar,
+.ku-field > .p-dropdown,
+.ku-field > .p-inputtextarea {
+    width: 100%;
+}
+
+.ku-field .p-inputnumber-input,
+.ku-field .p-calendar .p-inputtext {
+    width: 100%;
+    min-width: 0;
+}
+
+.ku-field-hint,
+.ku-form-note {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--ku-text-secondary);
+    margin: 0;
+}
+
+.ku-field-error {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--ku-danger);
+}
+
+.ku-field-checkbox {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    min-height: 2.75rem;
+}
+
+.ku-field-checkbox > label {
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.ku-field-checkbox > .ku-field-hint {
+    flex-basis: 100%;
+}
+
+.ku-field .p-selectbutton {
+    display: flex;
+}
+
+.ku-field .p-selectbutton .p-button {
+    flex: 1 1 0;
+    justify-content: center;
+}
+
+/* Label / value facts (details dialogs, "what you're acting on" summaries) */
+.ku-detail-list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.ku-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--ku-border);
+}
+
+.ku-detail-row:last-child {
+    border-bottom: 0;
+}
+
+.ku-detail-row > dt {
+    color: var(--ku-text-secondary);
+    font-size: 13.5px;
+    flex-shrink: 0;
+}
+
+.ku-detail-row > dd {
+    margin: 0;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ku-text);
+    overflow-wrap: break-word;
+    min-width: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.ku-detail-list-compact {
+    background: var(--ku-bg);
+    border: 1px solid var(--ku-border);
+    border-radius: 10px;
+    padding: 2px 14px;
+}
+
+.ku-detail-list-compact .ku-detail-row {
+    padding: 8px 0;
+}
+
+/* Contract history timeline */
+.ku-history .p-timeline-event-opposite {
+    display: none;
+}
+
+.ku-history-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 0.75rem;
+}
+
+.ku-history-entry {
+    padding-bottom: 16px;
+}
+
+.ku-history-title {
+    font-weight: 600;
+    color: var(--ku-text);
+}
+
+.ku-history-time {
+    font-size: 12.5px;
+    color: var(--ku-text-secondary);
+    margin-top: 2px;
+}
+
+.ku-history-diffs {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+.ku-history-diffs s {
+    color: var(--ku-text-muted);
+}
+
+@media (max-width: 520px) {
+    .ku-form-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    body[data-ku-theme='a'] .p-dialog .p-dialog-header .p-dialog-header-icon {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+
+    .ku-field .p-inputtext,
+    .ku-field .p-dropdown {
+        min-height: 2.75rem;
+    }
+}
+
+body[data-ku-theme='a'] .ku-field .p-invalid,
+body[data-ku-theme='a'] .ku-field .p-invalid .p-inputtext,
+body[data-ku-theme='a'] .ku-field .p-inputtext[aria-invalid='true'] {
+    border-color: var(--ku-danger);
 }

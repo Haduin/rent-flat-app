@@ -1,39 +1,30 @@
-import {Calendar} from "primereact/calendar";
+import {useEffect} from "react";
 import {usePaymentsView} from "../../../src/pages/payments/income/income-payments-view/income-payments-view.hook.ts";
-import {IncomeEditPaymentDialog} from "../../../src/pages/payments/income/income-edit-payment-dialog/income-edit-payment-dialog.tsx";
-import {IncomeConfirmPaymentDialog} from "../../../src/pages/payments/income/income-confirm-payment-dialog/income-confirm-payment-dialog.tsx";
-import {IncomeSplitPaymentDialog} from "../../../src/pages/payments/income/income-split-payment-dialog/income-split-payment-dialog.tsx";
-import {dateToStringWithYearMonth} from "../../../src/components/commons/dateFormatter.ts";
+import {ConfirmIncomeDialog, EditIncomeDialog, SplitIncomeDialog} from "./IncomePaymentDialogs.tsx";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {Card} from "../../components/ui/Card.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
-import {Badge, BadgeTone} from "../../components/ui/Badge.tsx";
+import {Badge} from "../../components/ui/Badge.tsx";
+import {PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE} from "../../components/ui/payment-status.ts";
 import {Button} from "../../components/ui/Button.tsx";
+import {MonthSettlementSummary} from "../../components/ui/MonthSettlementSummary.tsx";
+import {formatDatePl} from "../../utils/date.ts";
 import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../src/api/generated";
 import {isNotEqual} from "../../../src/utils/typeguards";
+import {formatMonthLabel, useCurrentMonth} from "../../components/layout/CurrentMonth.ts";
 
-const STATUS_LABEL: Record<string, string> = {
-    [PaymentStatus.Pending]: "Oczekuje",
-    [PaymentStatus.Paid]: "Opłacone",
-    [PaymentStatus.Late]: "Zaległe",
-    [PaymentStatus.Cancelled]: "Anulowane",
-    [PaymentStatus.PartiallyPaid]: "Częściowo",
-};
-
-const STATUS_TONE: Record<string, BadgeTone> = {
-    [PaymentStatus.Pending]: "neutral",
-    [PaymentStatus.Paid]: "success",
-    [PaymentStatus.Late]: "danger",
-    [PaymentStatus.Cancelled]: "neutral",
-    [PaymentStatus.PartiallyPaid]: "warning",
-};
+const STATUS_URGENCY: PaymentStatus[] = [
+    PaymentStatus.Late,
+    PaymentStatus.PartiallyPaid,
+    PaymentStatus.Pending,
+    PaymentStatus.Paid,
+    PaymentStatus.Cancelled,
+];
 
 const IncomePaymentsPage = () => {
     const {
         payments,
         loading,
-        dateSelected,
         selectedPayment,
         isConfirmationDialogVisible,
         handleDateSelectAndFetchPayments,
@@ -50,6 +41,15 @@ const IncomePaymentsPage = () => {
         closeEditDialog,
         handleEditPayment,
     } = usePaymentsView();
+    const {month} = useCurrentMonth();
+
+    // usePaymentsView (shared with the legacy UI) owns its month state; mirror the shell's month into it.
+    useEffect(() => handleDateSelectAndFetchPayments(month), [month, handleDateSelectAndFetchPayments]);
+
+    // who still owes comes first: late, partial, pending, then paid and cancelled
+    const sortedPayments = [...(payments ?? [])].sort(
+        (a, b) => STATUS_URGENCY.indexOf(a.status) - STATUS_URGENCY.indexOf(b.status)
+    );
 
     const payerBody = (payment: PaymentHistoryWithPersonDTO) => (
         <span style={{fontWeight: 600}}>
@@ -70,7 +70,7 @@ const IncomePaymentsPage = () => {
     );
 
     const statusBody = (payment: PaymentHistoryWithPersonDTO) => (
-        <Badge tone={STATUS_TONE[payment.status] ?? "neutral"}>{STATUS_LABEL[payment.status] ?? payment.status}</Badge>
+        <Badge tone={PAYMENT_STATUS_TONE[payment.status]}>{PAYMENT_STATUS_LABEL[payment.status]}</Badge>
     );
 
     const rowActions = (payment: PaymentHistoryWithPersonDTO) => {
@@ -95,56 +95,45 @@ const IncomePaymentsPage = () => {
         {header: "Płatnik", body: payerBody},
         {header: "Mieszkanie", body: (row) => row.room?.apartment},
         {header: "Kwota", body: amountBody},
-        {header: "Data", body: (row) => row.payedDate ?? "—"},
+        {header: "Data wpłaty", body: (row) => formatDatePl(row.payedDate)},
         {header: "Status", body: statusBody},
     ];
 
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader title="Wpłaty najemców" subtitle="Historia i rozliczanie czynszu"/>
-
-            <Card padding={20} contentStyle={{display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap"}}>
-                <Calendar
-                    value={dateSelected}
-                    onChange={(event) => handleDateSelectAndFetchPayments(event.value as Date)}
-                    view="month"
-                    locale="pl"
-                    dateFormat="yy-mm"
-                    placeholder="Wybierz miesiąc"
-                />
-                {dateSelected && (
-                    <Button variant="primary" onClick={() => handleGenerateNewMonthPayments.mutate()}>
-                        Wygeneruj płatności za {dateToStringWithYearMonth(dateSelected)}
+            <PageHeader
+                title="Wpłaty najemców"
+                subtitle="Historia i rozliczanie czynszu"
+                actions={
+                    <Button
+                        variant={(payments?.length ?? 0) > 0 ? "secondary" : "primary"}
+                        loading={handleGenerateNewMonthPayments.isPending}
+                        onClick={() => handleGenerateNewMonthPayments.mutate()}
+                    >
+                        Wygeneruj płatności za {formatMonthLabel(month)}
                     </Button>
-                )}
-            </Card>
+                }
+            />
+
+            <MonthSettlementSummary items={payments ?? []} settledLabel="Wpłacono" outstandingLabel="Do zebrania"/>
 
             <DataTableCard
-                value={payments ?? []}
+                value={sortedPayments}
                 columns={columns}
                 rowActions={rowActions}
                 loading={loading}
-                emptyMessage="Wybierz miesiąc, aby zobaczyć płatności"
+                emptyMessage="Brak płatności w tym miesiącu"
             />
 
-            <IncomeConfirmPaymentDialog
-                isVisible={isConfirmationDialogVisible}
-                onHide={closeConfirmationDialog}
-                onConfirm={handleConfirmPayment}
-                selectedPayment={selectedPayment}
-            />
-            <IncomeSplitPaymentDialog
-                isVisible={isSplitDialogVisible}
-                onHide={closeSplitDialog}
-                onConfirm={handleSplitPayment}
-                selectedPayment={selectedPayment}
-            />
-            <IncomeEditPaymentDialog
-                onHide={closeEditDialog}
-                selectedPayment={selectedPayment}
-                isVisible={isEditPaymentVisible}
-                onConfirm={handleEditPayment}
-            />
+            {selectedPayment && isConfirmationDialogVisible && (
+                <ConfirmIncomeDialog payment={selectedPayment} onConfirm={handleConfirmPayment} onHide={closeConfirmationDialog}/>
+            )}
+            {selectedPayment && isSplitDialogVisible && (
+                <SplitIncomeDialog payment={selectedPayment} onConfirm={handleSplitPayment} onHide={closeSplitDialog}/>
+            )}
+            {selectedPayment && isEditPaymentVisible && (
+                <EditIncomeDialog payment={selectedPayment} onConfirm={handleEditPayment} onHide={closeEditDialog}/>
+            )}
         </div>
     );
 };

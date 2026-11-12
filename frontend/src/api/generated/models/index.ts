@@ -28,6 +28,7 @@ export * from './PersonSmallDetailsDTO';
 export * from './RoomDetails';
 export * from './RoomResponse';
 export * from './RoomWithApartmentDTO';
+export * from './SaveNameRequest';
 export * from './SortOrder';
 export * from './UpdateContractDetails';
 export * from './UpdateExpenseTemplate';

@@ -5,6 +5,7 @@ import {ProgressSpinner} from "primereact/progressspinner";
 import {Link} from "react-router";
 import {client} from "../../api/client";
 
+/** @deprecated Legacy UI view, no longer routed — replaced by new_ui/features/apartments/ApartmentsPage.tsx. Kept only until the legacy UI is deleted; do not import. */
 const ApartmentsPage = () => {
 
     const {data, isLoading} = useQuery({

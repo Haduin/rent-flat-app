@@ -15,6 +15,7 @@ interface MenuItem {
     command?: (e: MenuItemCommandEvent) => void;
 }
 
+/** @deprecated Legacy UI view, no longer routed — replaced by new_ui/features/../components/layout/AppShell.tsx. Kept only until the legacy UI is deleted; do not import. */
 const NavigationComponent = () => {
     const {logout} = useOidc({assert: "user logged in"});
     const items: MenuItem[] = [

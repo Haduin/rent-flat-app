@@ -3,6 +3,8 @@ import {DataTable} from "primereact/datatable";
 import {Column} from "primereact/column";
 import {Card} from "./Card.tsx";
 
+const PAGE_SIZE = 10;
+
 export interface DataTableColumn<T> {
     header: string;
     /** Row property shown as-is when there is no `body`; also the sort key (dot paths like "person.lastName" work). */
@@ -35,8 +37,9 @@ export const DataTableCard = <T, >({value, columns, rowActions, loading, emptyMe
             // wrapper stays generic over T for callers, so the cast is contained to this one spot.
             value={value as Record<string, unknown>[] | undefined}
             loading={loading}
-            paginator
-            rows={10}
+            // a pager for one page of rows is just noise
+            paginator={(value?.length ?? 0) > PAGE_SIZE}
+            rows={PAGE_SIZE}
             rowsPerPageOptions={[10, 20, 50]}
             stripedRows
             responsiveLayout="stack"

@@ -4,17 +4,15 @@ import {IconField} from "primereact/iconfield";
 import {InputIcon} from "primereact/inputicon";
 import {SelectButton} from "primereact/selectbutton";
 import {ContractStatusFilter, useContractsView} from "../../../src/pages/contracts/contract-view/contracts-view.hook.tsx";
-import AddContractView from "../../../src/pages/contracts/add-contract-view/add-contract-view.tsx";
-import {DeleteContractModal} from "../../../src/pages/contracts/delete-contract-modal/delete-contract-modal.tsx";
-import {UpdateContractModal} from "../../../src/pages/contracts/update-contract-modal/update-contract-modal.tsx";
-import ContractDetailsModal from "../../../src/pages/contracts/contract-details/contract-details-modal.tsx";
-import ContractHistoryDialog from "../../../src/pages/contracts/contract-history/contract-history-dialog.tsx";
+import {AddContractDialog, ContractDetailsDialog, ContractHistoryDialog, EditContractDialog, TerminateContractDialog} from "./ContractDialogs.tsx";
+import {contractStatus} from "./contract-status.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {PageHeader} from "../../components/ui/PageHeader.tsx";
 import {Card} from "../../components/ui/Card.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
+import {formatDatePl} from "../../utils/date.ts";
 import {IconPlus} from "../../components/ui/icons.tsx";
 import type {ContractDTO} from "../../../src/api/generated";
 import {isNotEqual} from "../../../src/utils/typeguards";
@@ -62,11 +60,17 @@ const ContractsPage = () => {
     const [search, setSearch] = useState("");
 
     const contracts = useMemo(() => {
-        const list = showContracts() ?? [];
-        if (!search.trim()) return list;
+        // most urgent first (past end date, ending soon), then by end date
+        const list = [...(showContracts() ?? [])].sort((a, b) =>
+            contractStatus(a).urgency - contractStatus(b).urgency || (a.endDate ?? "").localeCompare(b.endDate ?? "")
+        );
         const needle = search.trim().toLowerCase();
+        if (!needle) return list;
         return list.filter((contract: ContractDTO) =>
-            `${contract.person?.firstName ?? ""} ${contract.person?.lastName ?? ""}`.toLowerCase().includes(needle)
+            [contract.person?.firstName, contract.person?.lastName, contract.room?.apartment, contract.room?.number]
+                .join(" ")
+                .toLowerCase()
+                .includes(needle)
         );
     }, [showContracts, search]);
 
@@ -81,28 +85,25 @@ const ContractsPage = () => {
     const periodBody = (contract: ContractDTO) => (
         <div style={{display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap"}}>
             <span>
-                {contract.startDate} – {contract.terminationDate ? (
+                {formatDatePl(contract.startDate)} – {contract.terminationDate ? (
                     <>
-                        <span style={{textDecoration: "line-through"}}>{contract.endDate}</span>{" "}
-                        <span style={{color: "var(--ku-danger)"}}>{contract.terminationDate}</span>
+                        <span style={{textDecoration: "line-through", color: "var(--ku-text-muted)"}}>{formatDatePl(contract.endDate)}</span>{" "}
+                        <span>zakończona {formatDatePl(contract.terminationDate)}</span>
                     </>
                 ) : (
-                    contract.endDate
+                    formatDatePl(contract.endDate)
                 )}
             </span>
-            {contract.alreadyExpired && <Badge tone="danger">Już się skończył</Badge>}
-            {contract.expiringSoon && <Badge tone="warning">Kończy się wkrótce</Badge>}
         </div>
     );
 
     const amountBody = (contract: ContractDTO) => (contract.amount != null ? formatCurrency(contract.amount) : "—");
     const depositBody = (contract: ContractDTO) => (contract.deposit != null ? formatCurrency(contract.deposit) : "—");
 
-    const statusBody = (contract: ContractDTO) => (
-        <Badge tone={"ACTIVE" === contract.status ? "success" : "ended"}>
-            {"ACTIVE" === contract.status ? "Aktywna" : "Zakończona"}
-        </Badge>
-    );
+    const statusBody = (contract: ContractDTO) => {
+        const {label, tone} = contractStatus(contract);
+        return <Badge tone={tone}>{label}</Badge>;
+    };
 
     const rowActions = (contract: ContractDTO) => (
         <>
@@ -111,6 +112,7 @@ const ContractsPage = () => {
                 size="small"
                 icon="pi pi-eye"
                 tooltip="Szczegóły"
+                aria-label="Szczegóły"
                 tooltipOptions={{position: "top"}}
                 onClick={() => handleOpenDetailsDialog(contract)}
             />
@@ -119,6 +121,7 @@ const ContractsPage = () => {
                 size="small"
                 icon="pi pi-pencil"
                 tooltip="Edytuj"
+                aria-label="Edytuj"
                 tooltipOptions={{position: "top"}}
                 disabled={isNotEqual("ACTIVE", contract.status)}
                 onClick={() => handleOpenEditDialog(contract)}
@@ -128,6 +131,7 @@ const ContractsPage = () => {
                 size="small"
                 icon="pi pi-history"
                 tooltip="Historia"
+                aria-label="Historia"
                 tooltipOptions={{position: "top"}}
                 onClick={() => handleOpenHistoryDialog(contract)}
             />
@@ -136,6 +140,7 @@ const ContractsPage = () => {
                 size="small"
                 icon="pi pi-times"
                 tooltip="Zakończ kontrakt"
+                aria-label="Zakończ kontrakt"
                 tooltipOptions={{position: "top"}}
                 disabled={isNotEqual("ACTIVE", contract.status)}
                 onClick={() => handleOpenDeleteDialog(contract)}
@@ -146,9 +151,9 @@ const ContractsPage = () => {
     const columns: DataTableColumn<ContractDTO>[] = [
         {header: "Najemca", body: tenantBody, sortable: true, field: "person.lastName"},
         {header: "Mieszkanie / pokój", body: roomBody},
-        {header: "Okres", body: periodBody},
+        {header: "Okres", body: periodBody, sortable: true, field: "endDate"},
         {header: "Czynsz", body: amountBody, sortable: true, field: "amount"},
-        {header: "Kaucja", body: depositBody},
+        {header: "Kaucja", body: depositBody, optional: true},
         {header: "Status", body: statusBody, sortable: true, field: "status"},
     ];
 
@@ -169,7 +174,8 @@ const ContractsPage = () => {
                     <InputText
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Szukaj najemcy..."
+                        placeholder="Szukaj najemcy lub pokoju…"
+                        aria-label="Szukaj najemcy lub pokoju"
                         style={{width: "100%"}}
                     />
                 </IconField>
@@ -190,46 +196,38 @@ const ContractsPage = () => {
                 columns={columns}
                 rowActions={rowActions}
                 loading={loading}
-                emptyMessage="Brak kontraktów do wyświetlenia"
+                emptyMessage={search.trim() ? "Żadna umowa nie pasuje do wyszukiwania" : "Brak umów w tym widoku"}
             />
 
-            {isDeleteDialogVisible && (
-                <DeleteContractModal
-                    selectedContract={selectedContract}
-                    isVisible={isDeleteDialogVisible}
-                    onHide={handleCloseDeleteDialog}
-                    onConfirm={deleteContractMutation}
-                />
-            )}
             {isAddContractDialogVisible && (
-                <AddContractView
-                    isVisible={isAddContractDialogVisible}
-                    onSave={addContractMutation.mutate}
+                <AddContractDialog
                     unassignedPersons={unassignedPersons}
+                    saving={addContractMutation.isPending}
+                    onSave={addContractMutation.mutate}
                     onHide={closeAddDialog}
                 />
             )}
-            {isDetailsDialogVisible && (
-                <ContractDetailsModal
-                    selectedContract={selectedContract}
-                    visible={isDetailsDialogVisible}
-                    onHide={handleCloseDetailsDialog}
-                />
-            )}
-            {isEditContractVisible && (
-                <UpdateContractModal
-                    selectedContract={selectedContract}
-                    isVisible={isEditContractVisible}
+            {selectedContract && isEditContractVisible && (
+                <EditContractDialog
+                    contract={selectedContract}
+                    saving={editContractMutation.isPending}
+                    onSave={editContractMutation.mutate}
                     onHide={handleCloseEditDialog}
-                    onSave={editContractMutation}
                 />
             )}
-            {isHistoryDialogVisible && (
-                <ContractHistoryDialog
-                    selectedContract={selectedContract}
-                    visible={isHistoryDialogVisible}
-                    onHide={handleCloseHistoryDialog}
+            {selectedContract && isDeleteDialogVisible && (
+                <TerminateContractDialog
+                    contract={selectedContract}
+                    saving={deleteContractMutation.isPending}
+                    onConfirm={deleteContractMutation.mutate}
+                    onHide={handleCloseDeleteDialog}
                 />
+            )}
+            {selectedContract && isDetailsDialogVisible && (
+                <ContractDetailsDialog contract={selectedContract} onHide={handleCloseDetailsDialog}/>
+            )}
+            {selectedContract && isHistoryDialogVisible && (
+                <ContractHistoryDialog contract={selectedContract} onHide={handleCloseHistoryDialog}/>
             )}
         </div>
     );

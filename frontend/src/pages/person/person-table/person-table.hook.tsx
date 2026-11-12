@@ -26,6 +26,8 @@ const usePersonTable = () => {
     const handleAddPerson = useCreatePerson({
         onSuccess: () => {
             setIsNewPersonDialogVisible(false);
+            // A new person has no contract yet (NON_RESIDENT), so the "only current" filter would hide them.
+            setShowOnlyActivePeople(false);
         }
     })
 

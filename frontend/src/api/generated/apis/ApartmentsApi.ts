@@ -15,21 +15,155 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApartmentResponse,
   ApartmentWithRooms,
+  RoomResponse,
+  SaveNameRequest,
 } from '../models/index';
 import {
+    ApartmentResponseFromJSON,
+    ApartmentResponseToJSON,
     ApartmentWithRoomsFromJSON,
     ApartmentWithRoomsToJSON,
+    RoomResponseFromJSON,
+    RoomResponseToJSON,
+    SaveNameRequestFromJSON,
+    SaveNameRequestToJSON,
 } from '../models/index';
 
-export interface HelloEndpointRequest {
-    name?: string;
+export interface CreateApartmentRequest {
+    saveNameRequest?: SaveNameRequest;
+}
+
+export interface CreateRoomRequest {
+    id: number;
+    saveNameRequest?: SaveNameRequest;
+}
+
+export interface DeleteRoomRequest {
+    id: number;
+    roomId: number;
+}
+
+export interface RenameApartmentRequest {
+    id: number;
+    saveNameRequest?: SaveNameRequest;
+}
+
+export interface RenameRoomRequest {
+    id: number;
+    roomId: number;
+    saveNameRequest?: SaveNameRequest;
 }
 
 /**
  * 
  */
 export class ApartmentsApi extends runtime.BaseAPI {
+
+    /**
+     * Create an apartment
+     */
+    async createApartmentRaw(requestParameters: CreateApartmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ApartmentResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/apartments`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SaveNameRequestToJSON(requestParameters['saveNameRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ApartmentResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create an apartment
+     */
+    async createApartment(requestParameters: CreateApartmentRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ApartmentResponse> {
+        const response = await this.createApartmentRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Add a room to an apartment
+     */
+    async createRoomRaw(requestParameters: CreateRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RoomResponse>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling createRoom().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/apartments/{id}/rooms`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SaveNameRequestToJSON(requestParameters['saveNameRequest']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => RoomResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Add a room to an apartment
+     */
+    async createRoom(requestParameters: CreateRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RoomResponse> {
+        const response = await this.createRoomRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Delete a room that has no contracts, costs or cost templates
+     */
+    async deleteRoomRaw(requestParameters: DeleteRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling deleteRoom().'
+            );
+        }
+
+        if (requestParameters['roomId'] == null) {
+            throw new runtime.RequiredError(
+                'roomId',
+                'Required parameter "roomId" was null or undefined when calling deleteRoom().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/apartments/{id}/rooms/{roomId}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))).replace(`{${"roomId"}}`, encodeURIComponent(String(requestParameters['roomId']))),
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete a room that has no contracts, costs or cost templates
+     */
+    async deleteRoom(requestParameters: DeleteRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.deleteRoomRaw(requestParameters, initOverrides);
+    }
 
     /**
      * Get all apartments with their rooms
@@ -58,37 +192,80 @@ export class ApartmentsApi extends runtime.BaseAPI {
     }
 
     /**
-     * A simple hello world endpoint
+     * Rename an apartment
      */
-    async helloEndpointRaw(requestParameters: HelloEndpointRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
-        const queryParameters: any = {};
-
-        if (requestParameters['name'] != null) {
-            queryParameters['name'] = requestParameters['name'];
+    async renameApartmentRaw(requestParameters: RenameApartmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling renameApartment().'
+            );
         }
+
+        const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        headerParameters['Content-Type'] = 'application/json';
+
         const response = await this.request({
-            path: `/apartments/hello`,
-            method: 'GET',
+            path: `/apartments/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
+            body: SaveNameRequestToJSON(requestParameters['saveNameRequest']),
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<string>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.VoidApiResponse(response);
     }
 
     /**
-     * A simple hello world endpoint
+     * Rename an apartment
      */
-    async helloEndpoint(requestParameters: HelloEndpointRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
-        const response = await this.helloEndpointRaw(requestParameters, initOverrides);
-        return await response.value();
+    async renameApartment(requestParameters: RenameApartmentRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.renameApartmentRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Rename a room
+     */
+    async renameRoomRaw(requestParameters: RenameRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling renameRoom().'
+            );
+        }
+
+        if (requestParameters['roomId'] == null) {
+            throw new runtime.RequiredError(
+                'roomId',
+                'Required parameter "roomId" was null or undefined when calling renameRoom().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/apartments/{id}/rooms/{roomId}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))).replace(`{${"roomId"}}`, encodeURIComponent(String(requestParameters['roomId']))),
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SaveNameRequestToJSON(requestParameters['saveNameRequest']),
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Rename a room
+     */
+    async renameRoom(requestParameters: RenameRoomRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.renameRoomRaw(requestParameters, initOverrides);
     }
 
 }

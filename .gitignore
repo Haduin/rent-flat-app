@@ -50,3 +50,6 @@ out/
 ### Local tooling ###
 .openidea/
 loadtest/raport.html
+./agents/
+/.impeccable/
+/.agents/skills/impeccable/

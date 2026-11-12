@@ -16,7 +16,7 @@ export default function PublicPage() {
                     Zarządzaj najemcami, umowami i płatnościami w jednym miejscu
                 </p>
                 <Link
-                    to="/protected/home"
+                    to="/protected/v2/dashboard"
                     className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg transition text-lg font-semibold"
                 >
                     Zaloguj się do systemu

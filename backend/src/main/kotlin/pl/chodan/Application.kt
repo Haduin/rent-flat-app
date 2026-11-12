@@ -71,7 +71,8 @@ fun createConfigFromYaml(environment: ApplicationEnvironment): Config {
                 url = environment.config.property("ktor.database.url").getString(),
                 user = environment.config.property("ktor.database.user").getString(),
                 password = environment.config.property("ktor.database.password").getString(),
-                driver = environment.config.property("ktor.database.driver").getString()
+                driver = environment.config.property("ktor.database.driver").getString(),
+                maxPoolSize = environment.config.property("ktor.database.maxPoolSize").getString().toInt()
             ),
             cors = CorsConfig(
                 allowedHosts = environment.config.property("ktor.cors.allowedHosts")
