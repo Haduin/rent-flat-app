@@ -58,6 +58,8 @@ dependencies {
 
     implementation("io.ktor:ktor-server-html-builder:$ktor_version")
     implementation("io.ktor:ktor-server-cors:$ktor_version")
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
+    implementation("io.ktor:ktor-server-request-validation:$ktor_version")
     implementation("org.postgresql:postgresql:42.7.2")
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.flywaydb:flyway-core:10.20.1")
@@ -99,8 +101,8 @@ dependencies {
 
     implementation("org.jetbrains.exposed:exposed-core")
 
-    integrationTestImplementation("org.testcontainers:postgresql:1.21.3")
-    integrationTestImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    integrationTestImplementation("org.testcontainers:postgresql:1.21.4")
+    integrationTestImplementation("org.testcontainers:junit-jupiter:1.21.4")
     integrationTestImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
     integrationTestRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
 }

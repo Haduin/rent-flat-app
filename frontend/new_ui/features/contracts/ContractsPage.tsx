@@ -1,14 +1,13 @@
 import {useMemo, useState} from "react";
-import {InputText} from "primereact/inputtext";
-import {IconField} from "primereact/iconfield";
-import {InputIcon} from "primereact/inputicon";
-import {SelectButton} from "primereact/selectbutton";
 import {ContractStatusFilter, useContractsView} from "../../../src/pages/contracts/contract-view/contracts-view.hook.tsx";
 import {AddContractDialog, ContractDetailsDialog, ContractHistoryDialog, EditContractDialog, TerminateContractDialog} from "./ContractDialogs.tsx";
 import {contractStatus} from "./contract-status.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {Card} from "../../components/ui/Card.tsx";
+import {Page} from "../../components/layout/Page.tsx";
+import {Text} from "../../components/ui/Text.tsx";
+import {FilterBar} from "../../components/ui/FilterBar.tsx";
+import {SearchInput} from "../../components/ui/SearchInput.tsx";
+import {SegmentedControl, SegmentOption} from "../../components/ui/SegmentedControl.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
@@ -17,7 +16,7 @@ import {IconPlus} from "../../components/ui/icons.tsx";
 import type {ContractDTO} from "../../../src/api/generated";
 import {isNotEqual} from "../../../src/utils/typeguards";
 
-const STATUS_FILTER_OPTIONS: { label: string; value: ContractStatusFilter }[] = [
+const STATUS_FILTER_OPTIONS: SegmentOption<ContractStatusFilter>[] = [
     {label: "Aktywne", value: "ACTIVE"},
     {label: "Zakończone", value: "TERMINATED"},
     {label: "Wszystkie", value: "ALL"},
@@ -75,26 +74,24 @@ const ContractsPage = () => {
     }, [showContracts, search]);
 
     const tenantBody = (contract: ContractDTO) => (
-        <span style={{fontWeight: 600}}>
+        <Text weight="semibold">
             {contract.person?.firstName} {contract.person?.lastName}
-        </span>
+        </Text>
     );
 
     const roomBody = (contract: ContractDTO) => `${contract.room?.apartment ?? ""} · ${contract.room?.number ?? ""}`;
 
     const periodBody = (contract: ContractDTO) => (
-        <div style={{display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap"}}>
-            <span>
-                {formatDatePl(contract.startDate)} – {contract.terminationDate ? (
-                    <>
-                        <span style={{textDecoration: "line-through", color: "var(--ku-text-muted)"}}>{formatDatePl(contract.endDate)}</span>{" "}
-                        <span>zakończona {formatDatePl(contract.terminationDate)}</span>
-                    </>
-                ) : (
-                    formatDatePl(contract.endDate)
-                )}
-            </span>
-        </div>
+        <span>
+            {formatDatePl(contract.startDate)} – {contract.terminationDate ? (
+                <>
+                    <Text tone="muted" strike>{formatDatePl(contract.endDate)}</Text>{" "}
+                    zakończona {formatDatePl(contract.terminationDate)}
+                </>
+            ) : (
+                formatDatePl(contract.endDate)
+            )}
+        </span>
     );
 
     const amountBody = (contract: ContractDTO) => (contract.amount != null ? formatCurrency(contract.amount) : "—");
@@ -158,38 +155,23 @@ const ContractsPage = () => {
     ];
 
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader
-                title="Kontrakty"
-                actions={
-                    <Button variant="primary" icon={<IconPlus size={15}/>} onClick={openAddDialog}>
-                        Nowa umowa
-                    </Button>
-                }
-            />
-
-            <Card padding={20} contentStyle={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12}}>
-                <IconField iconPosition="left" className="ku-search-input">
-                    <InputIcon className="pi pi-search"/>
-                    <InputText
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Szukaj najemcy lub pokoju…"
-                        aria-label="Szukaj najemcy lub pokoju"
-                        style={{width: "100%"}}
-                    />
-                </IconField>
-                <SelectButton
-                    value={contractStatusFilter}
-                    onChange={(event) => {
-                        if (event.value !== null) setContractStatusFilter(event.value);
-                    }}
-                    options={STATUS_FILTER_OPTIONS}
-                    optionLabel="label"
-                    optionValue="value"
-                    allowEmpty={false}
+        <Page
+            title="Kontrakty"
+            actions={
+                <Button variant="primary" icon={<IconPlus size={15}/>} onClick={openAddDialog}>
+                    Nowa umowa
+                </Button>
+            }
+        >
+            <FilterBar>
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Szukaj najemcy lub pokoju…"
+                    ariaLabel="Szukaj najemcy lub pokoju"
                 />
-            </Card>
+                <SegmentedControl value={contractStatusFilter} onChange={setContractStatusFilter} options={STATUS_FILTER_OPTIONS}/>
+            </FilterBar>
 
             <DataTableCard
                 value={contracts}
@@ -229,7 +211,7 @@ const ContractsPage = () => {
             {selectedContract && isHistoryDialogVisible && (
                 <ContractHistoryDialog contract={selectedContract} onHide={handleCloseHistoryDialog}/>
             )}
-        </div>
+        </Page>
     );
 };
 

@@ -15,13 +15,19 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApiError,
   CreatedPersonDTO,
+  IdResponse,
   PersonDTO,
   UpdatePersonDTO,
 } from '../models/index';
 import {
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
     CreatedPersonDTOFromJSON,
     CreatedPersonDTOToJSON,
+    IdResponseFromJSON,
+    IdResponseToJSON,
     PersonDTOFromJSON,
     PersonDTOToJSON,
     UpdatePersonDTOFromJSON,
@@ -49,7 +55,7 @@ export class PersonsApi extends runtime.BaseAPI {
     /**
      * Create a new person
      */
-    async createPersonRaw(requestParameters: CreatePersonRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async createPersonRaw(requestParameters: CreatePersonRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<IdResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -64,14 +70,15 @@ export class PersonsApi extends runtime.BaseAPI {
             body: CreatedPersonDTOToJSON(requestParameters['createdPersonDTO']),
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => IdResponseFromJSON(jsonValue));
     }
 
     /**
      * Create a new person
      */
-    async createPerson(requestParameters: CreatePersonRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.createPersonRaw(requestParameters, initOverrides);
+    async createPerson(requestParameters: CreatePersonRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<IdResponse> {
+        const response = await this.createPersonRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

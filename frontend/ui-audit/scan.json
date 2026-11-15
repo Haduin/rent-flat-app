@@ -1,0 +1,1269 @@
+{
+  "meta": {
+    "root": "A:\\Projekty\\kotlin\\mieszkania\\frontend\\new_ui",
+    "scannedFiles": 38,
+    "inlineStyles": 76,
+    "important": 3,
+    "tailwindConfig": [],
+    "themeFiles": [
+      "theme/tokens.css"
+    ],
+    "styleSystems": [],
+    "generatedAt": "2026-11-12T20:51:45.369Z"
+  },
+  "summary": {
+    "inline styles (files)": {
+      "unique": 19,
+      "total": 76
+    },
+    "a11y signals": {
+      "unique": 3,
+      "total": 4
+    },
+    "colors": {
+      "unique": 3,
+      "total": 18
+    },
+    "spacing": {
+      "unique": 62,
+      "total": 113
+    },
+    "box-shadow": {
+      "unique": 5,
+      "total": 11
+    },
+    "font-size": {
+      "unique": 33,
+      "total": 47
+    },
+    "font-weight": {
+      "unique": 13,
+      "total": 34
+    },
+    "letter-spacing": {
+      "unique": 2,
+      "total": 4
+    },
+    "border-radius": {
+      "unique": 8,
+      "total": 15
+    },
+    "line-height": {
+      "unique": 5,
+      "total": 7
+    },
+    "font-family": {
+      "unique": 3,
+      "total": 5
+    },
+    "z-index": {
+      "unique": 1,
+      "total": 2
+    },
+    "breakpoints": {
+      "unique": 6,
+      "total": 15
+    },
+    "transition/animation duration": {
+      "unique": 1,
+      "total": 1
+    }
+  },
+  "colorClusters": {
+    "deltaE": 6,
+    "uniqueColors": 3,
+    "clusterCount": 2,
+    "nearDuplicates": [
+      {
+        "representative": "#1414280a",
+        "total": 2,
+        "members": [
+          {
+            "hex": "#1414280a",
+            "count": 1
+          },
+          {
+            "hex": "#1414282e",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  },
+  "cssVariables": {
+    "defined": 31,
+    "used": 25,
+    "undefinedButUsed": [],
+    "definedButUnused": [
+      "--ku-accent-contrast",
+      "--ku-success-soft",
+      "--ku-warning-soft",
+      "--ku-danger-soft",
+      "--ku-shadow-sm",
+      "--p-primary-color"
+    ]
+  },
+  "values": {
+    "inline styles (files)": {
+      "components/form/FormDialog.tsx": {
+        "count": 1,
+        "locations": [
+          "components/form/FormDialog.tsx:64"
+        ]
+      },
+      "components/form/InfoDialog.tsx": {
+        "count": 1,
+        "locations": [
+          "components/form/InfoDialog.tsx:21"
+        ]
+      },
+      "components/layout/AppShell.tsx": {
+        "count": 1,
+        "locations": [
+          "components/layout/AppShell.tsx:169"
+        ]
+      },
+      "components/ui/Card.tsx": {
+        "count": 1,
+        "locations": [
+          "components/ui/Card.tsx:21"
+        ]
+      },
+      "components/ui/DataTableCard.tsx": {
+        "count": 1,
+        "locations": [
+          "components/ui/DataTableCard.tsx:33"
+        ]
+      },
+      "components/ui/MonthSettlementSummary.tsx": {
+        "count": 1,
+        "locations": [
+          "components/ui/MonthSettlementSummary.tsx:59"
+        ]
+      },
+      "components/ui/PageHeader.tsx": {
+        "count": 4,
+        "locations": [
+          "components/ui/PageHeader.tsx:10",
+          "components/ui/PageHeader.tsx:12",
+          "components/ui/PageHeader.tsx:14",
+          "components/ui/PageHeader.tsx:17"
+        ]
+      },
+      "components/ui/PageLoading.tsx": {
+        "count": 1,
+        "locations": [
+          "components/ui/PageLoading.tsx:4"
+        ]
+      },
+      "components/ui/QueryError.tsx": {
+        "count": 1,
+        "locations": [
+          "components/ui/QueryError.tsx:12"
+        ]
+      },
+      "components/ui/StatTile.tsx": {
+        "count": 6,
+        "locations": [
+          "components/ui/StatTile.tsx:37",
+          "components/ui/StatTile.tsx:42",
+          "components/ui/StatTile.tsx:43",
+          "components/ui/StatTile.tsx:49",
+          "components/ui/StatTile.tsx:66",
+          "components/ui/StatTile.tsx:75"
+        ]
+      },
+      "features/apartments/ApartmentsPage.tsx": {
+        "count": 24,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:113",
+          "features/apartments/ApartmentsPage.tsx:128",
+          "features/apartments/ApartmentsPage.tsx:140",
+          "features/apartments/ApartmentsPage.tsx:141",
+          "features/apartments/ApartmentsPage.tsx:147",
+          "features/apartments/ApartmentsPage.tsx:156",
+          "features/apartments/ApartmentsPage.tsx:157",
+          "features/apartments/ApartmentsPage.tsx:167"
+        ]
+      },
+      "features/apartments/NameDialog.tsx": {
+        "count": 5,
+        "locations": [
+          "features/apartments/NameDialog.tsx:41",
+          "features/apartments/NameDialog.tsx:45",
+          "features/apartments/NameDialog.tsx:52",
+          "features/apartments/NameDialog.tsx:64",
+          "features/apartments/NameDialog.tsx:67"
+        ]
+      },
+      "features/contracts/ContractDialogs.tsx": {
+        "count": 1,
+        "locations": [
+          "features/contracts/ContractDialogs.tsx:289"
+        ]
+      },
+      "features/contracts/ContractsPage.tsx": {
+        "count": 5,
+        "locations": [
+          "features/contracts/ContractsPage.tsx:78",
+          "features/contracts/ContractsPage.tsx:86",
+          "features/contracts/ContractsPage.tsx:90",
+          "features/contracts/ContractsPage.tsx:161",
+          "features/contracts/ContractsPage.tsx:179"
+        ]
+      },
+      "features/dashboard/DashboardPage.tsx": {
+        "count": 15,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:22",
+          "features/dashboard/DashboardPage.tsx:26",
+          "features/dashboard/DashboardPage.tsx:52",
+          "features/dashboard/DashboardPage.tsx:97",
+          "features/dashboard/DashboardPage.tsx:98",
+          "features/dashboard/DashboardPage.tsx:99",
+          "features/dashboard/DashboardPage.tsx:107",
+          "features/dashboard/DashboardPage.tsx:108"
+        ]
+      },
+      "features/expense-templates/ExpenseTemplatesPage.tsx": {
+        "count": 1,
+        "locations": [
+          "features/expense-templates/ExpenseTemplatesPage.tsx:86"
+        ]
+      },
+      "features/payments-expense/ExpensePaymentsPage.tsx": {
+        "count": 1,
+        "locations": [
+          "features/payments-expense/ExpensePaymentsPage.tsx:106"
+        ]
+      },
+      "features/payments-income/IncomePaymentsPage.tsx": {
+        "count": 3,
+        "locations": [
+          "features/payments-income/IncomePaymentsPage.tsx:55",
+          "features/payments-income/IncomePaymentsPage.tsx:62",
+          "features/payments-income/IncomePaymentsPage.tsx:103"
+        ]
+      },
+      "features/persons/PersonsPage.tsx": {
+        "count": 3,
+        "locations": [
+          "features/persons/PersonsPage.tsx:70",
+          "features/persons/PersonsPage.tsx:88",
+          "features/persons/PersonsPage.tsx:91"
+        ]
+      }
+    },
+    "a11y signals": {
+      "autofocus": {
+        "count": 1,
+        "locations": [
+          "components/form/InfoDialog.tsx:25"
+        ]
+      },
+      "small fixed font (<12px)": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:200",
+          "theme/tokens.css:870"
+        ]
+      },
+      "outline removed (check :focus-visible replacement)": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1017"
+        ]
+      }
+    },
+    "colors": {
+      "#ffffff": {
+        "count": 16,
+        "locations": [
+          "components/layout/AppShell.tsx:88",
+          "components/ui/StatTile.tsx:69",
+          "theme/tokens.css:13",
+          "theme/tokens.css:24",
+          "theme/tokens.css:125",
+          "theme/tokens.css:152",
+          "theme/tokens.css:182",
+          "theme/tokens.css:194"
+        ]
+      },
+      "#1414280a": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:44"
+        ]
+      },
+      "#1414282e": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:45"
+        ]
+      }
+    },
+    "spacing": {
+      "0": {
+        "count": 8,
+        "locations": [
+          "components/ui/Card.tsx:18",
+          "theme/tokens.css:60",
+          "theme/tokens.css:338",
+          "theme/tokens.css:945",
+          "theme/tokens.css:1058",
+          "theme/tokens.css:1105",
+          "theme/tokens.css:1142",
+          "theme/tokens.css:1167"
+        ]
+      },
+      "4": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:179"
+        ]
+      },
+      "5": {
+        "count": 1,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:22"
+        ]
+      },
+      "6": {
+        "count": 5,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:263",
+          "features/apartments/ApartmentsPage.tsx:271",
+          "features/apartments/NameDialog.tsx:52",
+          "features/apartments/NameDialog.tsx:67",
+          "features/dashboard/DashboardPage.tsx:128"
+        ]
+      },
+      "8": {
+        "count": 1,
+        "locations": [
+          "features/apartments/NameDialog.tsx:45"
+        ]
+      },
+      "10": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:212"
+        ]
+      },
+      "12": {
+        "count": 5,
+        "locations": [
+          "components/ui/QueryError.tsx:11",
+          "features/apartments/ApartmentsPage.tsx:128",
+          "features/apartments/ApartmentsPage.tsx:140",
+          "features/contracts/ContractsPage.tsx:171",
+          "features/persons/PersonsPage.tsx:80"
+        ]
+      },
+      "14": {
+        "count": 4,
+        "locations": [
+          "components/ui/PageHeader.tsx:10",
+          "features/dashboard/DashboardPage.tsx:97",
+          "features/dashboard/DashboardPage.tsx:99",
+          "features/dashboard/DashboardPage.tsx:113"
+        ]
+      },
+      "20": {
+        "count": 5,
+        "locations": [
+          "features/contracts/ContractsPage.tsx:161",
+          "features/expense-templates/ExpenseTemplatesPage.tsx:86",
+          "features/payments-expense/ExpensePaymentsPage.tsx:106",
+          "features/payments-income/IncomePaymentsPage.tsx:103",
+          "features/persons/PersonsPage.tsx:70"
+        ]
+      },
+      "24": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:113"
+        ]
+      },
+      "28": {
+        "count": 1,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:52"
+        ]
+      },
+      "60": {
+        "count": 1,
+        "locations": [
+          "components/ui/PageLoading.tsx:4"
+        ]
+      },
+      "32, rowGap: 12": {
+        "count": 1,
+        "locations": [
+          "components/ui/MonthSettlementSummary.tsx:41"
+        ]
+      },
+      "4, fontSize: 14, color: var(--ku-text-secondary)": {
+        "count": 1,
+        "locations": [
+          "components/ui/PageHeader.tsx:14"
+        ]
+      },
+      "10, flexWrap: wrap": {
+        "count": 1,
+        "locations": [
+          "components/ui/PageHeader.tsx:17"
+        ]
+      },
+      "0, fontWeight: 500": {
+        "count": 1,
+        "locations": [
+          "components/ui/QueryError.tsx:12"
+        ]
+      },
+      "14,": {
+        "count": 2,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:151",
+          "features/apartments/ApartmentsPage.tsx:221"
+        ]
+      },
+      "12,": {
+        "count": 2,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:152",
+          "features/dashboard/DashboardPage.tsx:121"
+        ]
+      },
+      "0, color: var(--ku-text-secondary)": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:167"
+        ]
+      },
+      "12, marginBottom: 22": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:176"
+        ]
+      },
+      "8, flexWrap: wrap": {
+        "count": 2,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:183",
+          "features/contracts/ContractsPage.tsx:86"
+        ]
+      },
+      "12, color: var(--ku-text)": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:206"
+        ]
+      },
+      "0, color: var(--ku-text-secondary), fontSize: 13.5": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:208"
+        ]
+      },
+      "6, fontWeight: 600, fontSize: 14": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:225"
+        ]
+      },
+      "12, marginBottom: 14": {
+        "count": 1,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:107"
+        ]
+      },
+      "8, fontSize: 13, fontWeight: 500, cursor: pointer": {
+        "count": 1,
+        "locations": [
+          "features/persons/PersonsPage.tsx:91"
+        ]
+      },
+      "9px 16px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:106"
+        ]
+      },
+      "0.5rem": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:111"
+        ]
+      },
+      "4px 10px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:203"
+        ]
+      },
+      "12px 16px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:283"
+        ]
+      },
+      "13px 16px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:306"
+        ]
+      },
+      "8px 14px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:398"
+        ]
+      },
+      "10px": {
+        "count": 4,
+        "locations": [
+          "theme/tokens.css:431",
+          "theme/tokens.css:732",
+          "theme/tokens.css:854",
+          "theme/tokens.css:1118"
+        ]
+      },
+      "28px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:432"
+        ]
+      },
+      "12px": {
+        "count": 6,
+        "locations": [
+          "theme/tokens.css:461",
+          "theme/tokens.css:577",
+          "theme/tokens.css:647",
+          "theme/tokens.css:776",
+          "theme/tokens.css:864",
+          "theme/tokens.css:900"
+        ]
+      },
+      "0 4px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:497"
+        ]
+      },
+      "auto": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:538",
+          "theme/tokens.css:753"
+        ]
+      },
+      "2px": {
+        "count": 3,
+        "locations": [
+          "theme/tokens.css:557",
+          "theme/tokens.css:777",
+          "theme/tokens.css:1216"
+        ]
+      },
+      "6px 6px max(6px, env(safe-area-inset-bottom))": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:563"
+        ]
+      },
+      "calc(40px + 64px + env(safe-area-inset-bottom))": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:570"
+        ]
+      },
+      "0 24px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:589"
+        ]
+      },
+      "16px": {
+        "count": 6,
+        "locations": [
+          "theme/tokens.css:593",
+          "theme/tokens.css:721",
+          "theme/tokens.css:1064",
+          "theme/tokens.css:1070",
+          "theme/tokens.css:1151",
+          "theme/tokens.css:1205"
+        ]
+      },
+      "8px 10px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:601"
+        ]
+      },
+      "3px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:611"
+        ]
+      },
+      "4px 2px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:612"
+        ]
+      },
+      "env(safe-area-inset-bottom)": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:634"
+        ]
+      },
+      "0 14px": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:648",
+          "theme/tokens.css:687"
+        ]
+      },
+      "8px": {
+        "count": 6,
+        "locations": [
+          "theme/tokens.css:663",
+          "theme/tokens.css:765",
+          "theme/tokens.css:821",
+          "theme/tokens.css:822",
+          "theme/tokens.css:934",
+          "theme/tokens.css:1054"
+        ]
+      },
+      "0 40px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:678"
+        ]
+      },
+      "36px 40px 56px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:682"
+        ]
+      },
+      "18px 14px 40px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:691"
+        ]
+      },
+      "20px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:698"
+        ]
+      },
+      "14px 16px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:780"
+        ]
+      },
+      "6px": {
+        "count": 3,
+        "locations": [
+          "theme/tokens.css:837",
+          "theme/tokens.css:899",
+          "theme/tokens.css:1076"
+        ]
+      },
+      "6px 0": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:856"
+        ]
+      },
+      "8px 16px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:866"
+        ]
+      },
+      "4px": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:951",
+          "theme/tokens.css:978"
+        ]
+      },
+      "18px": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:1027",
+          "theme/tokens.css:1221"
+        ]
+      },
+      "10px 0": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1152"
+        ]
+      },
+      "2px 14px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1181"
+        ]
+      },
+      "8px 0": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1185"
+        ]
+      },
+      "8px 0 0": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1220"
+        ]
+      }
+    },
+    "box-shadow": {
+      "highlighted ? var(--ku-shadow-md) : none,": {
+        "count": 1,
+        "locations": [
+          "components/ui/Card.tsx:23"
+        ]
+      },
+      "none": {
+        "count": 4,
+        "locations": [
+          "theme/tokens.css:243",
+          "theme/tokens.css:518",
+          "theme/tokens.css:633",
+          "theme/tokens.css:944"
+        ]
+      },
+      "0 0 0 1px oklch(55% 0.16 260 / 0.3)": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:266",
+          "theme/tokens.css:374"
+        ]
+      },
+      "0 0 0 2px #ffffff, 0 0 0 4px oklch(55% 0.16 260)": {
+        "count": 3,
+        "locations": [
+          "theme/tokens.css:369",
+          "theme/tokens.css:1018",
+          "theme/tokens.css:1035"
+        ]
+      },
+      "0 8px 24px oklch(22% 0.012 260 / 0.12)": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:930"
+        ]
+      }
+    },
+    "font-size": {
+      "14": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:225"
+        ]
+      },
+      "26, fontWeight: 700, letterSpacing: -0.01em": {
+        "count": 1,
+        "locations": [
+          "components/ui/PageHeader.tsx:12"
+        ]
+      },
+      "14, color: var(--ku-text-secondary)": {
+        "count": 1,
+        "locations": [
+          "components/ui/PageHeader.tsx:14"
+        ]
+      },
+      "13, fontWeight: 500, color: dark ? darkLabelColor : var(--ku-text-secondary)": {
+        "count": 1,
+        "locations": [
+          "components/ui/StatTile.tsx:43"
+        ]
+      },
+      "12.5, fontWeight: 600, color: dark ? darkCaptionColor[captionTone] : captionColor[captionTone]": {
+        "count": 1,
+        "locations": [
+          "components/ui/StatTile.tsx:75"
+        ]
+      },
+      "16, fontWeight: 600": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:141"
+        ]
+      },
+      "13,": {
+        "count": 2,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:150",
+          "features/dashboard/DashboardPage.tsx:120"
+        ]
+      },
+      "20, fontWeight: 700": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:178"
+        ]
+      },
+      "13, color: var(--ku-text-secondary), marginTop: 4": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:179"
+        ]
+      },
+      "14, fontWeight: 600, marginBottom: 12, color: var(--ku-text)": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:206"
+        ]
+      },
+      "13.5": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:208"
+        ]
+      },
+      "12.5, color: var(--ku-text-secondary), marginTop: 6": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:263"
+        ]
+      },
+      "12.5, color: var(--ku-text-secondary)": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:266"
+        ]
+      },
+      "12, color: var(--ku-text-muted), marginTop: 6": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:271"
+        ]
+      },
+      "13, fontWeight: 600, marginBottom: 6": {
+        "count": 1,
+        "locations": [
+          "features/apartments/NameDialog.tsx:52"
+        ]
+      },
+      "15, fontWeight: 600, color: var(--ku-text)": {
+        "count": 1,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:98"
+        ]
+      },
+      "15, fontWeight: 600": {
+        "count": 1,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:108"
+        ]
+      },
+      "13, marginTop: 6": {
+        "count": 1,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:128"
+        ]
+      },
+      "13, fontWeight: 500, cursor: pointer": {
+        "count": 1,
+        "locations": [
+          "features/persons/PersonsPage.tsx:91"
+        ]
+      },
+      "13.5px": {
+        "count": 6,
+        "locations": [
+          "theme/tokens.css:105",
+          "theme/tokens.css:260",
+          "theme/tokens.css:272",
+          "theme/tokens.css:1081",
+          "theme/tokens.css:1162",
+          "theme/tokens.css:1222"
+        ]
+      },
+      "11.5px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:200"
+        ]
+      },
+      "16px": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:250",
+          "theme/tokens.css:639"
+        ]
+      },
+      "12px": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:278",
+          "theme/tokens.css:484"
+        ]
+      },
+      "14px": {
+        "count": 3,
+        "locations": [
+          "theme/tokens.css:399",
+          "theme/tokens.css:1123",
+          "theme/tokens.css:1169"
+        ]
+      },
+      "18px": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:454",
+          "theme/tokens.css:794"
+        ]
+      },
+      "15px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:651"
+        ]
+      },
+      "28px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:736"
+        ]
+      },
+      "clamp(28px, 3vw, 36px)": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:758"
+        ]
+      },
+      "24px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:798"
+        ]
+      },
+      "11px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:870"
+        ]
+      },
+      "12.5px": {
+        "count": 4,
+        "locations": [
+          "theme/tokens.css:982",
+          "theme/tokens.css:1102",
+          "theme/tokens.css:1109",
+          "theme/tokens.css:1214"
+        ]
+      },
+      "1.05rem": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1040"
+        ]
+      },
+      "0.75rem": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1201"
+        ]
+      }
+    },
+    "font-weight": {
+      "500": {
+        "count": 5,
+        "locations": [
+          "components/ui/QueryError.tsx:12",
+          "theme/tokens.css:400",
+          "theme/tokens.css:652",
+          "theme/tokens.css:983",
+          "theme/tokens.css:1170"
+        ]
+      },
+      "600": {
+        "count": 16,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:141",
+          "features/apartments/ApartmentsPage.tsx:157",
+          "features/contracts/ContractsPage.tsx:78",
+          "features/dashboard/DashboardPage.tsx:108",
+          "features/dashboard/DashboardPage.tsx:126",
+          "features/payments-income/IncomePaymentsPage.tsx:55",
+          "theme/tokens.css:104",
+          "theme/tokens.css:201"
+        ]
+      },
+      "700": {
+        "count": 2,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:178",
+          "theme/tokens.css:453"
+        ]
+      },
+      "700, letterSpacing: -0.01em": {
+        "count": 1,
+        "locations": [
+          "components/ui/PageHeader.tsx:12"
+        ]
+      },
+      "500, color: dark ? darkLabelColor : var(--ku-text-secondary)": {
+        "count": 1,
+        "locations": [
+          "components/ui/StatTile.tsx:43"
+        ]
+      },
+      "700,": {
+        "count": 1,
+        "locations": [
+          "components/ui/StatTile.tsx:67"
+        ]
+      },
+      "600, color: dark ? darkCaptionColor[captionTone] : captionColor[captionTone]": {
+        "count": 1,
+        "locations": [
+          "components/ui/StatTile.tsx:75"
+        ]
+      },
+      "600, marginBottom: 12, color: var(--ku-text)": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:206"
+        ]
+      },
+      "600, fontSize: 14": {
+        "count": 1,
+        "locations": [
+          "features/apartments/ApartmentsPage.tsx:225"
+        ]
+      },
+      "600, marginBottom: 6": {
+        "count": 1,
+        "locations": [
+          "features/apartments/NameDialog.tsx:52"
+        ]
+      },
+      "600, color: var(--ku-text)": {
+        "count": 1,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:98"
+        ]
+      },
+      "600,": {
+        "count": 2,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:132",
+          "features/payments-income/IncomePaymentsPage.tsx:63"
+        ]
+      },
+      "500, cursor: pointer": {
+        "count": 1,
+        "locations": [
+          "features/persons/PersonsPage.tsx:91"
+        ]
+      }
+    },
+    "letter-spacing": {
+      "-0.01em": {
+        "count": 2,
+        "locations": [
+          "components/ui/PageHeader.tsx:12",
+          "theme/tokens.css:455"
+        ]
+      },
+      "0.03em": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:281",
+          "theme/tokens.css:874"
+        ]
+      }
+    },
+    "border-radius": {
+      "0": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:424",
+          "theme/tokens.css:666"
+        ]
+      },
+      "5,": {
+        "count": 1,
+        "locations": [
+          "features/dashboard/DashboardPage.tsx:29"
+        ]
+      },
+      "8px": {
+        "count": 3,
+        "locations": [
+          "theme/tokens.css:103",
+          "theme/tokens.css:258",
+          "theme/tokens.css:397"
+        ]
+      },
+      "999px": {
+        "count": 3,
+        "locations": [
+          "theme/tokens.css:161",
+          "theme/tokens.css:202",
+          "theme/tokens.css:1199"
+        ]
+      },
+      "12px": {
+        "count": 3,
+        "locations": [
+          "theme/tokens.css:241",
+          "theme/tokens.css:853",
+          "theme/tokens.css:929"
+        ]
+      },
+      "0 0 12px 12px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:316"
+        ]
+      },
+      "16px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:328"
+        ]
+      },
+      "10px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1180"
+        ]
+      }
+    },
+    "line-height": {
+      "1.5": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:54"
+        ]
+      },
+      "1.2": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:59",
+          "theme/tokens.css:737"
+        ]
+      },
+      "1.35": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1041"
+        ]
+      },
+      "1.45": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:1103",
+          "theme/tokens.css:1110"
+        ]
+      },
+      "1.6": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1223"
+        ]
+      }
+    },
+    "font-family": {
+      "Public Sans, system-ui, -apple-system, sans-serif": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:98"
+        ]
+      },
+      "Public Sans, system-ui, sans-serif": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:199",
+          "theme/tokens.css:271"
+        ]
+      },
+      "Sora, sans-serif": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:249",
+          "theme/tokens.css:333"
+        ]
+      }
+    },
+    "z-index": {
+      "20": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:422",
+          "theme/tokens.css:562"
+        ]
+      }
+    },
+    "breakpoints": {
+      "1024px": {
+        "count": 6,
+        "locations": [
+          "theme/tokens.css:525",
+          "theme/tokens.css:841",
+          "theme/tokens.css:850",
+          "theme/tokens.css:954",
+          "theme/tokens.css:968",
+          "theme/tokens.css:1236"
+        ]
+      },
+      "520px": {
+        "count": 3,
+        "locations": [
+          "theme/tokens.css:575",
+          "theme/tokens.css:807",
+          "theme/tokens.css:1230"
+        ]
+      },
+      "1025px": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:587",
+          "theme/tokens.css:914"
+        ]
+      },
+      "720px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:685"
+        ]
+      },
+      "860px": {
+        "count": 2,
+        "locations": [
+          "theme/tokens.css:702",
+          "theme/tokens.css:762"
+        ]
+      },
+      "861px": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:741"
+        ]
+      }
+    },
+    "transition/animation duration": {
+      "border-color 120ms ease-out": {
+        "count": 1,
+        "locations": [
+          "theme/tokens.css:1009"
+        ]
+      }
+    }
+  }
+}

@@ -20,6 +20,7 @@ Use query parameters for filtering, sorting, and pagination.
 
 ### Proper Status Codes
 Return appropriate HTTP status codes (200, 201, 400, 404, 500).
+Success statuses follow the success rule in `error-handling.md` (GET 200 + body, creating POST 201, PUT/DELETE/actions 204 without body); error statuses come from `ErrorCode` via `errors(...)`.
 
 ### Rate Limit Headers
 Include rate limit information in response headers.

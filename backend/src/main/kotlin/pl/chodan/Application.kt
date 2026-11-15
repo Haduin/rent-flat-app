@@ -2,22 +2,30 @@ package pl.chodan
 
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.requestvalidation.*
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import pl.chodan.config.*
 import pl.chodan.database.DatabaseProvider
 import pl.chodan.database.DatabaseProviderContract
+import pl.chodan.model.apartment.dto.apartmentValidation
 import pl.chodan.model.apartment.routing.configureApartmentRouting
 import pl.chodan.model.apartment.service.ApartmentService
+import pl.chodan.error.configureErrorHandling
+import pl.chodan.model.contract.dto.contractValidation
 import pl.chodan.model.contract.routing.configureContractRouting
 import pl.chodan.model.contract.service.ContractService
+import pl.chodan.model.expenses.dto.expenseTemplateValidation
+import pl.chodan.model.expenses.dto.expenseValidation
 import pl.chodan.model.expenses.routing.configureExpenseRouting
 import pl.chodan.model.expenses.routing.configureExpenseTemplateRouting
 import pl.chodan.model.expenses.service.ExpenseService
 import pl.chodan.model.expenses.service.ExpenseTemplateService
+import pl.chodan.model.payments.dto.paymentValidation
 import pl.chodan.model.payments.routing.configurePaymentRouting
 import pl.chodan.model.payments.service.PaymentService
+import pl.chodan.model.persons.dto.personValidation
 import pl.chodan.model.persons.routing.configurePersonRouting
 import pl.chodan.model.persons.service.PersonService
 import pl.chodan.model.room.routing.configureRoomRouting
@@ -27,6 +35,15 @@ import pl.chodan.model.statistics.service.StatisticsService
 
 fun main(args: Array<String>) = EngineMain.main(args)
 
+fun RequestValidationConfig.allValidations() {
+    contractValidation()
+    expenseValidation()
+    expenseTemplateValidation()
+    paymentValidation()
+    apartmentValidation()
+    personValidation()
+}
+
 fun Application.module() {
     val config = createConfigFromYaml(environment)
 
@@ -35,6 +52,7 @@ fun Application.module() {
     }
 
     configureModules()
+    configureErrorHandling { allValidations() }
     configureOpenAPI()
     configureApartmentRouting()
     configurePersonRouting()

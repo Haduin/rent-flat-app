@@ -15,9 +15,12 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApiError,
   RoomWithApartmentDTO,
 } from '../models/index';
 import {
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
     RoomWithApartmentDTOFromJSON,
     RoomWithApartmentDTOToJSON,
 } from '../models/index';

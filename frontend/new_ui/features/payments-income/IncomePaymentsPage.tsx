@@ -2,7 +2,8 @@ import {useEffect} from "react";
 import {usePaymentsView} from "../../../src/pages/payments/income/income-payments-view/income-payments-view.hook.ts";
 import {ConfirmIncomeDialog, EditIncomeDialog, SplitIncomeDialog} from "./IncomePaymentDialogs.tsx";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
+import {Page} from "../../components/layout/Page.tsx";
+import {Text} from "../../components/ui/Text.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE} from "../../components/ui/payment-status.ts";
@@ -52,21 +53,19 @@ const IncomePaymentsPage = () => {
     );
 
     const payerBody = (payment: PaymentHistoryWithPersonDTO) => (
-        <span style={{fontWeight: 600}}>
+        <Text weight="semibold">
             {payment.person?.firstName} {payment.person?.lastName}
-        </span>
+        </Text>
     );
 
     const amountBody = (payment: PaymentHistoryWithPersonDTO) => (
-        <span
-            style={{
-                fontWeight: 600,
-                textDecoration: PaymentStatus.Cancelled === payment.status ? "line-through" : "none",
-                color: PaymentStatus.Cancelled === payment.status ? "var(--ku-text-muted)" : "inherit",
-            }}
+        <Text
+            weight="semibold"
+            tone={PaymentStatus.Cancelled === payment.status ? "muted" : "default"}
+            strike={PaymentStatus.Cancelled === payment.status}
         >
             {formatCurrency(payment.amount)}
-        </span>
+        </Text>
     );
 
     const statusBody = (payment: PaymentHistoryWithPersonDTO) => (
@@ -100,21 +99,19 @@ const IncomePaymentsPage = () => {
     ];
 
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader
-                title="Wpłaty najemców"
-                subtitle="Historia i rozliczanie czynszu"
-                actions={
-                    <Button
-                        variant={(payments?.length ?? 0) > 0 ? "secondary" : "primary"}
-                        loading={handleGenerateNewMonthPayments.isPending}
-                        onClick={() => handleGenerateNewMonthPayments.mutate()}
-                    >
-                        Wygeneruj płatności za {formatMonthLabel(month)}
-                    </Button>
-                }
-            />
-
+        <Page
+            title="Wpłaty najemców"
+            subtitle="Historia i rozliczanie czynszu"
+            actions={
+                <Button
+                    variant={(payments?.length ?? 0) > 0 ? "secondary" : "primary"}
+                    loading={handleGenerateNewMonthPayments.isPending}
+                    onClick={() => handleGenerateNewMonthPayments.mutate()}
+                >
+                    Wygeneruj płatności za {formatMonthLabel(month)}
+                </Button>
+            }
+        >
             <MonthSettlementSummary items={payments ?? []} settledLabel="Wpłacono" outstandingLabel="Do zebrania"/>
 
             <DataTableCard
@@ -134,7 +131,7 @@ const IncomePaymentsPage = () => {
             {selectedPayment && isEditPaymentVisible && (
                 <EditIncomeDialog payment={selectedPayment} onConfirm={handleEditPayment} onHide={closeEditDialog}/>
             )}
-        </div>
+        </Page>
     );
 };
 

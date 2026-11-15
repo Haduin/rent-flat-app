@@ -17,6 +17,7 @@ import * as runtime from '../runtime';
 import type {
   ApartmentResponse,
   ApartmentWithRooms,
+  ApiError,
   RoomResponse,
   SaveNameRequest,
 } from '../models/index';
@@ -25,6 +26,8 @@ import {
     ApartmentResponseToJSON,
     ApartmentWithRoomsFromJSON,
     ApartmentWithRoomsToJSON,
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
     RoomResponseFromJSON,
     RoomResponseToJSON,
     SaveNameRequestFromJSON,

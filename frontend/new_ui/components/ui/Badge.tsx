@@ -9,7 +9,7 @@ export interface BadgeProps {
 }
 
 // "ended" has no PrimeReact severity equivalent - it's styled via the .ku-tag-ended
-// class (tokens.css) instead, so it stays visually distinct from "danger" (which
+// class (primereact.css) instead, so it stays visually distinct from "danger" (which
 // already flags "already past end date, still active" elsewhere in the contracts list).
 const toneSeverity: Partial<Record<BadgeTone, "success" | "warning" | "danger" | "secondary" | "info">> = {
     success: "success",

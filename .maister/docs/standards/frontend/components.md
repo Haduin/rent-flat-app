@@ -61,3 +61,26 @@ Mark secondary columns (descriptions, invoice numbers, audit dates) with `option
 
 ### Card Content Layout via `contentStyle`
 To lay out a `Card`'s children (flex, gap, wrapping) use the `contentStyle` prop, not `style`. `style` targets the outer `.p-card` element, whose only child is the PrimeReact body wrapper, so `display: flex`/`gap` on it never reaches the children.
+
+### `new_ui` Features Compose Wrappers Only
+Code in `new_ui/features/**` builds UI only from wrappers in `new_ui/components/` — never from `primereact/*` directly. ESLint `no-restricted-imports` enforces this for `new_ui/features/**` (`frontend/eslint.config.js`). If a wrapper is missing, add it to `new_ui/components/` (it owns the theme and PrimeReact styling) instead of importing PrimeReact into the feature.
+
+### Wrapper Catalog
+Pick the existing wrapper before writing markup or styles:
+- **Layout** (`components/layout/`): `Page` (`title`, `subtitle`, `actions` — the page header; there is no separate PageHeader), `Section` (`title`, `level` 2|3, `size`, `subtitle`, `actions`), `Stack` (`direction`, `gap` as a space token `"0-5"`…`"8"`, `align`, `justify`, `wrap`), `Grid` (`min` tile width, `gap`; responsive auto-fill).
+- **Typography** (`components/ui/`): `Heading` (`level` 2|3|4, `size` base|md|xl), `Text` (`as`, `tone` default|secondary|muted|success|danger, `size`, `weight`, `strike`).
+- **Surfaces**: `Card` (`padding` none|sm|md|lg, `highlighted`, `dashed`), `DetailList` (`variant` default|compact|footer), `DataTableCard`, `Badge`, `StatTile`.
+- **Controls**: `Button`, `FilterBar` (card holding list filters), `SearchInput`, `SegmentedControl<T>`, `ToggleCheckbox`, `Timeline<T>`, form fields in `components/form/` (`FormDialog`, `TextField`, `SegmentedField`, …).
+- **Destructive confirmation**: `confirmDanger({title, message, confirmLabel, onConfirm})` — default focus on "Anuluj", danger-styled accept.
+```tsx
+<Page title="Osoby" actions={<Button icon={<IconPlus size={15}/>}>Dodaj najemcę</Button>}>
+    <FilterBar>
+        <SearchInput value={search} onChange={setSearch} placeholder="Szukaj…" ariaLabel="Szukaj osoby"/>
+        <ToggleCheckbox checked={onlyActive} onChange={setOnlyActive} label="Tylko z aktywną umową"/>
+    </FilterBar>
+    <DataTableCard value={persons} columns={columns}/>
+</Page>
+```
+
+### No Inline Styles in Features
+Features don't set `style={{…}}` for layout, spacing, colors or typography — use `Stack`/`Grid`/`Section`/`Text` props or a `.ku-*` class owned by a wrapper. Inline style is allowed only for a unique, data-driven value (e.g. a status color coming from data).

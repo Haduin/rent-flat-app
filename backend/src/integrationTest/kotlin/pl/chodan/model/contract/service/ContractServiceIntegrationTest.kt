@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.assertThrows
 import pl.chodan.database.PaymentStatus
 import pl.chodan.model.contract.dto.DeleteContractDTO
 import pl.chodan.model.contract.dto.NewContractDTO
@@ -22,6 +21,7 @@ import pl.chodan.testutil.insertPayment
 import pl.chodan.testutil.insertRoom
 import pl.chodan.testutil.startTestKoin
 import pl.chodan.testutil.stopTestKoin
+import pl.chodan.testutil.assertApiError
 
 class ContractServiceIntegrationTest {
 
@@ -61,30 +61,30 @@ class ContractServiceIntegrationTest {
     }
 
     @Test
-    fun `getContractById returns the created contract`() = runBlocking {
+    fun `deleteContract makes the tenant NON_RESIDENT once their last active contract ends`() = runBlocking {
         val personId = createTenant()
-        val roomId = createRoom()
         val contractService = ContractService()
-        val id = contractService.createContract(
-            NewContractDTO(
-                personId = personId, roomId = roomId,
-                startDate = "2026-08-01", endDate = "2027-07-31",
-                amount = 2000.0, deposit = 500.0, payedDate = 10
+        val contractIds = List(2) {
+            contractService.createContract(
+                NewContractDTO(
+                    personId = personId, roomId = createRoom(),
+                    startDate = "2026-01-01", endDate = "2026-12-31",
+                    amount = 2000.0, deposit = 500.0, payedDate = 10
+                )
             )
-        )
+        }
+        val terminate = { contractId: Int ->
+            DeleteContractDTO(
+                contractId = contractId, terminationDate = "2026-08-15",
+                depositReturned = null, positiveCancel = null, description = null
+            )
+        }
 
-        val contract = contractService.getContractById(id)
+        contractService.deleteContract(terminate(contractIds[0]))
+        assertEquals("RESIDENT", PersonService().getPersonById(personId)?.status)
 
-        assertEquals(personId, contract?.personId)
-        assertEquals(roomId, contract?.roomId)
-        assertEquals("2026-08-01", contract?.startDate)
-    }
-
-    @Test
-    fun `getContractById returns null for an unknown id`() = runBlocking {
-        val contract = ContractService().getContractById(999)
-
-        assertNull(contract)
+        contractService.deleteContract(terminate(contractIds[1]))
+        assertEquals("NON_RESIDENT", PersonService().getPersonById(personId)?.status)
     }
 
     @Test
@@ -107,9 +107,9 @@ class ContractServiceIntegrationTest {
             )
         )
 
-        val updated = contractService.getContractById(id)
-        assertEquals(0, updated!!.amount!!.compareTo(2500.0.toBigDecimal()))
-        assertEquals(0, updated.deposit!!.compareTo(500.0.toBigDecimal()))
+        val updated = contractService.contractById(id)
+        assertEquals(0, updated.amount!!.compareTo(2500.0))
+        assertEquals(0, updated.deposit!!.compareTo(500.0))
         assertEquals("2026-08-01", updated.startDate)
     }
 
@@ -132,20 +132,21 @@ class ContractServiceIntegrationTest {
             )
         )
 
-        assertThrows(IllegalStateException::class.java) {
-            runBlocking {
-                contractService.updateContract(
-                    UpdateContractDetails(
-                        contractId = id, roomId = null, amount = 9999.0, deposit = null,
-                        startDate = null, endDate = null, payedTillDayOfMonth = null
-                    )
+        assertApiError("CONTRACT_TERMINATED") {
+            contractService.updateContract(
+                UpdateContractDetails(
+                    contractId = id, roomId = null, amount = 9999.0, deposit = null,
+                    startDate = null, endDate = null, payedTillDayOfMonth = null
                 )
-            }
+            )
         }
 
-        val untouched = contractService.getContractById(id)
-        assertEquals(0, untouched!!.amount!!.compareTo(2000.0.toBigDecimal()))
+        val untouched = contractService.contractById(id)
+        assertEquals(0, untouched.amount!!.compareTo(2000.0))
     }
+
+    private suspend fun ContractService.contractById(id: Int) =
+        getAllContractsWithRoomAndPersonDetails().single { it.id == id }
 
     /**
      * Baseline contract used by the per-field update tests below, plus an "everything else stayed
@@ -175,10 +176,10 @@ class ContractServiceIntegrationTest {
             )
         )
 
-        val updated = contractService.getContractById(id)!!
-        assertEquals(newRoomId, updated.roomId)
-        assertEquals(0, updated.amount!!.compareTo(2000.0.toBigDecimal()))
-        assertEquals(0, updated.deposit!!.compareTo(500.0.toBigDecimal()))
+        val updated = contractService.contractById(id)
+        assertEquals(newRoomId, updated.room?.id)
+        assertEquals(0, updated.amount!!.compareTo(2000.0))
+        assertEquals(0, updated.deposit!!.compareTo(500.0))
         assertEquals("2026-08-01", updated.startDate)
         assertEquals("2027-07-31", updated.endDate)
     }
@@ -196,10 +197,10 @@ class ContractServiceIntegrationTest {
             )
         )
 
-        val updated = contractService.getContractById(id)!!
-        assertEquals(0, updated.amount!!.compareTo(2750.0.toBigDecimal()))
-        assertEquals(roomId, updated.roomId)
-        assertEquals(0, updated.deposit!!.compareTo(500.0.toBigDecimal()))
+        val updated = contractService.contractById(id)
+        assertEquals(0, updated.amount!!.compareTo(2750.0))
+        assertEquals(roomId, updated.room?.id)
+        assertEquals(0, updated.deposit!!.compareTo(500.0))
         assertEquals("2026-08-01", updated.startDate)
         assertEquals("2027-07-31", updated.endDate)
     }
@@ -217,10 +218,10 @@ class ContractServiceIntegrationTest {
             )
         )
 
-        val updated = contractService.getContractById(id)!!
-        assertEquals(0, updated.deposit!!.compareTo(900.0.toBigDecimal()))
-        assertEquals(roomId, updated.roomId)
-        assertEquals(0, updated.amount!!.compareTo(2000.0.toBigDecimal()))
+        val updated = contractService.contractById(id)
+        assertEquals(0, updated.deposit!!.compareTo(900.0))
+        assertEquals(roomId, updated.room?.id)
+        assertEquals(0, updated.amount!!.compareTo(2000.0))
         assertEquals("2026-08-01", updated.startDate)
         assertEquals("2027-07-31", updated.endDate)
     }
@@ -238,11 +239,11 @@ class ContractServiceIntegrationTest {
             )
         )
 
-        val updated = contractService.getContractById(id)!!
+        val updated = contractService.contractById(id)
         assertEquals("2026-09-15", updated.startDate)
-        assertEquals(roomId, updated.roomId)
-        assertEquals(0, updated.amount!!.compareTo(2000.0.toBigDecimal()))
-        assertEquals(0, updated.deposit!!.compareTo(500.0.toBigDecimal()))
+        assertEquals(roomId, updated.room?.id)
+        assertEquals(0, updated.amount!!.compareTo(2000.0))
+        assertEquals(0, updated.deposit!!.compareTo(500.0))
         assertEquals("2027-07-31", updated.endDate)
     }
 
@@ -259,16 +260,14 @@ class ContractServiceIntegrationTest {
             )
         )
 
-        val updated = contractService.getContractById(id)!!
+        val updated = contractService.contractById(id)
         assertEquals("2028-01-31", updated.endDate)
-        assertEquals(roomId, updated.roomId)
-        assertEquals(0, updated.amount!!.compareTo(2000.0.toBigDecimal()))
-        assertEquals(0, updated.deposit!!.compareTo(500.0.toBigDecimal()))
+        assertEquals(roomId, updated.room?.id)
+        assertEquals(0, updated.amount!!.compareTo(2000.0))
+        assertEquals(0, updated.deposit!!.compareTo(500.0))
         assertEquals("2026-08-01", updated.startDate)
     }
 
-    // getContractById doesn't select payedTillDayOfMonth, so this field can only be observed
-    // through the join-backed getAllContractsWithRoomAndPersonDetails.
     @Test
     fun `updateContract changes payedTillDayOfMonth and leaves other fields untouched`() = runBlocking {
         val contractService = ContractService()
@@ -487,14 +486,13 @@ class ContractServiceIntegrationTest {
         database.insertPayment(id, scopeDate = "2026-09", status = PaymentStatus.PENDING)
         val alreadyPaidId = database.insertPayment(id, scopeDate = "2026-07", status = PaymentStatus.PAID)
 
-        val result = contractService.deleteContract(
+        contractService.deleteContract(
             DeleteContractDTO(
                 contractId = id, terminationDate = "2026-08-15",
                 depositReturned = true, positiveCancel = true, description = "Zakończono wcześniej"
             )
         )
 
-        assertTrue(result is ContractDeleteResult.Success)
         val payments = PaymentService().getAllPayments()
         val pendingCancelled = payments.filter { it.id != alreadyPaidId }
         assertTrue(pendingCancelled.all { it.status == PaymentStatus.CANCELLED })
@@ -502,14 +500,125 @@ class ContractServiceIntegrationTest {
     }
 
     @Test
-    fun `deleteContract returns NotFound for an unknown contract`() = runBlocking {
-        val result = ContractService().deleteContract(
+    fun `deleteContract rejects an unknown contract with CONTRACT_NOT_FOUND`() {
+        assertApiError("CONTRACT_NOT_FOUND") {
+            ContractService().deleteContract(
+                DeleteContractDTO(
+                    contractId = 999, terminationDate = "2026-08-15",
+                    depositReturned = null, positiveCancel = null, description = null
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `deleteContract rejects an already terminated contract with CONTRACT_TERMINATED`() = runBlocking {
+        val contractService = ContractService()
+        val id = contractService.createContract(
+            NewContractDTO(
+                personId = createTenant(), roomId = createRoom(),
+                startDate = "2026-08-01", endDate = "2027-07-31",
+                amount = 2000.0, deposit = 500.0, payedDate = 10
+            )
+        )
+        val details = DeleteContractDTO(
+            contractId = id, terminationDate = "2026-08-15",
+            depositReturned = null, positiveCancel = null, description = null
+        )
+        contractService.deleteContract(details)
+
+        assertApiError("CONTRACT_TERMINATED") { contractService.deleteContract(details) }
+    }
+
+    @Test
+    fun `updateContract rejects an unknown contract with CONTRACT_NOT_FOUND`() {
+        assertApiError("CONTRACT_NOT_FOUND") {
+            ContractService().updateContract(UpdateContractDetails(
+                    contractId = 999, roomId = null, amount = 1500.0, deposit = null,
+                    startDate = null, endDate = null, payedTillDayOfMonth = null
+                ))
+        }
+    }
+
+    @Test
+    fun `createContract rejects an unknown person with PERSON_NOT_FOUND`() {
+        val roomId = createRoom()
+        assertApiError("PERSON_NOT_FOUND") {
+            ContractService().createContract(
+                NewContractDTO(
+                    personId = 999, roomId = roomId,
+                    startDate = "2026-08-01", endDate = "2027-07-31",
+                    amount = 2000.0, deposit = 2000.0, payedDate = 10
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `createContract rejects an unknown room with ROOM_NOT_FOUND`() = runBlocking {
+        val personId = createTenant()
+        assertApiError("ROOM_NOT_FOUND") {
+            ContractService().createContract(
+                NewContractDTO(
+                    personId = personId, roomId = 999,
+                    startDate = "2026-08-01", endDate = "2027-07-31",
+                    amount = 2000.0, deposit = 2000.0, payedDate = 10
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `updateContract rejects an unknown room with ROOM_NOT_FOUND`() = runBlocking {
+        val contractService = ContractService()
+        val id = createBaselineContract(contractService, createRoom())
+
+        assertApiError("ROOM_NOT_FOUND") {
+            contractService.updateContract(
+                UpdateContractDetails(
+                    contractId = id, roomId = 999, amount = null, deposit = null,
+                    startDate = null, endDate = null, payedTillDayOfMonth = null
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `getContractHistory rejects an unknown contract with CONTRACT_NOT_FOUND`() {
+        assertApiError("CONTRACT_NOT_FOUND") { ContractService().getContractHistory(999) }
+    }
+
+    @Test
+    fun `createContract checks the person before the room`() {
+        assertApiError("PERSON_NOT_FOUND") {
+            ContractService().createContract(
+                NewContractDTO(
+                    personId = 999, roomId = 999,
+                    startDate = "2026-08-01", endDate = "2027-07-31",
+                    amount = 2000.0, deposit = 2000.0, payedDate = 10
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `updateContract checks the contract before the new room`() = runBlocking {
+        val contractService = ContractService()
+        val id = createBaselineContract(contractService, createRoom())
+        contractService.deleteContract(
             DeleteContractDTO(
-                contractId = 999, terminationDate = "2026-08-15",
+                contractId = id, terminationDate = "2026-08-15",
                 depositReturned = null, positiveCancel = null, description = null
             )
         )
 
-        assertTrue(result is ContractDeleteResult.NotFound)
+        assertApiError("CONTRACT_TERMINATED") {
+            contractService.updateContract(
+                UpdateContractDetails(
+                    contractId = id, roomId = 999, amount = null, deposit = null,
+                    startDate = null, endDate = null, payedTillDayOfMonth = null
+                )
+            )
+        }
     }
 }

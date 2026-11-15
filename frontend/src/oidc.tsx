@@ -3,7 +3,9 @@ import {z} from "zod";
 import {oidcEarlyInit} from "oidc-spa/core";
 
 // Call this only if you don't use oidc-spa's Vite plugin.
-oidcEarlyInit({BASE_URL: import.meta.env.VITE_FRONTEND_URL});
+// No hidden iframe for silent sign-in: inside a framed host (IDE preview) or after a slow cold start
+// the iframe ended up loading the app itself and oidc-spa aborted with a "refusing to post" alert.
+oidcEarlyInit({BASE_URL: import.meta.env.VITE_FRONTEND_URL, sessionRestorationMethod: "full page redirect"});
 
 export const {
     bootstrapOidc,

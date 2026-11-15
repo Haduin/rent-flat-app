@@ -6,7 +6,7 @@ import {InputTextarea} from "primereact/inputtextarea";
 import {Calendar} from "primereact/calendar";
 import {Dropdown} from "primereact/dropdown";
 import {Checkbox} from "primereact/checkbox";
-import {SelectButton} from "primereact/selectbutton";
+import {SegmentedControl} from "../ui/SegmentedControl.tsx";
 
 interface BaseFieldProps<V> {
     formik: FormikProps<V>;
@@ -200,17 +200,7 @@ export const SegmentedField = <V, T>(props: BaseFieldProps<V> & { options: Field
     return (
         <div className="ku-field" role="group" aria-labelledby={`${id}-label`}>
             <span id={`${id}-label`} className="ku-field-label">{label}</span>
-            <SelectButton
-                value={formik.values[name]}
-                onChange={(event) => {
-                    if (event.value !== null) set(event.value);
-                }}
-                options={options}
-                optionLabel="label"
-                optionValue="value"
-                allowEmpty={false}
-                disabled={disabled}
-            />
+            <SegmentedControl value={formik.values[name] as T} onChange={set} options={options} disabled={disabled}/>
             {hint && !error && <small className="ku-field-hint">{hint}</small>}
             {error && <small className="ku-field-error">{error}</small>}
         </div>

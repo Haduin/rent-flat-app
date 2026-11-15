@@ -5,9 +5,13 @@ export interface DetailItem {
     value: ReactNode;
 }
 
-/** Label-left / value-right facts: the read-only body of a details dialog and the "what you're acting on" summary atop a form. */
-export const DetailList = ({items, compact = false}: { items: DetailItem[]; compact?: boolean }) => (
-    <dl className={`ku-detail-list${compact ? " ku-detail-list-compact" : ""}`}>
+/**
+ * Label-left / value-right facts.
+ * default: body of a details dialog; compact: "what you're acting on" box atop a form;
+ * footer: the closing lines of a card (rent, net result) under one divider.
+ */
+export const DetailList = ({items, variant = "default"}: { items: DetailItem[]; variant?: "default" | "compact" | "footer" }) => (
+    <dl className={`ku-detail-list${"default" === variant ? "" : ` ku-detail-list-${variant}`}`}>
         {items.map(({label, value}) => (
             <div key={label} className="ku-detail-row">
                 <dt>{label}</dt>

@@ -12,6 +12,8 @@ import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.apartment.dto.ApartmentResponse
 import pl.chodan.model.apartment.dto.RoomDetails
+import pl.chodan.model.apartment.service.lockRoom
+import pl.chodan.model.apartment.service.requireApartment
 import pl.chodan.model.expenses.dto.ExpenseConfirmationDTO
 import pl.chodan.model.expenses.dto.NewOperationalExpenseDTO
 import pl.chodan.model.expenses.dto.OperationalExpenseDTO
@@ -23,13 +25,16 @@ import java.time.YearMonth
 
 class ExpenseService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
-    private val expenseTemplateService by inject<ExpenseTemplateService>()
 
     suspend fun addExpense(dto: NewOperationalExpenseDTO): Int = databaseProvider.dbQuery {
+        dto.apartmentId?.let { requireApartment(it) }
+        dto.roomId?.let { lockRoom(it) }
+        val date = LocalDate.parse(dto.insertDate)
+        dto.templateId?.let { requireTemplateFreeInMonth(it, YearMonth.from(date)) }
         OperationalExpense.insert {
             it[apartmentId] = dto.apartmentId
             it[roomId] = dto.roomId
-            it[insertDate] = LocalDate.parse(dto.insertDate)
+            it[insertDate] = date
             it[costDate] = dto.costDate?.toLocalDateWithFullPattern()
             it[amount] = dto.amount.toBigDecimal()
             it[category] = dto.category
@@ -89,7 +94,14 @@ class ExpenseService : KoinComponent {
                 }
         }
 
-    suspend fun updateExpense(dto: UpdateOperationalExpenseDTO) = databaseProvider.dbQuery {
+    suspend fun updateExpense(dto: UpdateOperationalExpenseDTO): Unit = databaseProvider.dbQuery {
+        val current = OperationalExpense.select(OperationalExpense.templateId, OperationalExpense.insertDate)
+            .where { OperationalExpense.id eq dto.id }.forUpdate().singleOrNull()
+            ?: throw ExpenseError.NotFound(dto.id)
+        current[OperationalExpense.templateId]?.let { templateId ->
+            val date = dto.insertDate?.toLocalDateWithFullPattern() ?: current[OperationalExpense.insertDate]
+            requireTemplateFreeInMonth(templateId, YearMonth.from(date), exceptExpenseId = dto.id)
+        }
         OperationalExpense.update({ OperationalExpense.id eq dto.id }) {
             dto.insertDate?.let { value -> it[insertDate] = value.toLocalDateWithFullPattern() }
             dto.costDate?.let { value -> it[costDate] = value.toLocalDateWithFullPattern() }
@@ -103,10 +115,12 @@ class ExpenseService : KoinComponent {
     suspend fun generateMonthlyExpenses(yearMonth: String) = databaseProvider.dbQuery {
         val ym = YearMonth.parse(yearMonth)
 
-        // Select active templates within optional start/end month range
+        // Locking the templates serializes concurrent runs; the later one then sees the committed expenses.
         val templates = OperationalExpenseTemplate.selectAll()
-            .andWhere { OperationalExpenseTemplate.active eq true }
-            .map { it }
+            .where { OperationalExpenseTemplate.active eq true }
+            .orderBy(OperationalExpenseTemplate.id)
+            .forUpdate()
+            .toList()
 
         templates.forEach { row ->
             val day = row[OperationalExpenseTemplate.dayOfMonth]
@@ -118,12 +132,8 @@ class ExpenseService : KoinComponent {
 
             val templateId = row[OperationalExpenseTemplate.id]
 
-            val exists = OperationalExpense.selectAll()
-                .andWhere { OperationalExpense.templateId eq templateId }
-                .andWhere { OperationalExpense.insertDate eq insertDate }
-                .any()
-
-            if (!exists) {
+            // whole month, not the exact day: the template's day may have changed since the last run
+            if (!templateExpenseExists(templateId, ym)) {
                 OperationalExpense.insert {
                     it[OperationalExpense.templateId] = templateId
                     it[OperationalExpense.apartmentId] = row[OperationalExpenseTemplate.apartmentId]
@@ -139,15 +149,35 @@ class ExpenseService : KoinComponent {
         }
     }
 
-    suspend fun confirmExpense(dto: ExpenseConfirmationDTO) = databaseProvider.dbQuery {
+    suspend fun confirmExpense(dto: ExpenseConfirmationDTO): Unit = databaseProvider.dbQuery {
+        val status = OperationalExpense.select(OperationalExpense.status)
+            .where { OperationalExpense.id eq dto.expenseId }.forUpdate().singleOrNull()
+            ?.get(OperationalExpense.status)
+            ?: throw ExpenseError.NotFound(dto.expenseId)
+        if (PaymentStatus.PAID == status || PaymentStatus.CANCELLED == status) throw ExpenseError.NotConfirmable(status)
         OperationalExpense.update({ OperationalExpense.id eq dto.expenseId }) {
-            it[status] = PaymentStatus.PAID
+            it[OperationalExpense.status] = PaymentStatus.PAID
             it[paidDate] = dto.paidDate.toLocalDateWithFullPattern()
             it[amount] = dto.payedAmount.toBigDecimal()
         }
     }
 
-    suspend fun deleteExpense(id: Int): Int = databaseProvider.dbQuery {
-        OperationalExpense.deleteWhere { OperationalExpense.id eq id }
+    suspend fun deleteExpense(id: Int) = databaseProvider.dbQuery {
+        if (0 == OperationalExpense.deleteWhere { OperationalExpense.id eq id }) throw ExpenseError.NotFound(id)
+    }
+
+    /** Locks the template and refuses a second expense of it in [month] (pre-check for unique V7). */
+    private fun requireTemplateFreeInMonth(templateId: Int, month: YearMonth, exceptExpenseId: Int? = null) {
+        val exists = OperationalExpenseTemplate.selectAll().where { OperationalExpenseTemplate.id eq templateId }.forUpdate().any()
+        if (!exists) throw ExpenseError.TemplateNotFound(templateId)
+        if (templateExpenseExists(templateId, month, exceptExpenseId)) throw ExpenseError.AlreadyGenerated(month)
+    }
+
+    private fun templateExpenseExists(templateId: Int, month: YearMonth, exceptExpenseId: Int? = null): Boolean {
+        val query = OperationalExpense.select(OperationalExpense.id)
+            .where { OperationalExpense.templateId eq templateId }
+            .andWhere { OperationalExpense.insertDate.between(month.atDay(1), month.atEndOfMonth()) }
+        exceptExpenseId?.let { query.andWhere { OperationalExpense.id neq it } }
+        return query.any()
     }
 }

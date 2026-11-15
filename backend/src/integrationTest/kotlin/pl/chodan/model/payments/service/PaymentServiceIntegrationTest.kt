@@ -1,13 +1,21 @@
 package pl.chodan.model.payments.service
 
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import pl.chodan.database.Payment
+import pl.chodan.database.PaymentSplit
 import pl.chodan.database.PaymentStatus
+import pl.chodan.model.contract.database.Contract
+import pl.chodan.model.contract.database.ContractStatus
 import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.service.ContractService
 import pl.chodan.model.payments.dto.PaymentEdit
@@ -17,6 +25,7 @@ import pl.chodan.model.persons.dto.CreatedPersonDTO
 import pl.chodan.model.persons.dto.PaymentConfirmationDTO
 import pl.chodan.model.persons.service.PersonService
 import pl.chodan.routing.SortOrder
+import pl.chodan.testutil.connectWithoutRetries
 import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase
 import pl.chodan.testutil.insertApartment
@@ -25,6 +34,9 @@ import pl.chodan.testutil.insertPaymentSplit
 import pl.chodan.testutil.insertRoom
 import pl.chodan.testutil.startTestKoin
 import pl.chodan.testutil.stopTestKoin
+import pl.chodan.testutil.assertApiError
+import pl.chodan.testutil.runAgainstUncommittedCompetitor
+import java.time.LocalDate
 
 class PaymentServiceIntegrationTest {
 
@@ -91,6 +103,17 @@ class PaymentServiceIntegrationTest {
     }
 
     @Test
+    fun `the database refuses a second payment for the same contract and month`() = runBlocking {
+        val contractId = createContract()
+        database.insertPayment(contractId, scopeDate = "2026-08")
+
+        assertThrows(ExposedSQLException::class.java) {
+            database.insertPayment(contractId, scopeDate = "2026-08")
+        }
+        assertEquals(1, PaymentService().getAllPayments().size)
+    }
+
+    @Test
     fun `editPayment only overwrites the provided fields`() = runBlocking {
         val contractId = createContract()
         val paymentId = database.insertPayment(contractId, scopeDate = "2026-08", amount = 1000.0)
@@ -103,25 +126,25 @@ class PaymentServiceIntegrationTest {
     }
 
     @Test
-    fun `getPaymentsForMouth only returns payments scoped to the requested month`() = runBlocking {
+    fun `getPaymentsForMonth only returns payments scoped to the requested month`() = runBlocking {
         val contractId = createContract()
         database.insertPayment(contractId, scopeDate = "2026-07")
         database.insertPayment(contractId, scopeDate = "2026-08")
 
-        val payments = PaymentService().getPaymentsForMouth("2026-08")
+        val payments = PaymentService().getPaymentsForMonth("2026-08")
 
         assertEquals(1, payments.size)
         assertEquals("2026-08", payments.single().scopeDate)
     }
 
     @Test
-    fun `getPaymentsForMouth sorts by amount descending when requested`() = runBlocking {
-        val contractId = createContract()
-        database.insertPayment(contractId, scopeDate = "2026-08", amount = 100.0)
-        database.insertPayment(contractId, scopeDate = "2026-08", amount = 300.0)
-        database.insertPayment(contractId, scopeDate = "2026-08", amount = 200.0)
+    fun `getPaymentsForMonth sorts by amount descending when requested`() = runBlocking {
+        // one payment per contract per month, so each amount needs its own contract
+        database.insertPayment(createContract(), scopeDate = "2026-08", amount = 100.0)
+        database.insertPayment(createContract(), scopeDate = "2026-08", amount = 300.0)
+        database.insertPayment(createContract(), scopeDate = "2026-08", amount = 200.0)
 
-        val payments = PaymentService().getPaymentsForMouth(
+        val payments = PaymentService().getPaymentsForMonth(
             "2026-08", sortFieldName = PaymentSortableField.AMOUNT, sortOrder = SortOrder.DESC
         )
 
@@ -129,15 +152,10 @@ class PaymentServiceIntegrationTest {
     }
 
     @Test
-    fun `getPaymentsForMouth paginates results`() = runBlocking {
-        val contractId = createContract()
-        repeat(3) { database.insertPayment(contractId, scopeDate = "2026-08", amount = it.toDouble()) }
+    fun `getPaymentsForMonth returns the whole month without paging (D8)`() = runBlocking {
+        repeat(21) { database.insertPayment(createContract(), scopeDate = "2026-08") }
 
-        val firstPage = PaymentService().getPaymentsForMouth("2026-08", page = 0, pageSize = 2)
-        val secondPage = PaymentService().getPaymentsForMouth("2026-08", page = 1, pageSize = 2)
-
-        assertEquals(2, firstPage.size)
-        assertEquals(1, secondPage.size)
+        assertEquals(21, PaymentService().getPaymentsForMonth("2026-08").size)
     }
 
     @Test
@@ -152,23 +170,6 @@ class PaymentServiceIntegrationTest {
         val payment = PaymentService().getAllPayments().single { it.id == paymentId }
         assertEquals(PaymentStatus.PAID, payment.status)
         assertEquals("2026-08-10", payment.payedDate)
-    }
-
-    // Despite the name, deletePayment never removes the row - it behaves exactly like
-    // confirmPayment except for the resulting status. This documents the actual behaviour rather
-    // than the name's implication.
-    @Test
-    fun `deletePayment cancels the payment instead of removing the row`() = runBlocking {
-        val contractId = createContract()
-        val paymentId = database.insertPayment(contractId, scopeDate = "2026-08", amount = 1800.0)
-
-        PaymentService().deletePayment(
-            PaymentConfirmationDTO(paymentId = paymentId, paymentDate = "2026-08-10", payedAmount = 1800.0)
-        )
-
-        val payments = PaymentService().getAllPayments()
-        assertEquals(1, payments.size)
-        assertEquals(PaymentStatus.CANCELLED, payments.single().status)
     }
 
     @Test
@@ -207,13 +208,28 @@ class PaymentServiceIntegrationTest {
         val paymentId = database.insertPayment(contractId, scopeDate = "2026-08", amount = 1000.0)
         database.insertPaymentSplit(paymentId, amount = 800.0, paymentDate = "2026-08-08")
 
-        assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
-                PaymentService().splitPayment(
-                    PaymentSplitDTO(paymentId = paymentId, amount = 300.0, paymentDate = "2026-08-20")
-                )
-            }
+        assertApiError("PAYMENT_OVERPAID") {
+            PaymentService().splitPayment(
+                PaymentSplitDTO(paymentId = paymentId, amount = 300.0, paymentDate = "2026-08-20")
+            )
         }
+    }
+
+    @Test
+    fun `confirmPayment and splitPayment throw PAYMENT_NOT_FOUND for a missing payment`() {
+        assertApiError("PAYMENT_NOT_FOUND") {
+            PaymentService().confirmPayment(
+                PaymentConfirmationDTO(paymentId = 12345, paymentDate = "2026-08-10", payedAmount = 100.0)
+            )
+        }
+        assertApiError("PAYMENT_NOT_FOUND") {
+            PaymentService().splitPayment(PaymentSplitDTO(paymentId = 12345, amount = 100.0, paymentDate = "2026-08-20"))
+        }
+    }
+
+    @Test
+    fun `getPaymentSplits throws PAYMENT_NOT_FOUND for a missing payment (D7)`() {
+        assertApiError("PAYMENT_NOT_FOUND") { PaymentService().getPaymentSplits(999) }
     }
 
     @Test
@@ -223,12 +239,10 @@ class PaymentServiceIntegrationTest {
             contractId, scopeDate = "2026-08", amount = 1000.0, status = PaymentStatus.PAID
         )
 
-        assertThrows(IllegalStateException::class.java) {
-            runBlocking {
-                PaymentService().splitPayment(
-                    PaymentSplitDTO(paymentId = paymentId, amount = 100.0, paymentDate = "2026-08-20")
-                )
-            }
+        assertApiError("PAYMENT_NOT_SPLITTABLE") {
+            PaymentService().splitPayment(
+                PaymentSplitDTO(paymentId = paymentId, amount = 100.0, paymentDate = "2026-08-20")
+            )
         }
     }
 
@@ -243,5 +257,98 @@ class PaymentServiceIntegrationTest {
 
         assertEquals(listOf(800.0, 200.0), splits.map { it.amount })
         assertEquals(listOf("2026-08-08", "2026-08-20"), splits.map { it.paymentDate })
+    }
+
+    @Test
+    fun `confirmPayment rejects an already paid payment with PAYMENT_NOT_CONFIRMABLE`() = runBlocking {
+        val paymentId = database.insertPayment(createContract(), "2026-08", status = PaymentStatus.PAID, payedDate = "2026-08-05")
+
+        assertApiError("PAYMENT_NOT_CONFIRMABLE") {
+            PaymentService().confirmPayment(PaymentConfirmationDTO(paymentId, "2026-08-10", 2000.0))
+        }
+    }
+
+    @Test
+    fun `confirmPayment on a partially paid payment keeps the due amount`() = runBlocking {
+        val paymentId = database.insertPayment(createContract(), "2026-08", amount = 2000.0, status = PaymentStatus.PARTIALLY_PAID)
+        database.insertPaymentSplit(paymentId, 800.0, "2026-08-05")
+
+        PaymentService().confirmPayment(PaymentConfirmationDTO(paymentId, "2026-08-10", 1200.0))
+
+        val payment = PaymentService().getAllPayments().single { it.id == paymentId }
+        assertEquals(PaymentStatus.PAID, payment.status)
+        assertEquals(2000.0, payment.amount)
+    }
+
+    @Test
+    fun `splitPayment rejects an overpaying instalment with PAYMENT_OVERPAID`() = runBlocking {
+        val paymentId = database.insertPayment(createContract(), "2026-08", amount = 2000.0)
+
+        assertApiError("PAYMENT_OVERPAID") {
+            PaymentService().splitPayment(PaymentSplitDTO(paymentId, 2500.0, "2026-08-10"))
+        }
+    }
+
+    @Test
+    fun `generateNewPaymentsForActiveContracts waits for an uncommitted payment of the same month and skips it (D11)`() = runBlocking {
+        val contractId = createContract()
+        // Exposed retries a transaction after an SQL error, which would hide the unique violation on retry.
+        stopTestKoin()
+        startTestKoin(connectWithoutRetries())
+
+        val result = runAgainstUncommittedCompetitor(
+            database,
+            competitor = {
+                Payment.insert {
+                    it[Payment.contractId] = contractId
+                    it[scopeDate] = "2026-08"
+                    it[amount] = 2000.toBigDecimal()
+                    it[status] = PaymentStatus.PENDING
+                }
+            },
+            service = { PaymentService().generateNewPaymentsForActiveContracts("2026-08") },
+        )
+
+        assertTrue(result.isSuccess, "$result")
+        assertEquals(1, PaymentService().getAllPayments().size)
+    }
+
+    @Test
+    fun `generateNewPaymentsForActiveContracts waits for an uncommitted termination and skips the contract`() = runBlocking {
+        val contractId = createContract()
+
+        val result = runAgainstUncommittedCompetitor(
+            database,
+            competitor = {
+                Contract.selectAll().where { Contract.id eq contractId }.forUpdate().single()
+                Contract.update({ Contract.id eq contractId }) { it[status] = ContractStatus.TERMINATED }
+            },
+            service = { PaymentService().generateNewPaymentsForActiveContracts("2026-08") },
+        )
+
+        assertTrue(result.isSuccess, "$result")
+        assertTrue(PaymentService().getAllPayments().isEmpty())
+    }
+
+    @Test
+    fun `splitPayment waits for an uncommitted instalment and then refuses with PAYMENT_OVERPAID (D13)`() = runBlocking {
+        val paymentId = database.insertPayment(createContract(), "2026-08", amount = 1000.0)
+        stopTestKoin()
+        startTestKoin(connectWithoutRetries())
+
+        val result = runAgainstUncommittedCompetitor(
+            database,
+            competitor = {
+                Payment.selectAll().where { Payment.id eq paymentId }.forUpdate().toList()
+                PaymentSplit.insert {
+                    it[PaymentSplit.paymentId] = paymentId
+                    it[amount] = 600.toBigDecimal()
+                    it[paymentDate] = LocalDate.of(2026, 8, 5)
+                }
+            },
+            service = { PaymentService().splitPayment(PaymentSplitDTO(paymentId, 600.0, "2026-08-10")) },
+        )
+
+        assertEquals("PAYMENT_OVERPAID", (result.exceptionOrNull() as? PaymentError)?.code?.name, "$result")
     }
 }

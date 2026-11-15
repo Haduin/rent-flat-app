@@ -1,12 +1,12 @@
 import {useState} from "react";
 import {getExpensesTemplate, removeExpensesTemplate} from "../../../src/pages/expenses-template/api/expenses-template.api.ts";
 import {ExpenseTemplateDialog} from "./ExpenseTemplateDialog.tsx";
-import {confirmDialog} from "primereact/confirmdialog";
+import {confirmDanger} from "../../components/ui/confirm.ts";
 import {useModal} from "../../../src/hooks/use-modal";
 import {ViewMode} from "../../../src/commons/view-mode.ts";
 import {getExpenseCategoryLabel} from "../../../src/pages/expenses-template/enum/expenses.enum.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
+import {Page} from "../../components/layout/Page.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
@@ -41,14 +41,11 @@ const ExpenseTemplatesPage = () => {
     };
     // The backend keeps a removed template (its generated costs point at it) and only deactivates it.
     const handleDeactivate = (expense: OperationalExpenseTemplateResponse) =>
-        confirmDialog({
-            header: `Wyłączyć szablon ${getSelectedExpenseLabel(expense)}?`,
+        confirmDanger({
+            title: `Wyłączyć szablon ${getSelectedExpenseLabel(expense)}?`,
             message: "Od następnego generowania nie będzie tworzył nowych kosztów. Koszty już wygenerowane zostają. Wyłączenia nie da się na razie cofnąć.",
-            defaultFocus: "reject",
-            acceptLabel: "Wyłącz szablon",
-            rejectLabel: "Anuluj",
-            acceptClassName: "p-button-danger",
-            accept: () => removeAction.mutate(expense.id),
+            confirmLabel: "Wyłącz szablon",
+            onConfirm: () => removeAction.mutate(expense.id),
         });
     const getSelectedExpenseLabel = (expense: OperationalExpenseTemplateResponse | null) => {
         if (!expense) return "";
@@ -83,17 +80,15 @@ const ExpenseTemplatesPage = () => {
     ];
 
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader
-                title="Szablony kosztów"
-                subtitle="Co miesiąc tworzą koszty operacyjne w wybranym dniu"
-                actions={
-                    <Button variant="primary" icon={<IconPlus size={15}/>} onClick={handleOpenCreate}>
-                        Dodaj szablon
-                    </Button>
-                }
-            />
-
+        <Page
+            title="Szablony kosztów"
+            subtitle="Co miesiąc tworzą koszty operacyjne w wybranym dniu"
+            actions={
+                <Button variant="primary" icon={<IconPlus size={15}/>} onClick={handleOpenCreate}>
+                    Dodaj szablon
+                </Button>
+            }
+        >
             <DataTableCard
                 value={expensesTemplates}
                 columns={columns}
@@ -105,7 +100,7 @@ const ExpenseTemplatesPage = () => {
             {isExpensesModalOpen && (
                 <ExpenseTemplateDialog template={ViewMode.UPDATE === mode ? selectedExpense : null} onHide={handleClose}/>
             )}
-        </div>
+        </Page>
     );
 };
 

@@ -4,13 +4,13 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import pl.chodan.database.ExpenseCategory
 import pl.chodan.model.expenses.dto.AddExpenseTemplateRequest
 import pl.chodan.model.expenses.dto.UpdateExpenseTemplate
+import pl.chodan.testutil.assertApiError
 import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase
 import pl.chodan.testutil.insertApartment
@@ -94,36 +94,54 @@ class ExpenseTemplateServiceIntegrationTest {
         assertEquals(10, updated.dayOfMonth)
     }
 
-    // UpdateExpenseTemplate has no `active` field at all (it's commented out on the DTO), so
-    // there is no way to deactivate a template through the API in the first place - and, worse,
-    // an update request with every other field left null doesn't safely no-op either: Exposed's
-    // UPDATE requires at least one assigned column, so this throws instead of doing nothing.
-    // The route has no try/catch around this call, so in production it would surface as a 500.
     @Test
-    fun `updateExpenseTemplate throws when every field is null instead of safely no-op-ing`() {
+    fun `createExpenseTemplate returns the id of the new template`() = runBlocking {
         val service = ExpenseTemplateService()
-        val id = runBlocking {
-            service.createExpenseTemplate(
-                AddExpenseTemplateRequest(
-                    apartmentId = null, roomId = null, amount = 100.0,
-                    category = ExpenseCategory.OTHER, expenseDate = "10"
-                )
-            )
-            service.findAll().single().id
-        }
 
-        assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
-                service.updateExpenseTemplate(
-                    id,
-                    UpdateExpenseTemplate(
-                        apartmentId = null, roomId = null, amount = null,
-                        category = null, expenseDate = null
-                    )
-                )
-            }
+        val id = service.createExpenseTemplate(template())
+
+        assertEquals(service.findAll().single().id, id)
+    }
+
+    @Test
+    fun `createExpenseTemplate rejects an unknown apartment or room`() {
+        val apartmentId = database.insertApartment("Mieszkanie A")
+
+        assertApiError("APARTMENT_NOT_FOUND") { ExpenseTemplateService().createExpenseTemplate(template(apartmentId = 999)) }
+        assertApiError("ROOM_NOT_FOUND") {
+            ExpenseTemplateService().createExpenseTemplate(template(apartmentId = apartmentId, roomId = 999))
         }
     }
+
+    @Test
+    fun `updateExpenseTemplate rejects an unknown apartment or room`() {
+        val service = ExpenseTemplateService()
+        val id = runBlocking { service.createExpenseTemplate(template()) }
+
+        assertApiError("APARTMENT_NOT_FOUND") { service.updateExpenseTemplate(id, update(apartmentId = 999)) }
+        assertApiError("ROOM_NOT_FOUND") { service.updateExpenseTemplate(id, update(roomId = 999)) }
+    }
+
+    @Test
+    fun `updateExpenseTemplate reports the missing template before an unknown apartment`() {
+        assertApiError("EXPENSE_TEMPLATE_NOT_FOUND") {
+            ExpenseTemplateService().updateExpenseTemplate(999, update(apartmentId = 999))
+        }
+    }
+
+    @Test
+    fun `deleteExpenseTemplate rejects an unknown template`() {
+        assertApiError("EXPENSE_TEMPLATE_NOT_FOUND") { ExpenseTemplateService().deleteExpenseTemplate(999) }
+    }
+
+    private fun template(apartmentId: Int? = null, roomId: Int? = null) = AddExpenseTemplateRequest(
+        apartmentId = apartmentId, roomId = roomId, amount = 100.0,
+        category = ExpenseCategory.OTHER, expenseDate = "10"
+    )
+
+    private fun update(apartmentId: Int? = null, roomId: Int? = null) = UpdateExpenseTemplate(
+        apartmentId = apartmentId, roomId = roomId, amount = null, category = null, expenseDate = null
+    )
 
     // Soft-delete: templates that already generated real expenses are linked via a FK
     // (operational_expense.template_id) with no cascade, so a hard DELETE would blow up on those.

@@ -6,15 +6,4 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SaveNameRequest(
     val name: String
-) {
-    fun validatedName(): String {
-        val trimmed = name.trim()
-        require(trimmed.isNotEmpty()) { "Nazwa jest wymagana" }
-        require(trimmed.length <= MAX_NAME_LENGTH) { "Nazwa może mieć najwyżej $MAX_NAME_LENGTH znaków" }
-        return trimmed
-    }
-
-    companion object {
-        const val MAX_NAME_LENGTH = 255
-    }
-}
+)

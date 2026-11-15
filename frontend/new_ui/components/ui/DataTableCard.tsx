@@ -26,11 +26,11 @@ export interface DataTableCardProps<T> {
 
 /**
  * The only way new_ui renders a list table: Card + paginator + stacked card layout
- * below 1024px (see the matching @media blocks in tokens.css), with the actions
+ * below 1024px (see the matching @media blocks in components.css), with the actions
  * and optional-column conventions built in so every page behaves the same.
  */
 export const DataTableCard = <T, >({value, columns, rowActions, loading, emptyMessage}: DataTableCardProps<T>) => (
-    <Card padding={0} style={{overflowX: "auto"}}>
+    <Card padding="none" style={{overflowX: "auto"}}>
         <DataTable
             // PrimeReact's DataTable requires its generic value type to extend an internal,
             // unexported Record<string, any> shape it doesn't expose for reuse here - this
@@ -43,7 +43,7 @@ export const DataTableCard = <T, >({value, columns, rowActions, loading, emptyMe
             rowsPerPageOptions={[10, 20, 50]}
             stripedRows
             responsiveLayout="stack"
-            // keep in sync with the stacked-layout @media block in tokens.css
+            // keep in sync with the stacked-layout @media block in components.css
             breakpoint="1024px"
             emptyMessage={emptyMessage}
         >

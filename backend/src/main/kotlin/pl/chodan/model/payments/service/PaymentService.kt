@@ -1,6 +1,7 @@
 package pl.chodan.model.payments.service
 
 import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
@@ -20,7 +21,6 @@ import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
 import pl.chodan.model.contract.database.ContractStatus
 import pl.chodan.model.contract.dto.RawContract
-import pl.chodan.model.expenses.service.ExpenseTemplateService
 import pl.chodan.model.payments.dto.PaymentDTO
 import pl.chodan.model.payments.dto.PaymentEdit
 import pl.chodan.model.payments.dto.PaymentHistoryWithPersonDTO
@@ -38,7 +38,6 @@ import java.time.LocalDate
 class PaymentService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
     private val logger = LoggerFactory.getLogger(PaymentService::class.java)
-    private val expenseTemplateService by inject<ExpenseTemplateService>()
 
     suspend fun generateNewPaymentsForActiveContracts(yearMonth: String) = databaseProvider.dbQuery {
         val startDate = LocalDate.parse("$yearMonth-01")
@@ -50,6 +49,8 @@ class PaymentService : KoinComponent {
                         (Contract.endDate greaterEq startDate) and
                         (Contract.status eq ContractStatus.ACTIVE)
             }
+            .orderBy(Contract.id)
+            .forUpdate(ForUpdateOption.PostgreSQL.ForKeyShare)
             .map { row ->
                 RawContract(
                     id = row[Contract.id],
@@ -79,7 +80,7 @@ class PaymentService : KoinComponent {
             }
 
         if (paymentsToInsert.isNotEmpty()) {
-            Payment.batchInsert(paymentsToInsert) { paymentData ->
+            Payment.batchInsert(paymentsToInsert, ignore = true) { paymentData ->
                 this[Payment.contractId] = paymentData.contractId
                 this[Payment.amount] = paymentData.amount
                 this[Payment.payedDate] = null
@@ -87,7 +88,7 @@ class PaymentService : KoinComponent {
                 this[Payment.status] = PaymentStatus.PENDING
             }
 
-            logger.info("✅ Utworzono ${paymentsToInsert.size} nowych płatności dla miesiąca $yearMonth")
+            logger.info("✅ Do wygenerowania ${paymentsToInsert.size} płatności dla miesiąca $yearMonth")
         } else {
             logger.info("ℹ️ Brak nowych płatności do wygenerowania w miesiącu $yearMonth")
         }
@@ -102,13 +103,12 @@ class PaymentService : KoinComponent {
 
 
     suspend fun editPayment(paymentEdit: PaymentEdit) = databaseProvider.dbQuery {
-
-        Payment.update({ Payment.id eq paymentEdit.paymentId }) {
+        val updated = Payment.update({ Payment.id eq paymentEdit.paymentId }) {
             paymentEdit.amount?.let { amount -> it[Payment.amount] = BigDecimal.valueOf(amount) }
             paymentEdit.status?.let { status -> it[Payment.status] = status }
             paymentEdit.payedDate?.let { payedDate -> it[Payment.payedDate] = payedDate.toLocalDateWithFullPattern() }
         }
-
+        if (0 == updated) throw PaymentError.NotFound(paymentEdit.paymentId)
     }
 
     suspend fun getAllPayments(): List<PaymentDTO> = databaseProvider.dbQuery {
@@ -126,12 +126,10 @@ class PaymentService : KoinComponent {
             }
     }
 
-    suspend fun getPaymentsForMouth(
-        mouth: String,
+    suspend fun getPaymentsForMonth(
+        month: String,
         sortFieldName: PaymentSortableField = PaymentSortableField.ID,
-        sortOrder: SortOrder = SortOrder.ASC,
-        page: Int = 0,
-        pageSize: Int = 20
+        sortOrder: SortOrder = SortOrder.ASC
     ): List<PaymentHistoryWithPersonDTO> =
         databaseProvider.dbQuery {
             val sortColumn: Expression<*> = when (sortFieldName) {
@@ -153,10 +151,8 @@ class PaymentService : KoinComponent {
                 .join(Room, JoinType.LEFT, Contract.roomId, Room.id)
                 .join(Apartment, JoinType.LEFT, Room.apartmentId, Apartment.id)
                 .selectAll()
-                .where { Payment.scopeDate eq mouth }
+                .where { Payment.scopeDate eq month }
                 .orderBy(sortColumn, sortOrderExpression)
-                .limit(pageSize)
-                .offset((page * pageSize).toLong())
                 .map { row ->
                     PaymentHistoryWithPersonDTO(
                         id = row[Payment.id],
@@ -180,35 +176,25 @@ class PaymentService : KoinComponent {
 
         }
 
-    suspend fun confirmPayment(paymentDto: PaymentConfirmationDTO) = databaseProvider.dbQuery {
-        Payment.update({ Payment.id eq paymentDto.paymentId }) {
-            it[status] = PaymentStatus.PAID
-            it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
-            it[amount] = BigDecimal.valueOf(paymentDto.payedAmount)
+    suspend fun confirmPayment(paymentDto: PaymentConfirmationDTO): Unit = databaseProvider.dbQuery {
+        val status = lockPayment(paymentDto.paymentId)[Payment.status]
+        if (PaymentStatus.PENDING != status && PaymentStatus.LATE != status && PaymentStatus.PARTIALLY_PAID != status) {
+            throw PaymentError.NotConfirmable(status)
         }
-    }
-
-    suspend fun deletePayment(paymentDto: PaymentConfirmationDTO) = databaseProvider.dbQuery {
         Payment.update({ Payment.id eq paymentDto.paymentId }) {
-            it[status] = PaymentStatus.CANCELLED
+            it[Payment.status] = PaymentStatus.PAID
             it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
-            it[amount] = BigDecimal.valueOf(paymentDto.payedAmount)
+            // a partially paid payment keeps its due amount, the instalments already account for it
+            if (PaymentStatus.PARTIALLY_PAID != status) it[amount] = BigDecimal.valueOf(paymentDto.payedAmount)
         }
     }
 
     suspend fun splitPayment(paymentSplitDto: PaymentSplitDTO) = databaseProvider.dbQuery {
-        val payment = Payment.selectAll()
-            .where { Payment.id eq paymentSplitDto.paymentId }
-            .singleOrNull()
-            ?: throw IllegalArgumentException("Nie znaleziono płatności o id ${paymentSplitDto.paymentId}")
+        val payment = lockPayment(paymentSplitDto.paymentId)
 
         val status = payment[Payment.status]
         if (PaymentStatus.PAID == status || PaymentStatus.CANCELLED == status) {
-            throw IllegalStateException("Nie można podzielić płatności w statusie $status")
-        }
-
-        if (paymentSplitDto.amount <= 0) {
-            throw IllegalArgumentException("Kwota wpłaty musi być większa od zera")
+            throw PaymentError.NotSplittable(status)
         }
 
         val dueAmount = payment[Payment.amount]
@@ -218,7 +204,7 @@ class PaymentService : KoinComponent {
 
         val remaining = dueAmount - alreadyPaid
         if (BigDecimal.valueOf(paymentSplitDto.amount) > remaining) {
-            throw IllegalArgumentException("Kwota wpłaty przekracza pozostałą do zapłaty kwotę $remaining")
+            throw PaymentError.Overpaid(remaining)
         }
 
         val paymentDate = paymentSplitDto.paymentDate.toLocalDateWithFullPattern()
@@ -239,6 +225,7 @@ class PaymentService : KoinComponent {
     }
 
     suspend fun getPaymentSplits(paymentId: Int): List<PaymentSplitEntryDTO> = databaseProvider.dbQuery {
+        if (Payment.selectAll().where { Payment.id eq paymentId }.empty()) throw PaymentError.NotFound(paymentId)
         PaymentSplit.selectAll()
             .where { PaymentSplit.paymentId eq paymentId }
             .orderBy(PaymentSplit.paymentDate)
@@ -251,4 +238,7 @@ class PaymentService : KoinComponent {
                 )
             }
     }
+
+    private fun lockPayment(id: Int) =
+        Payment.selectAll().where { Payment.id eq id }.forUpdate().singleOrNull() ?: throw PaymentError.NotFound(id)
 }

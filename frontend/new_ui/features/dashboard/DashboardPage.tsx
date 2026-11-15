@@ -1,9 +1,15 @@
 import {Link} from "react-router";
 import {useApartmentsStatistics} from "../../../src/pages/statistics/api/statistics.api.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
+import {Page} from "../../components/layout/Page.tsx";
 import {StatTile} from "../../components/ui/StatTile.tsx";
+import {Section} from "../../components/layout/Section.tsx";
+import {Stack} from "../../components/layout/Stack.tsx";
+import {Grid} from "../../components/layout/Grid.tsx";
 import {Card} from "../../components/ui/Card.tsx";
+import {Heading} from "../../components/ui/Heading.tsx";
+import {Text} from "../../components/ui/Text.tsx";
+import {DetailList} from "../../components/form/DetailList.tsx";
 import {Badge, BadgeTone} from "../../components/ui/Badge.tsx";
 import {QueryError} from "../../components/ui/QueryError.tsx";
 import {PageLoading} from "../../components/ui/PageLoading.tsx";
@@ -19,27 +25,18 @@ const occupancyTone = (rooms: number, percent: number): Extract<BadgeTone, "succ
 };
 
 const RoomDots = ({total, occupied}: { total: number; occupied: number }) => (
-    <div style={{display: "flex", flexWrap: "wrap", gap: 5}} role="img" aria-label={`${occupied} z ${total} pokoi wynajętych`}>
+    <div className="ku-room-dots" role="img" aria-label={`${occupied} z ${total} pokoi wynajętych`}>
         {Array.from({length: total}).map((_, index) => (
-            <span
-                key={index}
-                style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 5,
-                    background: index < occupied ? "var(--ku-success)" : "var(--ku-neutral-soft)",
-                    border: index < occupied ? "none" : "1px dashed var(--ku-border-strong)",
-                }}
-            />
+            <span key={index} className={index < occupied ? "ku-room-dot ku-room-dot-occupied" : "ku-room-dot"}/>
         ))}
     </div>
 );
 
 const DashboardPage = () => {
-    const {data, isLoading, isError, refetch} = useApartmentsStatistics();
+    const {data, isLoading, isError, error, refetch} = useApartmentsStatistics();
 
     if (isError) {
-        return <QueryError message="Nie udało się wczytać statystyk." onRetry={() => refetch()}/>;
+        return <QueryError message="Nie udało się wczytać statystyk." error={error} onRetry={() => refetch()}/>;
     }
     if (isLoading || !data) {
         return <PageLoading label="Wczytywanie statystyk"/>;
@@ -49,12 +46,10 @@ const DashboardPage = () => {
     const netNegative = overview.netResultCurrentMonth < 0;
 
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 28}}>
-            <PageHeader
-                title="Statystyki portfela"
-                subtitle={`${pluralPl(overview.totalApartments, APARTMENT_FORMS)} · ${pluralPl(overview.totalRooms, ROOM_FORMS)} · ${overview.totalOccupiedRooms} wynajętych`}
-            />
-
+        <Page
+            title="Statystyki portfela"
+            subtitle={`${pluralPl(overview.totalApartments, APARTMENT_FORMS)} · ${pluralPl(overview.totalRooms, ROOM_FORMS)} · ${overview.totalOccupiedRooms} wynajętych`}
+        >
             <div className="ku-stat-grid">
                 <StatTile
                     label="Obłożenie pokoi"
@@ -94,54 +89,44 @@ const DashboardPage = () => {
                 />
             </div>
 
-            <div style={{display: "flex", flexDirection: "column", gap: 14}}>
-                <h2 style={{fontSize: 15, fontWeight: 600, color: "var(--ku-text)"}}>Mieszkania</h2>
-                <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 14}}>
+            <Section title="Mieszkania">
+                <Grid min="320px">
                     {apartments.map((apartment) => (
                         <Link
                             key={apartment.apartmentId}
                             to={`/protected/v2/mieszkania?mieszkanie=${apartment.apartmentId}`}
                             className="ku-tile-link"
                         >
-                        <Card padding={20}>
-                            <div style={{display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 14}}>
-                                <h3 style={{fontSize: 15, fontWeight: 600}}>{apartment.apartmentName}</h3>
-                                <Badge tone={occupancyTone(apartment.totalRooms, apartment.occupancyRatePercent)}>
-                                    {apartment.occupancyRatePercent.toFixed(0)}% obłożenia
-                                </Badge>
-                            </div>
-                            <div style={{marginBottom: 14}}>
-                                <RoomDots total={apartment.totalRooms} occupied={apartment.occupiedRooms}/>
-                            </div>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    fontSize: 13,
-                                    paddingTop: 12,
-                                    borderTop: "1px solid var(--ku-border)",
-                                }}
-                            >
-                                <span style={{color: "var(--ku-text-secondary)"}}>Czynsz / mc</span>
-                                <span style={{fontWeight: 600}}>{formatCurrency(apartment.activeMonthlyRent)}</span>
-                            </div>
-                            <div style={{display: "flex", justifyContent: "space-between", fontSize: 13, marginTop: 6}}>
-                                <span style={{color: "var(--ku-text-secondary)"}}>Wynik netto (mc)</span>
-                                <span
-                                    style={{
-                                        fontWeight: 600,
-                                        color: apartment.netResultCurrentMonth >= 0 ? "var(--ku-success)" : "var(--ku-danger)",
-                                    }}
-                                >
-                                    {formatCurrency(apartment.netResultCurrentMonth)}
-                                </span>
-                            </div>
-                        </Card>
+                            <Card padding="md">
+                                <Stack gap="4">
+                                    <Stack direction="row" justify="space-between" align="flex-start" gap="3">
+                                        <Heading level={3} size="md">{apartment.apartmentName}</Heading>
+                                        <Badge tone={occupancyTone(apartment.totalRooms, apartment.occupancyRatePercent)}>
+                                            {apartment.occupancyRatePercent.toFixed(0)}% obłożenia
+                                        </Badge>
+                                    </Stack>
+                                    <RoomDots total={apartment.totalRooms} occupied={apartment.occupiedRooms}/>
+                                    <DetailList
+                                        variant="footer"
+                                        items={[
+                                            {label: "Czynsz / mc", value: formatCurrency(apartment.activeMonthlyRent)},
+                                            {
+                                                label: "Wynik netto (mc)",
+                                                value: (
+                                                    <Text tone={apartment.netResultCurrentMonth >= 0 ? "success" : "danger"} weight="semibold">
+                                                        {formatCurrency(apartment.netResultCurrentMonth)}
+                                                    </Text>
+                                                ),
+                                            },
+                                        ]}
+                                    />
+                                </Stack>
+                            </Card>
                         </Link>
                     ))}
-                </div>
-            </div>
-        </div>
+                </Grid>
+            </Section>
+        </Page>
     );
 };
 

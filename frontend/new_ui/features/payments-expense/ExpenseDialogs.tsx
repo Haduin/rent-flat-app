@@ -1,6 +1,6 @@
 import {useFormik} from "formik";
 import * as Yup from "yup";
-import {confirmDialog} from "primereact/confirmdialog";
+import {confirmDanger} from "../../components/ui/confirm.ts";
 import {FormDialog} from "../../components/form/FormDialog.tsx";
 import {InfoDialog} from "../../components/form/InfoDialog.tsx";
 import {DetailList, DetailItem} from "../../components/form/DetailList.tsx";
@@ -45,7 +45,7 @@ export const ConfirmExpenseDialog = ({expense, onConfirm, onHide}: {
             onSubmit={formik.handleSubmit}
             submitLabel="Potwierdź zapłatę"
         >
-            <DetailList compact items={expenseSummary(expense, expense.invoiceNumber ? [{label: "Nr faktury", value: expense.invoiceNumber}] : [])}/>
+            <DetailList variant="compact" items={expenseSummary(expense, expense.invoiceNumber ? [{label: "Nr faktury", value: expense.invoiceNumber}] : [])}/>
             <DateField formik={formik} name="date" label="Data zapłaty"/>
             <AmountField formik={formik} name="amount" label="Zapłacona kwota"/>
         </FormDialog>
@@ -117,12 +117,9 @@ export const EditExpenseDialog = ({expense, saving, onSave, onHide}: {
 };
 
 export const confirmDeleteExpense = (expense: OperationalExpenseDTO, onDelete: () => void) =>
-    confirmDialog({
-        header: `Usunąć koszt ${expenseTitle(expense)}?`,
+    confirmDanger({
+        title: `Usunąć koszt ${expenseTitle(expense)}?`,
         message: `${formatCurrency(expense.amount)}, termin ${formatDatePl(expense.insertDate)}. Usunięcia nie można cofnąć.`,
-        defaultFocus: "reject",
-        acceptLabel: "Usuń koszt",
-        rejectLabel: "Anuluj",
-        acceptClassName: "p-button-danger",
-        accept: onDelete,
+        confirmLabel: "Usuń koszt",
+        onConfirm: onDelete,
     });

@@ -1,7 +1,11 @@
 package pl.chodan.database
 
+import org.jetbrains.exposed.sql.CustomFunction
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.castTo
+import org.jetbrains.exposed.sql.javatime.JavaLocalDateTimeColumnType
 import org.jetbrains.exposed.sql.javatime.date
+import org.jetbrains.exposed.sql.stringLiteral
 import pl.chodan.model.apartment.database.Apartment
 
 /**
@@ -34,6 +38,22 @@ object OperationalExpense : Table("flat.operational_expense") {
     val templateId = integer("template_id").references(OperationalExpenseTemplate.id).nullable()
 
     override val primaryKey = PrimaryKey(id)
+
+    init {
+        // Mirrors Flyway V7 so integration tests (SchemaUtils.create) see the same constraint.
+        uniqueIndex(
+            "operational_expense_template_month_unique",
+            templateId,
+            functions = listOf(
+                CustomFunction(
+                    "date_trunc",
+                    JavaLocalDateTimeColumnType(),
+                    stringLiteral("month"),
+                    insertDate.castTo(JavaLocalDateTimeColumnType())
+                )
+            )
+        )
+    }
 }
 
 /**

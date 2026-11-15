@@ -1,8 +1,7 @@
 import {useFormik} from "formik";
 import * as Yup from "yup";
-import {Dialog} from "primereact/dialog";
-import {InputText} from "primereact/inputtext";
-import {Button} from "../../components/ui/Button.tsx";
+import {FormDialog} from "../../components/form/FormDialog.tsx";
+import {TextField} from "../../components/form/fields.tsx";
 
 const NAME_MAX_LENGTH = 255;
 
@@ -31,44 +30,18 @@ export const NameDialog = ({visible, title, label, initialName, saving, onSave, 
         validationSchema: nameSchema,
         onSubmit: (values) => onSave(values.name.trim()),
     });
-    const error = formik.touched.name ? formik.errors.name : undefined;
 
     return (
-        <Dialog
+        <FormDialog
             visible={visible}
+            title={title}
             onHide={onHide}
-            header={title}
-            style={{width: "28rem"}}
-            breakpoints={{"560px": "calc(100vw - 32px)"}}
-            onShow={() => document.getElementById("apartment-name-input")?.focus()}
-            footer={
-                <div style={{display: "flex", justifyContent: "flex-end", gap: 8}}>
-                    <Button variant="secondary" type="button" onClick={onHide}>Anuluj</Button>
-                    <Button type="submit" form="apartment-name-form" loading={saving}>Zapisz</Button>
-                </div>
-            }
+            formId="name-form"
+            onSubmit={formik.handleSubmit}
+            submitLabel="Zapisz"
+            saving={saving}
         >
-            <form id="apartment-name-form" onSubmit={formik.handleSubmit} noValidate>
-                <label htmlFor="apartment-name-input" style={{display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6}}>
-                    {label}
-                </label>
-                <InputText
-                    id="apartment-name-input"
-                    name="name"
-                    value={formik.values.name}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    invalid={Boolean(error)}
-                    aria-invalid={Boolean(error)}
-                    aria-describedby={error ? "apartment-name-error" : undefined}
-                    style={{width: "100%"}}
-                />
-                {error && (
-                    <small id="apartment-name-error" className="p-error" style={{display: "block", marginTop: 6}}>
-                        {error}
-                    </small>
-                )}
-            </form>
-        </Dialog>
+            <TextField formik={formik} name="name" label={label}/>
+        </FormDialog>
     );
 };

@@ -2,11 +2,13 @@ package pl.chodan.model.statistics.service
 
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.sum
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.OperationalExpense
 import pl.chodan.database.Payment
+import pl.chodan.database.PaymentSplit
 import pl.chodan.database.PaymentStatus
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
@@ -24,7 +26,8 @@ class StatisticsService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
 
     private data class ContractRow(val apartmentId: Int, val roomId: Int, val amount: BigDecimal, val active: Boolean)
-    private data class PaymentRow(val apartmentId: Int, val amount: BigDecimal, val scopeDate: String, val status: PaymentStatus)
+    /** [collected] is what the tenant actually paid: the full amount when PAID, the instalments so far when PARTIALLY_PAID. */
+    private data class PaymentRow(val apartmentId: Int, val collected: BigDecimal, val scopeDate: String, val status: PaymentStatus)
     private data class ExpenseRow(val apartmentId: Int?, val amount: BigDecimal, val month: YearMonth)
 
     suspend fun getApartmentsStatistics(): ApartmentsStatisticsResponse = databaseProvider.dbQuery {
@@ -51,13 +54,24 @@ class StatisticsService : KoinComponent {
             }
         val contractsByApartment = contractRows.groupBy { it.apartmentId }
 
+        val splitTotal = PaymentSplit.amount.sum()
+        val paidInInstalments = PaymentSplit.select(PaymentSplit.paymentId, splitTotal)
+            .groupBy(PaymentSplit.paymentId)
+            .associate { it[PaymentSplit.paymentId] to (it[splitTotal] ?: BigDecimal.ZERO) }
+
         val paymentRows = Payment
             .join(Contract, JoinType.INNER, Payment.contractId, Contract.id)
             .join(Room, JoinType.INNER, Contract.roomId, Room.id)
-            .select(Payment.amount, Payment.status, Payment.scopeDate, Room.apartmentId)
+            .select(Payment.id, Payment.amount, Payment.status, Payment.scopeDate, Room.apartmentId)
             .mapNotNull { row ->
                 val apartmentId = row[Room.apartmentId] ?: return@mapNotNull null
-                PaymentRow(apartmentId, row[Payment.amount], row[Payment.scopeDate], row[Payment.status])
+                val status = row[Payment.status]
+                val collected = if (PaymentStatus.PARTIALLY_PAID == status) {
+                    paidInInstalments[row[Payment.id]] ?: BigDecimal.ZERO
+                } else {
+                    row[Payment.amount]
+                }
+                PaymentRow(apartmentId, collected, row[Payment.scopeDate], status)
             }
         val paymentsByApartment = paymentRows.groupBy { it.apartmentId }
 
@@ -86,9 +100,9 @@ class StatisticsService : KoinComponent {
 
             val payments = paymentsByApartment[apartmentId].orEmpty()
             val paidPayments = payments.filter { PaymentStatus.PAID == it.status || PaymentStatus.PARTIALLY_PAID == it.status }
-            val totalIncomeCollected = paidPayments.sumOf { it.amount }.toDouble()
+            val totalIncomeCollected = paidPayments.sumOf { it.collected }.toDouble()
             val currentMonthIncomeCollected =
-                paidPayments.filter { it.scopeDate == currentMonth }.sumOf { it.amount }.toDouble()
+                paidPayments.filter { it.scopeDate == currentMonth }.sumOf { it.collected }.toDouble()
 
             val expenses = expensesByApartment[apartmentId].orEmpty()
             val totalCosts = expenses.sumOf { it.amount }.toDouble()

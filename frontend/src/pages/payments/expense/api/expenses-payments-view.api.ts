@@ -5,6 +5,7 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 import {dateToStringWithYearMonth} from "../../../../components/commons/dateFormatter.ts";
 import {useMemo} from "react";
 import {useToast} from "../../../../components/commons/ToastProvider.tsx";
+import {apiErrorMessage} from "../../../../utils/api-error.ts";
 import {PAYMENTS_MUTATIONS_KEYS, PAYMENTS_QUERY_KEYS} from "../../../../api/keys/payments.ts";
 
 export function useExpensesBySelectedMonth(dateSelected?: Date) {
@@ -40,8 +41,8 @@ export function useRemoveExpense() {
             });
             showToast("success", "Usunięcie wydatku zakończone pomyślnie");
         },
-        onError: () => {
-            showToast("error", "Wystąpił błąd podczas usuwania wydatku");
+        onError: async (error) => {
+            showToast("error", "Wystąpił błąd podczas usuwania wydatku", await apiErrorMessage(error));
         },
         mutationKey: [PAYMENTS_MUTATIONS_KEYS.REMOVE_EXPENSE],
     });
@@ -60,8 +61,8 @@ export function useUpdateExpense() {
             });
             showToast("success", "Edycja wydatku zakończona pomyślnie");
         },
-        onError: () => {
-            showToast("error", "Wystąpił błąd podczas edycji wydatku");
+        onError: async (error) => {
+            showToast("error", "Wystąpił błąd podczas edycji wydatku", await apiErrorMessage(error));
         },
     });
 }
@@ -79,8 +80,8 @@ export function useConfirmExpense() {
             });
             showToast("success", "Pomyślnie potwierdzono koszt");
         },
-        onError: (error: Error) => {
-            showToast("error", `Nie udało się potwierdzić kosztu: ${error.message}`);
+        onError: async (error) => {
+            showToast("error", "Nie udało się potwierdzić kosztu", await apiErrorMessage(error));
         },
     });
 }
@@ -105,8 +106,8 @@ export function useGenerateExpensesFromTemplates(dateSelected?: Date) {
             });
             showToast("success", "Generowanie wydatków zakończone pomyślnie");
         },
-        onError: () => {
-            showToast("error", "Wystąpił błąd podczas generowania wydatków");
+        onError: async (error) => {
+            showToast("error", "Wystąpił błąd podczas generowania wydatków", await apiErrorMessage(error));
         },
     });
 }

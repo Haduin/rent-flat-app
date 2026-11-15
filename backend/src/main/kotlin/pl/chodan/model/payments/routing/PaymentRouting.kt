@@ -11,6 +11,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import pl.chodan.error.ErrorCode
+import pl.chodan.error.errors
+import pl.chodan.error.intParam
+import pl.chodan.error.optionalEnumQuery
+import pl.chodan.error.yearMonthQuery
+import pl.chodan.model.payments.dto.PaymentDTO
 import pl.chodan.model.payments.dto.PaymentEdit
 import pl.chodan.model.payments.dto.PaymentHistoryWithPersonDTO
 import pl.chodan.model.payments.dto.PaymentSplitDTO
@@ -29,15 +35,21 @@ fun Application.configurePaymentRouting() {
                 get({
                     description = "Get all payments"
                     operationId = "getAllPayments"
-                    response { code(HttpStatusCode.OK) { description = "Returns all payments" } }
+                    response {
+                        code(HttpStatusCode.OK) {
+                            description = "Returns all payments"
+                            body<List<PaymentDTO>>()
+                        }
+                    }
                 }) {
                     call.respond(paymentService.getAllPayments())
                 }
-                get("/{mouth}", {
+                get("/{month}", {
                     description = "Get payments for given month with sorting"
                     operationId = "getPaymentsForMonth"
+                    errors(ErrorCode.VALIDATION_FAILED)
                     request {
-                        pathParameter<String>("mouth") { description = "Month in format YYYY-MM" }
+                        pathParameter<String>("month") { description = "Month in format YYYY-MM" }
                         queryParameter<PaymentSortableField>("sortField") {
                             description = "Sort field (ID, PERSON, FLAT, DATE, AMOUNT, STATUS)"
                             required = false
@@ -52,95 +64,59 @@ fun Application.configurePaymentRouting() {
                             description = "Payments for month"
                             body<List<PaymentHistoryWithPersonDTO>>()
                         }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid parameters" }
                     }
                 }) {
-                    val mouth = call.parameters["mouth"]
-                    if (mouth == null) {
-                        call.respond(HttpStatusCode.BadRequest, "Mouth parameter is required")
-                        return@get
-                    }
-
-                    val sortFieldName = try {
-                        call.request.queryParameters["sortField"]?.let { PaymentSortableField.valueOf(it) }
-                            ?: PaymentSortableField.ID
-                    } catch (e: IllegalArgumentException) {
-                        call.respond(HttpStatusCode.BadRequest, "Invalid sortField parameter")
-                        return@get
-                    }
-                    val sortOrder = try {
-                        call.request.queryParameters["sortOrder"]?.let { SortOrder.valueOf(it) } ?: SortOrder.ASC
-                    } catch (e: IllegalArgumentException) {
-                        call.respond(HttpStatusCode.BadRequest, "Invalid sortOrder parameter")
-                        return@get
-                    }
-
-                    call.respond(paymentService.getPaymentsForMouth(mouth, sortFieldName, sortOrder))
-
+                    call.respond(
+                        paymentService.getPaymentsForMonth(
+                            call.yearMonthQuery("month").value,
+                            call.optionalEnumQuery<PaymentSortableField>("sortField") ?: PaymentSortableField.ID,
+                            call.optionalEnumQuery<SortOrder>("sortOrder") ?: SortOrder.ASC
+                        )
+                    )
                 }
                 post("/confirm", {
                     description = "Confirm a payment"
                     operationId = "confirmPayment"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
+                        ErrorCode.PAYMENT_NOT_FOUND, ErrorCode.PAYMENT_NOT_CONFIRMABLE
+                    )
                     request { body<PaymentConfirmationDTO> { description = "Payment confirmation payload" } }
-                    response {
-                        code(HttpStatusCode.OK) { description = "Payment confirmed" }
-                        code(HttpStatusCode.BadRequest) { description = "Confirmation failed" }
-                    }
+                    response { code(HttpStatusCode.NoContent) { description = "Payment confirmed" } }
                 }) {
-                    val request = call.receive<PaymentConfirmationDTO>()
-                    try {
-                        paymentService.confirmPayment(request)
-                        call.respond(HttpStatusCode.OK, mapOf("message" to "Payment confirmed successfully"))
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest, mapOf("error" to "Failed to confirm payment: ${e.message}")
-                        )
-                    }
+                    paymentService.confirmPayment(call.receive<PaymentConfirmationDTO>())
+                    call.respond(HttpStatusCode.NoContent)
                 }
 
                 put("/edit", {
                     description = "Edit a payment"
                     operationId = "editPayment"
+                    errors(ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD, ErrorCode.PAYMENT_NOT_FOUND)
                     request { body<PaymentEdit> { description = "Payment edit payload" } }
-                    response {
-                        code(HttpStatusCode.OK) { description = "Payment updated" }
-                        code(HttpStatusCode.BadRequest) { description = "Update failed" }
-                    }
+                    response { code(HttpStatusCode.NoContent) { description = "Payment updated" } }
                 }) {
-                    val request = call.receive<PaymentEdit>()
-                    try {
-                        paymentService.editPayment(request)
-                        call.respond(HttpStatusCode.OK)
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest, mapOf("error" to "Failed to edit payment: ${e.message}")
-                        )
-                    }
+                    paymentService.editPayment(call.receive<PaymentEdit>())
+                    call.respond(HttpStatusCode.NoContent)
                 }
 
                 post("/split", {
                     description = "Record a partial (split) payment towards a payment's due amount"
                     operationId = "splitPayment"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD, ErrorCode.PAYMENT_NOT_FOUND,
+                        ErrorCode.PAYMENT_NOT_SPLITTABLE, ErrorCode.PAYMENT_OVERPAID
+                    )
                     request { body<PaymentSplitDTO> { description = "Split payment payload" } }
-                    response {
-                        code(HttpStatusCode.OK) { description = "Split payment recorded" }
-                        code(HttpStatusCode.BadRequest) { description = "Split failed" }
-                    }
+                    response { code(HttpStatusCode.NoContent) { description = "Split payment recorded" } }
                 }) {
-                    val request = call.receive<PaymentSplitDTO>()
-                    try {
-                        paymentService.splitPayment(request)
-                        call.respond(HttpStatusCode.OK, mapOf("message" to "Split payment recorded successfully"))
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest, mapOf("error" to "Failed to split payment: ${e.message}")
-                        )
-                    }
+                    paymentService.splitPayment(call.receive<PaymentSplitDTO>())
+                    call.respond(HttpStatusCode.NoContent)
                 }
 
                 get("/{id}/splits", {
                     description = "Get the recorded split payments (instalments) for a payment"
                     operationId = "getPaymentSplits"
+                    errors(ErrorCode.VALIDATION_FAILED, ErrorCode.PAYMENT_NOT_FOUND)
                     request {
                         pathParameter<Int>("id") { description = "Payment id" }
                     }
@@ -149,15 +125,9 @@ fun Application.configurePaymentRouting() {
                             description = "Split payments for the given payment"
                             body<List<PaymentSplitEntryDTO>>()
                         }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid payment id" }
                     }
                 }) {
-                    val paymentId = call.parameters["id"]?.toIntOrNull()
-                    if (paymentId == null) {
-                        call.respond(HttpStatusCode.BadRequest, "Id parameter is required")
-                    } else {
-                        call.respond(paymentService.getPaymentSplits(paymentId))
-                    }
+                    call.respond(paymentService.getPaymentSplits(call.intParam("id")))
                 }
             }
         }

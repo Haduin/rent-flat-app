@@ -11,7 +11,7 @@ import {ConfirmExpenseDialog, confirmDeleteExpense, EditExpenseDialog, ExpenseDe
 import {useModal} from "../../../src/hooks/use-modal";
 import {dateToStringFullYearMouthDay} from "../../../src/components/commons/dateFormatter.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
+import {Page} from "../../components/layout/Page.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
@@ -103,21 +103,19 @@ const ExpensePaymentsPage = () => {
     ];
 
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader
-                title="Koszty operacyjne"
-                subtitle="Media, podatki, czynsz do właściciela"
-                actions={
-                    <Button
-                        variant={(expenses?.length ?? 0) > 0 ? "secondary" : "primary"}
-                        loading={handleGenerate.isPending}
-                        onClick={() => handleGenerate.mutate()}
-                    >
-                        Wygeneruj koszty za {formatMonthLabel(dateSelected)}
-                    </Button>
-                }
-            />
-
+        <Page
+            title="Koszty operacyjne"
+            subtitle="Media, podatki, czynsz do właściciela"
+            actions={
+                <Button
+                    variant={(expenses?.length ?? 0) > 0 ? "secondary" : "primary"}
+                    loading={handleGenerate.isPending}
+                    onClick={() => handleGenerate.mutate()}
+                >
+                    Wygeneruj koszty za {formatMonthLabel(dateSelected)}
+                </Button>
+            }
+        >
             <MonthSettlementSummary items={expenses ?? []} settledLabel="Zapłacono" outstandingLabel="Do zapłaty"/>
 
             <DataTableCard value={expenses} columns={columns} rowActions={rowActions} loading={isLoading} emptyMessage="Brak kosztów w tym miesiącu"/>
@@ -134,7 +132,7 @@ const ExpensePaymentsPage = () => {
             {selectedExpense && isConfirmDialogVisible && (
                 <ConfirmExpenseDialog expense={selectedExpense} onConfirm={handleConfirmExpense} onHide={closeDialogs}/>
             )}
-        </div>
+        </Page>
     );
 };
 

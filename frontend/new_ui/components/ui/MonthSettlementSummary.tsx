@@ -38,7 +38,7 @@ export const MonthSettlementSummary = ({items, settledLabel, outstandingLabel}: 
     const {total, settled, outstanding, openCount, lateCount} = summarizeSettlement(items);
 
     return (
-        <Card padding={18} contentStyle={{display: "flex", flexWrap: "wrap", columnGap: 32, rowGap: 12}}>
+        <Card padding="md" contentStyle={{display: "flex", flexWrap: "wrap", columnGap: "var(--ku-space-8)", rowGap: "var(--ku-space-3)"}}>
             <div className="ku-settlement-figure">
                 <span className="ku-settlement-label">{settledLabel}</span>
                 <span className="ku-settlement-value">

@@ -14,12 +14,12 @@ export interface StatTileProps {
     to?: string;
 }
 
-const darkLabelColor = "oklch(75% 0.01 260)";
+const darkLabelColor = "var(--ku-on-ink-muted)";
 
 const darkCaptionColor: Record<NonNullable<StatTileProps["captionTone"]>, string> = {
-    success: "oklch(72% 0.13 150)",
-    warning: "oklch(80% 0.12 75)",
-    danger: "oklch(74% 0.14 25)",
+    success: "var(--ku-on-ink-success)",
+    warning: "var(--ku-on-ink-warning)",
+    danger: "var(--ku-on-ink-danger)",
     neutral: darkLabelColor,
 };
 
@@ -32,7 +32,7 @@ const captionColor: Record<NonNullable<StatTileProps["captionTone"]>, string> = 
 
 const StatTileCard = ({label, value, caption, captionTone = "neutral", icon, dark}: Omit<StatTileProps, "to">) => (
     <Card
-        padding={18}
+        padding="md"
         className={`ku-stat-tile${dark ? " ku-stat-tile-dark" : ""}`}
         style={{
             background: dark ? "var(--ku-ink)" : "var(--ku-surface)",
@@ -40,7 +40,7 @@ const StatTileCard = ({label, value, caption, captionTone = "neutral", icon, dar
         }}
     >
         <div style={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
-            <span style={{fontSize: 13, fontWeight: 500, color: dark ? darkLabelColor : "var(--ku-text-secondary)"}}>
+            <span style={{fontSize: "var(--ku-text-sm)", fontWeight: 500, color: dark ? darkLabelColor : "var(--ku-text-secondary)"}}>
                 {label}
             </span>
             {icon && !dark && (
@@ -66,13 +66,13 @@ const StatTileCard = ({label, value, caption, captionTone = "neutral", icon, dar
             style={{
                 fontWeight: 700,
                 fontFamily: "var(--ku-font-display)",
-                color: dark ? "#ffffff" : "var(--ku-text)",
+                color: dark ? "var(--ku-on-ink)" : "var(--ku-text)",
             }}
         >
             {value}
         </div>
         {caption && (
-            <div style={{fontSize: 12.5, fontWeight: 600, color: dark ? darkCaptionColor[captionTone] : captionColor[captionTone]}}>
+            <div style={{fontSize: "var(--ku-text-sm)", fontWeight: 600, color: dark ? darkCaptionColor[captionTone] : captionColor[captionTone]}}>
                 {caption}
             </div>
         )}

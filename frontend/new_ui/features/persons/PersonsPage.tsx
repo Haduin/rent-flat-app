@@ -1,14 +1,12 @@
 import {useMemo, useState} from "react";
-import {InputText} from "primereact/inputtext";
-import {IconField} from "primereact/iconfield";
-import {InputIcon} from "primereact/inputicon";
-import {Checkbox} from "primereact/checkbox";
 import usePersonTable from "../../../src/pages/person/person-table/person-table.hook.tsx";
 import {PersonDialog} from "./PersonDialog.tsx";
 import type {Person} from "../../../src/pages/person/person-table/person-table.types.ts";
 import type {PersonDTO} from "../../../src/api/generated";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {Card} from "../../components/ui/Card.tsx";
+import {Page} from "../../components/layout/Page.tsx";
+import {FilterBar} from "../../components/ui/FilterBar.tsx";
+import {SearchInput} from "../../components/ui/SearchInput.tsx";
+import {ToggleCheckbox} from "../../components/ui/ToggleCheckbox.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
@@ -67,32 +65,27 @@ const PersonsPage = () => {
     ];
 
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader
-                title="Osoby"
-                actions={
-                    <Button variant="primary" icon={<IconPlus size={15}/>} onClick={handleAddNewPerson}>
-                        Dodaj najemcę
-                    </Button>
-                }
-            />
-
-            <Card padding={20} contentStyle={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12}}>
-                <IconField iconPosition="left" className="ku-search-input">
-                    <InputIcon className="pi pi-search"/>
-                    <InputText
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Szukaj osoby lub dokumentu…"
-                        aria-label="Szukaj po imieniu, nazwisku lub numerze dokumentu"
-                        style={{width: "100%"}}
-                    />
-                </IconField>
-                <label style={{display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 500, cursor: "pointer"}}>
-                    <Checkbox checked={showOnlyActivePeople} onChange={() => setShowOnlyActivePeople(!showOnlyActivePeople)}/>
-                    Tylko z aktywną umową
-                </label>
-            </Card>
+        <Page
+            title="Osoby"
+            actions={
+                <Button variant="primary" icon={<IconPlus size={15}/>} onClick={handleAddNewPerson}>
+                    Dodaj najemcę
+                </Button>
+            }
+        >
+            <FilterBar>
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Szukaj osoby lub dokumentu…"
+                    ariaLabel="Szukaj po imieniu, nazwisku lub numerze dokumentu"
+                />
+                <ToggleCheckbox
+                    checked={showOnlyActivePeople}
+                    onChange={setShowOnlyActivePeople}
+                    label="Tylko z aktywną umową"
+                />
+            </FilterBar>
 
             <DataTableCard
                 value={people}
@@ -118,7 +111,7 @@ const PersonsPage = () => {
                     onHide={() => setEditDialogVisible(false)}
                 />
             )}
-        </div>
+        </Page>
     );
 };
 

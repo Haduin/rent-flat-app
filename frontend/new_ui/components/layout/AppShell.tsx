@@ -12,6 +12,8 @@ import {Button} from "../ui/Button.tsx";
 import {useOidc} from "../../../src/oidc.tsx";
 import {isNotEqual, isNotNullable} from "../../../src/utils/typeguards";
 import "../../theme/tokens.css";
+import "../../theme/primereact.css";
+import "../../theme/components.css";
 
 const NAV_ENTRIES: BottomNavEntry[] = [
     {label: "Dashboard", to: "/protected/v2/dashboard", icon: <IconGrid size={20}/>},
@@ -85,7 +87,7 @@ export const AppShell = ({children}: { children: ReactNode }) => {
     const start = (
         <NavLink to="/protected/v2/dashboard" className="ku-brand" aria-label={`${PRODUCT_NAME} — Dashboard`}>
             <span className="ku-brand-mark">
-                <IconHome size={16} color="#ffffff"/>
+                <IconHome size={16} color="var(--ku-accent-contrast)"/>
             </span>
             <span className="ku-brand-name">{PRODUCT_NAME}</span>
         </NavLink>
@@ -168,7 +170,7 @@ export const AppShell = ({children}: { children: ReactNode }) => {
         <CurrentMonthContext.Provider value={{month, setMonth}}>
             <div className="kwatera-a" style={{minHeight: "100%", background: "var(--ku-bg)"}}>
                 <header>
-                    {/* at ≤1024px tokens.css hides this nav (and PrimeReact's own hamburger) in favour of BottomNav */}
+                    {/* at ≤1024px components.css hides this nav (and PrimeReact's own hamburger) in favour of BottomNav */}
                     <Menubar model={items} start={start} end={end} ariaLabel="Główna nawigacja" className="ku-shell-header"/>
                 </header>
                 <main className="ku-shell-content">{children}</main>

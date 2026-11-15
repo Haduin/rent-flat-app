@@ -46,7 +46,7 @@ const usePaidSoFar = (paymentId: number) => {
 
 const SplitHistory = ({splits}: { splits: { id: number; paymentDate: string; amount: number }[] }) =>
     splits.length > 0 ? (
-        <DetailList compact items={splits.map((split, index) => ({
+        <DetailList variant="compact" items={splits.map((split, index) => ({
             label: `Wpłata ${index + 1} · ${formatDatePl(split.paymentDate)}`,
             value: formatCurrency(split.amount),
         }))}/>
@@ -74,7 +74,7 @@ export const ConfirmIncomeDialog = ({payment, onConfirm, onHide}: {
             onSubmit={formik.handleSubmit}
             submitLabel="Potwierdź wpłatę"
         >
-            <DetailList compact items={paymentSummary(payment)}/>
+            <DetailList variant="compact" items={paymentSummary(payment)}/>
             <DateField formik={formik} name="date" label="Data wpłaty"/>
             <AmountField formik={formik} name="amount" label="Wpłacona kwota" hint="Jeśli wpłynęła tylko część, użyj „Podziel”"/>
         </FormDialog>
@@ -112,7 +112,7 @@ export const SplitIncomeDialog = ({payment, onConfirm, onHide}: {
             onSubmit={formik.handleSubmit}
             submitLabel="Zapisz wpłatę"
         >
-            <DetailList compact items={paymentSummary(payment, [
+            <DetailList variant="compact" items={paymentSummary(payment, [
                 {label: "Wpłacono", value: formatCurrency(paid)},
                 {label: "Pozostało", value: <strong>{formatCurrency(remaining)}</strong>},
             ])}/>

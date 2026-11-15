@@ -13,10 +13,14 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import pl.chodan.error.ErrorCode
+import pl.chodan.error.errors
+import pl.chodan.error.intParam
 import pl.chodan.model.expenses.dto.AddExpenseTemplateRequest
 import pl.chodan.model.expenses.dto.OperationalExpenseTemplateResponse
 import pl.chodan.model.expenses.dto.UpdateExpenseTemplate
 import pl.chodan.model.expenses.service.ExpenseTemplateService
+import pl.chodan.routing.IdResponse
 
 fun Application.configureExpenseTemplateRouting() {
     val expenseTemplateService by inject<ExpenseTemplateService>()
@@ -30,18 +34,22 @@ fun Application.configureExpenseTemplateRouting() {
                 post({
                     description = "Create a new expense template"
                     operationId = "createExpenseTemplate"
-                    request { body<AddExpenseTemplateRequest> { description = "Expense template payload" } }
-                    response { code(Created) { description = "Template created" } }
-                }) {
-
-                    val request = call.receive<AddExpenseTemplateRequest>()
-
-                    expenseTemplateService.createExpenseTemplate(request)
-
-                    call.respond(
-                        Created, mapOf("message" to "Expense template created successfully")
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
+                        ErrorCode.APARTMENT_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND
                     )
-
+                    request { body<AddExpenseTemplateRequest> { description = "Expense template payload" } }
+                    response {
+                        code(Created) {
+                            description = "Template created"
+                            body<IdResponse>()
+                        }
+                    }
+                }) {
+                    call.respond(
+                        Created,
+                        IdResponse(expenseTemplateService.createExpenseTemplate(call.receive<AddExpenseTemplateRequest>()))
+                    )
                 }
 
                 get({
@@ -54,53 +62,43 @@ fun Application.configureExpenseTemplateRouting() {
                         }
                     }
                 }) {
-                    val response = expenseTemplateService.findAll()
-                    response.isNotEmpty().let {
-                        call.respond(response)
-                    }
+                    call.respond(expenseTemplateService.findAll())
                 }
 
                 put("/{expenseTemplateId}", {
                     description = "Updates an existing expense template"
                     operationId = "updateExpenseTemplate"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD, ErrorCode.EXPENSE_TEMPLATE_NOT_FOUND,
+                        ErrorCode.APARTMENT_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND
+                    )
                     request {
                         pathParameter<Int>("expenseTemplateId") { description = "Expense template id" }
                         body<UpdateExpenseTemplate>()
                     }
                     response {
                         code(HttpStatusCode.NoContent) { description = "Template updated" }
-                        code(HttpStatusCode.NotFound) { description = "Expense template not found" }
                     }
                 }) {
-                    val id = call.parameters["expenseTemplateId"]?.toIntOrNull()
-                    if (id == null) {
-                        call.respond(HttpStatusCode.NotFound)
-                        return@put
-                    }
-
-                    val request = call.receive<UpdateExpenseTemplate>()
-                    expenseTemplateService.updateExpenseTemplate(id, request)
+                    expenseTemplateService.updateExpenseTemplate(
+                        call.intParam("expenseTemplateId"),
+                        call.receive<UpdateExpenseTemplate>()
+                    )
                     call.respond(HttpStatusCode.NoContent)
                 }
                 delete("/{expenseTemplateId}", {
                     operationId = "deleteExpenseTemplate"
                     description = "Deletes an existing expense template"
+                    errors(ErrorCode.VALIDATION_FAILED, ErrorCode.EXPENSE_TEMPLATE_NOT_FOUND)
                     request {
                         pathParameter<Int>("expenseTemplateId") { description = "Expense template id" }
                     }
                     response {
-                        code(HttpStatusCode.OK) { description = "Template deleted" }
-                        code(HttpStatusCode.NotFound) { description = "Expense template not found" }
+                        code(HttpStatusCode.NoContent) { description = "Template deleted" }
                     }
                 }) {
-                    val id = call.parameters["expenseTemplateId"]?.toIntOrNull()
-                    if (id == null) {
-                        call.respond(HttpStatusCode.NotFound)
-                        return@delete
-                    }
-
-                    expenseTemplateService.deleteExpenseTemplate(id)
-                    call.respond(HttpStatusCode.OK)
+                    expenseTemplateService.deleteExpenseTemplate(call.intParam("expenseTemplateId"))
+                    call.respond(HttpStatusCode.NoContent)
                 }
 
             }

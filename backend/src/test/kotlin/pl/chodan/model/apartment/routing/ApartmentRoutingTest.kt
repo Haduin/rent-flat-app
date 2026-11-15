@@ -13,14 +13,17 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.koin.dsl.module
+import pl.chodan.error.ApiError
+import pl.chodan.error.ErrorCode
 import pl.chodan.model.apartment.dto.ApartmentResponse
 import pl.chodan.model.apartment.dto.ApartmentWithRooms
 import pl.chodan.model.apartment.dto.RoomDetails
+import pl.chodan.model.apartment.service.ApartmentError
 import pl.chodan.model.apartment.service.ApartmentService
-import pl.chodan.model.apartment.service.RoomDeletion
 import pl.chodan.model.room.dto.RoomResponse
 import pl.chodan.testutil.installTestAuthentication
 import pl.chodan.testutil.installTestContentNegotiation
+import pl.chodan.testutil.installTestErrorHandling
 import pl.chodan.testutil.startTestKoin
 import pl.chodan.testutil.stopTestKoin
 import pl.chodan.testutil.testAuthHeader
@@ -36,6 +39,7 @@ class ApartmentRoutingTest {
         startTestKoin(module { single { apartmentService } })
         application {
             installTestContentNegotiation()
+            installTestErrorHandling()
             installTestAuthentication()
             configureApartmentRouting()
         }
@@ -90,6 +94,8 @@ class ApartmentRoutingTest {
         val response = client.post("/apartments") { jsonName("   ") }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
+        val error = Json.decodeFromString<ApiError>(response.bodyAsText())
+        assertEquals(listOf("name: nazwa jest wymagana"), error.details)
         coVerify(exactly = 0) { apartmentService.createApartment(any()) }
     }
 
@@ -106,19 +112,20 @@ class ApartmentRoutingTest {
     }
 
     @Test
-    fun `PUT apartment answers 404 for an unknown apartment`() = testApplication {
+    fun `PUT apartment with a non numeric id returns bad request`() = testApplication {
         setup()
-        coEvery { apartmentService.renameApartment(99, "Nowa") } returns false
 
-        val response = client.put("/apartments/99") { jsonName("Nowa") }
+        val response = client.put("/apartments/abc") { jsonName("Nowa") }
 
-        assertEquals(HttpStatusCode.NotFound, response.status)
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertEquals(ErrorCode.VALIDATION_FAILED, Json.decodeFromString<ApiError>(response.bodyAsText()).code)
+        coVerify(exactly = 0) { apartmentService.renameApartment(any(), any()) }
     }
 
     @Test
     fun `PUT apartment renames an existing apartment`() = testApplication {
         setup()
-        coEvery { apartmentService.renameApartment(1, "Nowa") } returns true
+        coEvery { apartmentService.renameApartment(1, "Nowa") } returns Unit
 
         val response = client.put("/apartments/1") { jsonName("Nowa") }
 
@@ -137,19 +144,9 @@ class ApartmentRoutingTest {
     }
 
     @Test
-    fun `POST rooms answers 404 when the apartment does not exist`() = testApplication {
-        setup()
-        coEvery { apartmentService.createRoom(99, "Pok 5") } returns null
-
-        val response = client.post("/apartments/99/rooms") { jsonName("Pok 5") }
-
-        assertEquals(HttpStatusCode.NotFound, response.status)
-    }
-
-    @Test
     fun `PUT room renames a room of the apartment`() = testApplication {
         setup()
-        coEvery { apartmentService.renameRoom(1, 7, "Pok 6") } returns true
+        coEvery { apartmentService.renameRoom(1, 7, "Pok 6") } returns Unit
 
         val response = client.put("/apartments/1/rooms/7") { jsonName("Pok 6") }
 
@@ -157,15 +154,37 @@ class ApartmentRoutingTest {
     }
 
     @Test
-    fun `DELETE room maps the service outcome to a status`() = testApplication {
+    fun `DELETE room deletes an unused room and requires authentication`() = testApplication {
         setup()
-        coEvery { apartmentService.deleteRoom(1, 7) } returns RoomDeletion.DELETED
-        coEvery { apartmentService.deleteRoom(1, 8) } returns RoomDeletion.IN_USE
-        coEvery { apartmentService.deleteRoom(1, 9) } returns RoomDeletion.NOT_FOUND
+        coEvery { apartmentService.deleteRoom(1, 7) } returns Unit
 
         assertEquals(HttpStatusCode.NoContent, client.delete("/apartments/1/rooms/7") { testAuthHeader() }.status)
-        assertEquals(HttpStatusCode.Conflict, client.delete("/apartments/1/rooms/8") { testAuthHeader() }.status)
-        assertEquals(HttpStatusCode.NotFound, client.delete("/apartments/1/rooms/9") { testAuthHeader() }.status)
         assertEquals(HttpStatusCode.Unauthorized, client.delete("/apartments/1/rooms/7").status)
+    }
+
+    @Test
+    fun `domain errors of each endpoint map to their status and code`() = testApplication {
+        setup()
+        coEvery { apartmentService.renameApartment(99, "Nowa") } throws ApartmentError.NotFound(99)
+        coEvery { apartmentService.createRoom(99, "Nowa") } throws ApartmentError.NotFound(99)
+        coEvery { apartmentService.renameRoom(1, 99, "Nowa") } throws ApartmentError.RoomNotFound(99)
+        coEvery { apartmentService.deleteRoom(1, 99) } throws ApartmentError.RoomNotFound(99)
+        coEvery { apartmentService.deleteRoom(1, 8) } throws ApartmentError.RoomInUse()
+        val cases = listOf(
+            Triple(HttpMethod.Put, "/apartments/99", ErrorCode.APARTMENT_NOT_FOUND),
+            Triple(HttpMethod.Post, "/apartments/99/rooms", ErrorCode.APARTMENT_NOT_FOUND),
+            Triple(HttpMethod.Put, "/apartments/1/rooms/99", ErrorCode.ROOM_NOT_FOUND),
+            Triple(HttpMethod.Delete, "/apartments/1/rooms/99", ErrorCode.ROOM_NOT_FOUND),
+            Triple(HttpMethod.Delete, "/apartments/1/rooms/8", ErrorCode.ROOM_IN_USE),
+        )
+
+        for ((method, path, code) in cases) {
+            val response = client.request(path) {
+                this.method = method
+                jsonName("Nowa")
+            }
+            assertEquals(code.status, response.status, "$method $path")
+            assertEquals(code, Json.decodeFromString<ApiError>(response.bodyAsText()).code, "$method $path")
+        }
     }
 }

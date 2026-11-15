@@ -1,6 +1,7 @@
 package pl.chodan.model.apartment.service
 
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
@@ -19,8 +20,6 @@ import pl.chodan.model.apartment.dto.ApartmentWithRooms
 import pl.chodan.model.apartment.dto.RoomDetails
 import pl.chodan.model.contract.database.Contract
 import pl.chodan.model.room.dto.RoomResponse
-
-enum class RoomDeletion { DELETED, NOT_FOUND, IN_USE }
 
 class ApartmentService : KoinComponent {
 
@@ -53,15 +52,14 @@ class ApartmentService : KoinComponent {
         ApartmentResponse(id = id, name = name)
     }
 
-    /** @return false when the apartment doesn't exist. */
-    suspend fun renameApartment(apartmentId: Int, name: String): Boolean = databaseProvider.dbQuery {
-        Apartment.update({ Apartment.id eq apartmentId }) { it[Apartment.name] = name } > 0
+    suspend fun renameApartment(apartmentId: Int, name: String) = databaseProvider.dbQuery {
+        if (0 == Apartment.update({ Apartment.id eq apartmentId }) { it[Apartment.name] = name }) {
+            throw ApartmentError.NotFound(apartmentId)
+        }
     }
 
-    /** @return null when the apartment doesn't exist. */
-    suspend fun createRoom(apartmentId: Int, name: String): RoomResponse? = databaseProvider.dbQuery {
-        val apartmentExists = Apartment.selectAll().where { Apartment.id eq apartmentId }.any()
-        if (!apartmentExists) return@dbQuery null
+    suspend fun createRoom(apartmentId: Int, name: String): RoomResponse = databaseProvider.dbQuery {
+        requireApartment(apartmentId)
         val id = Room.insert {
             it[Room.name] = name
             it[Room.apartmentId] = apartmentId
@@ -69,20 +67,34 @@ class ApartmentService : KoinComponent {
         RoomResponse(id = id, name = name, apartmentId = apartmentId)
     }
 
-    /** @return false when the room doesn't exist in that apartment. */
-    suspend fun renameRoom(apartmentId: Int, roomId: Int, name: String): Boolean = databaseProvider.dbQuery {
-        Room.update({ (Room.id eq roomId) and (Room.apartmentId eq apartmentId) }) { it[Room.name] = name } > 0
+    suspend fun renameRoom(apartmentId: Int, roomId: Int, name: String) = databaseProvider.dbQuery {
+        if (0 == Room.update({ (Room.id eq roomId) and (Room.apartmentId eq apartmentId) }) { it[Room.name] = name }) {
+            throw ApartmentError.RoomNotFound(roomId)
+        }
     }
 
     /** Only a room nothing points at can go: any contract, cost or cost template keeps it (history must stay intact). */
-    suspend fun deleteRoom(apartmentId: Int, roomId: Int): RoomDeletion = databaseProvider.dbQuery {
-        val exists = Room.selectAll().where { (Room.id eq roomId) and (Room.apartmentId eq apartmentId) }.any()
-        if (!exists) return@dbQuery RoomDeletion.NOT_FOUND
+    suspend fun deleteRoom(apartmentId: Int, roomId: Int): Unit = databaseProvider.dbQuery {
+        val exists = Room.selectAll().where { (Room.id eq roomId) and (Room.apartmentId eq apartmentId) }.forUpdate().any()
+        if (!exists) throw ApartmentError.RoomNotFound(roomId)
         val inUse = Contract.selectAll().where { Contract.roomId eq roomId }.any() ||
                 OperationalExpense.selectAll().where { OperationalExpense.roomId eq roomId }.any() ||
                 OperationalExpenseTemplate.selectAll().where { OperationalExpenseTemplate.roomId eq roomId }.any()
-        if (inUse) return@dbQuery RoomDeletion.IN_USE
+        if (inUse) throw ApartmentError.RoomInUse()
         Room.deleteWhere { Room.id eq roomId }
-        RoomDeletion.DELETED
     }
+}
+
+/** Existence check only, no lock: apartments are never deleted. Call inside `dbQuery`. */
+internal fun requireApartment(id: Int) {
+    if (Apartment.selectAll().where { Apartment.id eq id }.empty()) throw ApartmentError.NotFound(id)
+}
+
+/**
+ * Existence check for a room referenced by another row. Call inside `dbQuery`.
+ * KEY SHARE conflicts only with FOR UPDATE/DELETE (deleteRoom), not with FK checks or other pre-checks, so it cannot deadlock.
+ */
+internal fun lockRoom(id: Int) {
+    val exists = Room.selectAll().where { Room.id eq id }.forUpdate(ForUpdateOption.PostgreSQL.ForKeyShare).any()
+    if (!exists) throw ApartmentError.RoomNotFound(id)
 }

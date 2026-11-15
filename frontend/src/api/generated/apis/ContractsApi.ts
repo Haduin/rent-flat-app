@@ -15,19 +15,25 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApiError,
   ContractDTO,
   ContractHistoryDTO,
   DeleteContractDTO,
+  IdResponse,
   NewContractDTO,
   UpdateContractDetails,
 } from '../models/index';
 import {
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
     ContractDTOFromJSON,
     ContractDTOToJSON,
     ContractHistoryDTOFromJSON,
     ContractHistoryDTOToJSON,
     DeleteContractDTOFromJSON,
     DeleteContractDTOToJSON,
+    IdResponseFromJSON,
+    IdResponseToJSON,
     NewContractDTOFromJSON,
     NewContractDTOToJSON,
     UpdateContractDetailsFromJSON,
@@ -62,7 +68,7 @@ export class ContractsApi extends runtime.BaseAPI {
     /**
      * Create a new contract
      */
-    async createContractRaw(requestParameters: CreateContractRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async createContractRaw(requestParameters: CreateContractRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<IdResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -77,14 +83,15 @@ export class ContractsApi extends runtime.BaseAPI {
             body: NewContractDTOToJSON(requestParameters['newContractDTO']),
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => IdResponseFromJSON(jsonValue));
     }
 
     /**
      * Create a new contract
      */
-    async createContract(requestParameters: CreateContractRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.createContractRaw(requestParameters, initOverrides);
+    async createContract(requestParameters: CreateContractRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<IdResponse> {
+        const response = await this.createContractRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

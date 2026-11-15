@@ -26,25 +26,6 @@ class RoomService : KoinComponent {
                 id = row[Room.id], number = row[Room.name], apartment = row[Apartment.name]
             )
         }
-
-//        val sqlQuery =
-//            "select  a.name as apartment_name, r.id as room_id, r.name as room_name " +
-//                    "from flat.apartment a, flat.room r where a.id = r.apartment_id"
-//        transaction {
-//            val result = mutableListOf<RoomWithApartmentDTO>()
-//            exec(sqlQuery) { rs ->
-//                while (rs.next()) {
-//                    result.add(
-//                        RoomWithApartmentDTO(
-//                            rs.getInt("room_id"),
-//                            rs.getString("room_name"),
-//                            rs.getString("apartment_name")
-//                        )
-//                    )
-//                }
-//            }
-//            result
-//        }
     }
 
     suspend fun fetchFreeRoomsBetweenDates(startDate: String, endDate: String): List<RoomWithApartmentDTO> =

@@ -15,14 +15,20 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApiError,
   ExpenseConfirmationDTO,
+  IdResponse,
   NewOperationalExpenseDTO,
   OperationalExpenseDTO,
   UpdateOperationalExpenseDTO,
 } from '../models/index';
 import {
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
     ExpenseConfirmationDTOFromJSON,
     ExpenseConfirmationDTOToJSON,
+    IdResponseFromJSON,
+    IdResponseToJSON,
     NewOperationalExpenseDTOFromJSON,
     NewOperationalExpenseDTOToJSON,
     OperationalExpenseDTOFromJSON,
@@ -93,7 +99,7 @@ export class ExpensesApi extends runtime.BaseAPI {
     /**
      * Create a new operational expense
      */
-    async createExpenseRaw(requestParameters: CreateExpenseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
+    async createExpenseRaw(requestParameters: CreateExpenseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<IdResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -108,17 +114,13 @@ export class ExpensesApi extends runtime.BaseAPI {
             body: NewOperationalExpenseDTOToJSON(requestParameters['newOperationalExpenseDTO']),
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<number>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => IdResponseFromJSON(jsonValue));
     }
 
     /**
      * Create a new operational expense
      */
-    async createExpense(requestParameters: CreateExpenseRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number> {
+    async createExpense(requestParameters: CreateExpenseRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<IdResponse> {
         const response = await this.createExpenseRaw(requestParameters, initOverrides);
         return await response.value();
     }

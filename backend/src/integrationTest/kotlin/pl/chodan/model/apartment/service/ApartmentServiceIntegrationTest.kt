@@ -3,16 +3,27 @@ package pl.chodan.model.apartment.service
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.vendors.ForUpdateOption
+import pl.chodan.database.Room
+import pl.chodan.database.ExpenseCategory
+import pl.chodan.model.contract.database.Contract
+import pl.chodan.model.contract.database.ContractStatus
+import pl.chodan.model.persons.dto.CreatedPersonDTO
+import pl.chodan.model.persons.service.PersonService
+import pl.chodan.testutil.connectWithoutRetries
+import pl.chodan.testutil.assertApiError
+import pl.chodan.testutil.runAgainstUncommittedCompetitor
+import java.time.LocalDate
 import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase
 import pl.chodan.testutil.insertApartment
 import pl.chodan.testutil.insertRoom
-import pl.chodan.database.ExpenseCategory
 import pl.chodan.model.expenses.dto.AddExpenseTemplateRequest
 import pl.chodan.model.expenses.service.ExpenseTemplateService
 import pl.chodan.testutil.startTestKoin
@@ -88,21 +99,22 @@ class ApartmentServiceIntegrationTest {
     }
 
     @Test
-    fun `createRoom returns null for an unknown apartment`() = runBlocking {
-        assertNull(ApartmentService().createRoom(12345, "Pok 1"))
+    fun `createRoom fails with APARTMENT_NOT_FOUND for an unknown apartment`() {
+        assertApiError("APARTMENT_NOT_FOUND") { ApartmentService().createRoom(12345, "Pok 1") }
     }
 
     @Test
-    fun `renameApartment and renameRoom update names and report missing rows`() = runBlocking {
+    fun `renameApartment and renameRoom update names and fail for missing rows`() = runBlocking {
         val service = ApartmentService()
         val apartmentId = database.insertApartment("Stara")
         val otherApartmentId = database.insertApartment("Inna")
         val roomId = database.insertRoom(apartmentId, "Pok 1")
 
-        assertTrue(service.renameApartment(apartmentId, "Nowa"))
-        assertTrue(service.renameRoom(apartmentId, roomId, "Pok 2"))
-        assertFalse(service.renameApartment(12345, "X"))
-        assertFalse(service.renameRoom(otherApartmentId, roomId, "X"), "a room can only be renamed through its own apartment")
+        service.renameApartment(apartmentId, "Nowa")
+        service.renameRoom(apartmentId, roomId, "Pok 2")
+        assertApiError("APARTMENT_NOT_FOUND") { service.renameApartment(12345, "X") }
+        // a room can only be renamed through its own apartment
+        assertApiError("ROOM_NOT_FOUND") { service.renameRoom(otherApartmentId, roomId, "X") }
 
         val renamed = service.getAllApartmentsWithRoomDetails().single { it.apartmentId == apartmentId }
         assertEquals("Nowa", renamed.apartmentName)
@@ -122,9 +134,40 @@ class ApartmentServiceIntegrationTest {
             )
         )
 
-        assertEquals(RoomDeletion.DELETED, service.deleteRoom(apartmentId, freeRoom))
-        assertEquals(RoomDeletion.IN_USE, service.deleteRoom(apartmentId, usedRoom))
-        assertEquals(RoomDeletion.NOT_FOUND, service.deleteRoom(apartmentId, freeRoom))
+        service.deleteRoom(apartmentId, freeRoom)
+        assertApiError("ROOM_IN_USE") { service.deleteRoom(apartmentId, usedRoom) }
+        assertApiError("ROOM_NOT_FOUND") { service.deleteRoom(apartmentId, freeRoom) }
         assertEquals(listOf(usedRoom), service.getAllApartmentsWithRoomDetails().single().rooms.map { it.roomId })
+    }
+
+    @Test
+    fun `deleteRoom waits for an uncommitted contract on the room and then refuses with ROOM_IN_USE (D14)`() = runBlocking {
+        val apartmentId = database.insertApartment()
+        val roomId = database.insertRoom(apartmentId)
+        val personId = PersonService().createPerson(CreatedPersonDTO("Jan", "Kowalski", "ABC123", "PL"))
+        // Exposed retries a transaction after an SQL error, which would turn the unfixed FK failure into ROOM_IN_USE on retry.
+        stopTestKoin()
+        startTestKoin(connectWithoutRetries())
+
+        val result = runAgainstUncommittedCompetitor(
+            database,
+            competitor = {
+                // same lock as lockRoom (internal to main, not visible from integrationTest)
+                Room.selectAll().where { Room.id eq roomId }.forUpdate(ForUpdateOption.PostgreSQL.ForKeyShare).toList()
+                Contract.insert {
+                    it[Contract.personId] = personId
+                    it[Contract.roomId] = roomId
+                    it[amount] = 1500.toBigDecimal()
+                    it[deposit] = 1500.toBigDecimal()
+                    it[startDate] = LocalDate.of(2026, 1, 1)
+                    it[endDate] = LocalDate.of(2026, 12, 31)
+                    it[status] = ContractStatus.ACTIVE
+                    it[payedTillDayOfMonth] = "10"
+                }
+            },
+            service = { ApartmentService().deleteRoom(apartmentId, roomId) },
+        )
+
+        assertEquals("ROOM_IN_USE", (result.exceptionOrNull() as? ApartmentError)?.code?.name)
     }
 }

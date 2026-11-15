@@ -1,13 +1,13 @@
 import {useEffect} from "react";
 import {useFormik} from "formik";
 import * as Yup from "yup";
-import {Timeline} from "primereact/timeline";
 import {FormDialog} from "../../components/form/FormDialog.tsx";
 import {InfoDialog} from "../../components/form/InfoDialog.tsx";
 import {DetailList} from "../../components/form/DetailList.tsx";
 import {AmountField, CheckboxField, DateField, IntegerField, SelectField, TextAreaField} from "../../components/form/fields.tsx";
 import {dateNotBefore, dayOfMonth, nonNegativeAmount, positiveAmount, requiredDate} from "../../components/form/schemas.ts";
 import {Badge} from "../../components/ui/Badge.tsx";
+import {Timeline} from "../../components/ui/Timeline.tsx";
 import {PageLoading} from "../../components/ui/PageLoading.tsx";
 import {formatDatePl, parseIsoDate} from "../../utils/date.ts";
 import {contractStatus, roomLabel, tenantName} from "./contract-status.ts";
@@ -207,7 +207,7 @@ export const TerminateContractDialog = ({contract, saving, onConfirm, onHide}: {
             submitVariant="danger"
             saving={saving}
         >
-            <DetailList compact items={[
+            <DetailList variant="compact" items={[
                 {label: "Pokój", value: roomLabel(contract.room)},
                 {label: "Okres", value: `${formatDatePl(contract.startDate)} – ${formatDatePl(contract.endDate)}`},
                 {label: "Kaucja", value: money(contract.deposit)},
@@ -281,8 +281,7 @@ export const ContractHistoryDialog = ({contract, onHide}: { contract: ContractDT
                 <p className="ku-form-note">Brak zapisanych zmian tej umowy.</p>
             ) : (
                 <Timeline
-                    value={events}
-                    className="ku-history"
+                    events={events}
                     marker={(entry: ContractHistoryDTO) => {
                         const type = CHANGE_TYPE[entry.changeType];
                         return (
