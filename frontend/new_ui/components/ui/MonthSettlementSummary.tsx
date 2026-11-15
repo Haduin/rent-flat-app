@@ -7,7 +7,12 @@ import {pluralPl} from "../../utils/plural.ts";
 export interface SettlementItem {
     amount: number;
     status: PaymentStatus;
+    /** Amount already received; when absent, only PAID items count as settled. */
+    paidAmount?: number;
 }
+
+const settledAmount = (item: SettlementItem) =>
+    item.paidAmount ?? (isEqual(PaymentStatus.Paid, item.status) ? item.amount : 0);
 
 export interface MonthSettlementSummaryProps {
     items: SettlementItem[];
@@ -20,7 +25,7 @@ export interface MonthSettlementSummaryProps {
 export const summarizeSettlement = (items: SettlementItem[]) => {
     const billable = items.filter((item) => isNotEqual(PaymentStatus.Cancelled, item.status));
     const total = billable.reduce((sum, item) => sum + item.amount, 0);
-    const settled = billable.filter((item) => isEqual(PaymentStatus.Paid, item.status)).reduce((sum, item) => sum + item.amount, 0);
+    const settled = billable.reduce((sum, item) => sum + settledAmount(item), 0);
     return {
         total,
         settled,

@@ -118,8 +118,5 @@ val integrationTest = tasks.register<Test>("integrationTest") {
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     mergeServiceFiles()
-}
-
-tasks.withType<Jar> {
     archiveFileName.set("backend.jar")
 }

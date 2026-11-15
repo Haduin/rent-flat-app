@@ -138,6 +138,19 @@ class PaymentServiceIntegrationTest {
     }
 
     @Test
+    fun `getPaymentsForMonth reports the paid amount per status`() = runBlocking {
+        val partial = database.insertPayment(createContract(), "2026-08", amount = 1600.0, status = PaymentStatus.PARTIALLY_PAID)
+        database.insertPaymentSplit(partial, 300.0, "2026-08-02")
+        database.insertPaymentSplit(partial, 200.0, "2026-08-09")
+        val paid = database.insertPayment(createContract(), "2026-08", amount = 2000.0, status = PaymentStatus.PAID, payedDate = "2026-08-05")
+        val pending = database.insertPayment(createContract(), "2026-08", amount = 1000.0)
+
+        val paidAmounts = PaymentService().getPaymentsForMonth("2026-08").associate { it.id to it.paidAmount }
+
+        assertEquals(mapOf(partial to 500.0, paid to 2000.0, pending to 0.0), paidAmounts)
+    }
+
+    @Test
     fun `getPaymentsForMonth sorts by amount descending when requested`() = runBlocking {
         // one payment per contract per month, so each amount needs its own contract
         database.insertPayment(createContract(), scopeDate = "2026-08", amount = 100.0)
@@ -269,15 +282,13 @@ class PaymentServiceIntegrationTest {
     }
 
     @Test
-    fun `confirmPayment on a partially paid payment keeps the due amount`() = runBlocking {
+    fun `confirmPayment rejects a partially paid payment with PAYMENT_NOT_CONFIRMABLE`() = runBlocking {
         val paymentId = database.insertPayment(createContract(), "2026-08", amount = 2000.0, status = PaymentStatus.PARTIALLY_PAID)
         database.insertPaymentSplit(paymentId, 800.0, "2026-08-05")
 
-        PaymentService().confirmPayment(PaymentConfirmationDTO(paymentId, "2026-08-10", 1200.0))
-
-        val payment = PaymentService().getAllPayments().single { it.id == paymentId }
-        assertEquals(PaymentStatus.PAID, payment.status)
-        assertEquals(2000.0, payment.amount)
+        assertApiError("PAYMENT_NOT_CONFIRMABLE") {
+            PaymentService().confirmPayment(PaymentConfirmationDTO(paymentId, "2026-08-10", 1200.0))
+        }
     }
 
     @Test

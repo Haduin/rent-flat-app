@@ -26,7 +26,7 @@ const contractTermsSchema = {
     endDate: dateNotBefore("startDate", "Koniec nie może być przed początkiem umowy"),
     amount: positiveAmount("Czynsz jest wymagany"),
     deposit: nonNegativeAmount("Kaucja jest wymagana (0, jeśli brak)"),
-    payDay: dayOfMonth("Dzień płatności jest wymagany"),
+    payDay: dayOfMonth("Dzień płatności jest wymagany", 28),
     roomId: Yup.number().nullable().required("Wybierz pokój"),
 };
 
@@ -115,7 +115,7 @@ export const AddContractDialog = ({unassignedPersons, saving, onSave, onHide}: {
                 <AmountField formik={formik} name="amount" label="Czynsz miesięczny"/>
                 <AmountField formik={formik} name="deposit" label="Kaucja"/>
             </div>
-            <IntegerField formik={formik} name="payDay" label="Dzień płatności" hint={PAY_DAY_HINT} min={1} max={31}/>
+            <IntegerField formik={formik} name="payDay" label="Dzień płatności" hint={PAY_DAY_HINT} min={1} max={28}/>
         </FormDialog>
     );
 };
@@ -173,7 +173,7 @@ export const EditContractDialog = ({contract, saving, onSave, onHide}: {
                 <AmountField formik={formik} name="amount" label="Czynsz miesięczny"/>
                 <AmountField formik={formik} name="deposit" label="Kaucja"/>
             </div>
-            <IntegerField formik={formik} name="payDay" label="Dzień płatności" hint={PAY_DAY_HINT} min={1} max={31}/>
+            <IntegerField formik={formik} name="payDay" label="Dzień płatności" hint={PAY_DAY_HINT} min={1} max={28}/>
         </FormDialog>
     );
 };

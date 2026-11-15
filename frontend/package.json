@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-api": "openapi-generator-cli generate -i http://localhost:8080/openapi.json -g typescript-fetch -o src/api/generated "
+    "clean-api": "node -e \"for (const p of ['apis', 'models', 'dist', '.openapi-generator', 'index.ts', 'runtime.ts', '../../../node_modules/.tmp/tsconfig.generated.tsbuildinfo']) require('fs').rmSync('src/api/generated/' + p, {recursive: true, force: true})\"",
+    "generate-api": "pnpm clean-api && openapi-generator-cli generate -i http://localhost:8080/openapi.json -g typescript-fetch -o src/api/generated "
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",

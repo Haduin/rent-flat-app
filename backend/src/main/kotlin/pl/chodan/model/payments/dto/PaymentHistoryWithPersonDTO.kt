@@ -14,5 +14,7 @@ data class PaymentHistoryWithPersonDTO(
     val payedDate: String?,
     val scopeDate: String?,
     val amount: Double,
+    /** What has come in so far: the full amount once PAID, the instalment sum while PARTIALLY_PAID. */
+    val paidAmount: Double,
     val status: PaymentStatus
 )

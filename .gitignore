@@ -55,4 +55,6 @@ loadtest/raport.html
 /.impeccable/
 /loadtest/
 /ui-audit/
+/frontend/ui-audit/
 /.maister/tasks/*
+/frontend/src/api/generated/dist/

@@ -85,7 +85,7 @@ class PaymentRoutingTest {
             id = 1, contractId = 10,
             person = PersonSmallDetailsDTO(id = 1, firstName = "Jan", lastName = "Kowalski"),
             room = RoomWithApartmentDTO(id = 5, number = "1", apartment = "Mieszkanie A"),
-            payedDate = null, scopeDate = "2026-08", amount = 2000.0, status = PaymentStatus.PENDING
+            payedDate = null, scopeDate = "2026-08", amount = 2000.0, paidAmount = 0.0, status = PaymentStatus.PENDING
         )
         coEvery {
             paymentService.getPaymentsForMonth("2026-08", PaymentSortableField.ID, SortOrder.ASC)

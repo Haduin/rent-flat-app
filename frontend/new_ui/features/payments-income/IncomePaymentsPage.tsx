@@ -73,12 +73,16 @@ const IncomePaymentsPage = () => {
     );
 
     const rowActions = (payment: PaymentHistoryWithPersonDTO) => {
-        const canConfirm = isNotEqual(PaymentStatus.Paid, payment.status) && isNotEqual(PaymentStatus.Cancelled, payment.status);
-        return canConfirm ? (
+        const isOpen = isNotEqual(PaymentStatus.Paid, payment.status) && isNotEqual(PaymentStatus.Cancelled, payment.status);
+        // a partially paid payment is settled through splits only, so the instalment history stays complete
+        const canConfirm = isOpen && isNotEqual(PaymentStatus.PartiallyPaid, payment.status);
+        return isOpen ? (
             <>
-                <Button variant="primary" size="small" onClick={() => openConfirmationDialog(payment)}>
-                    Potwierdź
-                </Button>
+                {canConfirm && (
+                    <Button variant="primary" size="small" onClick={() => openConfirmationDialog(payment)}>
+                        Potwierdź
+                    </Button>
+                )}
                 <Button variant="secondary" size="small" icon="pi pi-percentage" onClick={() => openSplitDialog(payment)}>
                     Podziel
                 </Button>

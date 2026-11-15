@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.sum
 import org.jetbrains.exposed.sql.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -145,6 +146,14 @@ class PaymentService : KoinComponent {
                 SortOrder.DESC -> org.jetbrains.exposed.sql.SortOrder.DESC
             }
 
+            val splitSum = PaymentSplit.amount.sum()
+            val splitTotals = PaymentSplit
+                .join(Payment, JoinType.INNER, PaymentSplit.paymentId, Payment.id)
+                .select(PaymentSplit.paymentId, splitSum)
+                .where { Payment.scopeDate eq month }
+                .groupBy(PaymentSplit.paymentId)
+                .associate { it[PaymentSplit.paymentId] to (it[splitSum] ?: BigDecimal.ZERO) }
+
             Payment
                 .join(Contract, JoinType.LEFT, Payment.contractId, Contract.id)
                 .join(Person, JoinType.LEFT, Contract.personId, Person.id)
@@ -160,6 +169,11 @@ class PaymentService : KoinComponent {
                         scopeDate = row[Payment.scopeDate],
                         payedDate = row[Payment.payedDate]?.toString(),
                         amount = row[Payment.amount].toDouble(),
+                        paidAmount = when (row[Payment.status]) {
+                            PaymentStatus.PAID -> row[Payment.amount]
+                            PaymentStatus.CANCELLED -> BigDecimal.ZERO
+                            else -> splitTotals[row[Payment.id]] ?: BigDecimal.ZERO
+                        }.toDouble(),
                         person = PersonSmallDetailsDTO(
                             id = row[Person.id],
                             firstName = row[Person.firstName],
@@ -178,14 +192,13 @@ class PaymentService : KoinComponent {
 
     suspend fun confirmPayment(paymentDto: PaymentConfirmationDTO): Unit = databaseProvider.dbQuery {
         val status = lockPayment(paymentDto.paymentId)[Payment.status]
-        if (PaymentStatus.PENDING != status && PaymentStatus.LATE != status && PaymentStatus.PARTIALLY_PAID != status) {
+        if (PaymentStatus.PENDING != status && PaymentStatus.LATE != status) {
             throw PaymentError.NotConfirmable(status)
         }
         Payment.update({ Payment.id eq paymentDto.paymentId }) {
             it[Payment.status] = PaymentStatus.PAID
             it[payedDate] = paymentDto.paymentDate.toLocalDateWithFullPattern()
-            // a partially paid payment keeps its due amount, the instalments already account for it
-            if (PaymentStatus.PARTIALLY_PAID != status) it[amount] = BigDecimal.valueOf(paymentDto.payedAmount)
+            it[amount] = BigDecimal.valueOf(paymentDto.payedAmount)
         }
     }
 
