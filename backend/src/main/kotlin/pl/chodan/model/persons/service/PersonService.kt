@@ -43,7 +43,7 @@ class PersonService : KoinComponent {
     }
 
     suspend fun getAllPersons(): List<PersonDTO> = databaseProvider.dbQuery {
-        Person.selectAll().toList().map {
+        Person.selectAll().orderBy(Person.id).map {
             PersonDTO(
                 it[Person.id],
                 it[Person.firstName],
@@ -58,7 +58,8 @@ class PersonService : KoinComponent {
     suspend fun getNonResidentPersons(): List<PersonDTO> = databaseProvider.dbQuery {
         Person.selectAll()
             .where { Person.status eq PersonStatus.NON_RESIDENT }
-            .toList().map {
+            .orderBy(Person.id)
+            .map {
                 PersonDTO(
                     it[Person.id],
                     it[Person.firstName],

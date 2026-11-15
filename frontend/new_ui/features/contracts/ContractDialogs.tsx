@@ -16,7 +16,7 @@ import {dateToStringFullYearMouthDay} from "../../../src/components/commons/date
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import type {DeleteContractDTO, NewContract} from "../../../src/components/commons/types.ts";
 import type {ContractDTO, ContractHistoryDTO, PersonDTO, UpdateContractDetails} from "../../../src/api/generated";
-import {isEqual, isNotNullable, isNull} from "../../../src/utils/typeguards";
+import {isEqual, isNotEqual, isNotNullable, isNull} from "../../../src/utils/typeguards";
 
 const money = (value: number | null | undefined) => (isNotNullable(value) ? formatCurrency(value) : "—");
 const toIso = (date: Date | null) => (isNull(date) ? "" : dateToStringFullYearMouthDay(date));
@@ -126,7 +126,6 @@ export const EditContractDialog = ({contract, saving, onSave, onHide}: {
     onSave: (details: UpdateContractDetails) => void;
     onHide: () => void;
 }) => {
-    const {data: rooms = []} = useFetchRooms();
     const formik = useFormik<ContractTermsValues>({
         initialValues: {
             roomId: contract.room?.id ?? null,
@@ -147,6 +146,17 @@ export const EditContractDialog = ({contract, saving, onSave, onHide}: {
             payedTillDayOfMonth: String(values.payDay),
         }),
     });
+
+    // the contract's own room plus rooms with no active contract in the chosen period (the backend re-checks: ROOM_OCCUPIED)
+    const {startDate, endDate} = formik.values;
+    const datesChosen = isNotNullable(startDate) && isNotNullable(endDate) && endDate >= startDate;
+    const {data: freeRooms = []} = useUnassignedRooms(
+        datesChosen ? {startDate: toIso(startDate), endDate: toIso(endDate)} : undefined
+    );
+    const rooms = [
+        ...(contract.room ? [contract.room] : []),
+        ...freeRooms.filter((room) => isNotEqual(contract.room?.id, room.id)),
+    ];
 
     return (
         <FormDialog

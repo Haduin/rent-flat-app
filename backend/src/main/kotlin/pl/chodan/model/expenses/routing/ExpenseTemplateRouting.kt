@@ -70,7 +70,7 @@ fun Application.configureExpenseTemplateRouting() {
                     operationId = "updateExpenseTemplate"
                     errors(
                         ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD, ErrorCode.EXPENSE_TEMPLATE_NOT_FOUND,
-                        ErrorCode.APARTMENT_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND
+                        ErrorCode.EXPENSE_TEMPLATE_INACTIVE, ErrorCode.APARTMENT_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND
                     )
                     request {
                         pathParameter<Int>("expenseTemplateId") { description = "Expense template id" }

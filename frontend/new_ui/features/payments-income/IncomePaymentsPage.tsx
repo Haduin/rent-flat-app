@@ -11,7 +11,7 @@ import {Button} from "../../components/ui/Button.tsx";
 import {MonthSettlementSummary} from "../../components/ui/MonthSettlementSummary.tsx";
 import {formatDatePl} from "../../utils/date.ts";
 import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../src/api/generated";
-import {isNotEqual} from "../../../src/utils/typeguards";
+import {isEqual, isNotEqual} from "../../../src/utils/typeguards";
 import {formatMonthLabel, useCurrentMonth} from "../../components/layout/CurrentMonth.ts";
 
 const STATUS_URGENCY: PaymentStatus[] = [
@@ -87,7 +87,8 @@ const IncomePaymentsPage = () => {
                     Podziel
                 </Button>
             </>
-        ) : (
+        ) : isEqual(PaymentStatus.Paid, payment.status) && (
+            // only a confirmed payment is edited (its date and amount); a cancelled one stays as it is
             <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => openEditDialog(payment)}>
                 Edytuj
             </Button>

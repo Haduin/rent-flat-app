@@ -1,5 +1,6 @@
 import {useState} from "react";
 import {
+    useAddExpense,
     useConfirmExpense,
     useExpensesBySelectedMonth,
     useGenerateExpensesFromTemplates,
@@ -7,20 +8,30 @@ import {
     useUpdateExpense,
 } from "../../../src/pages/payments/expense/api/expenses-payments-view.api.ts";
 import {expensesMap} from "../../../src/pages/expenses-template/add-edit-expenses-template/add-edit-expenses-template-dialog.types.ts";
-import {ConfirmExpenseDialog, confirmDeleteExpense, EditExpenseDialog, ExpenseDetailsDialog} from "./ExpenseDialogs.tsx";
+import {AddExpenseDialog, ConfirmExpenseDialog, confirmDeleteExpense, EditExpenseDialog, ExpenseDetailsDialog} from "./ExpenseDialogs.tsx";
 import {useModal} from "../../../src/hooks/use-modal";
+import {getApartments} from "../../../src/pages/apartment/api/apartments.api.ts";
 import {dateToStringFullYearMouthDay} from "../../../src/components/commons/dateFormatter.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {Page} from "../../components/layout/Page.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
+import {IconPlus} from "../../components/ui/icons.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
+import {EXPENSE_CATEGORY_TONE} from "../../components/ui/expense-category.ts";
 import {PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE} from "../../components/ui/payment-status.ts";
 import {MonthSettlementSummary} from "../../components/ui/MonthSettlementSummary.tsx";
 import {formatDatePl} from "../../utils/date.ts";
-import {OperationalExpenseDTO, PaymentStatus, UpdateOperationalExpenseDTO} from "../../../src/api/generated";
+import {NewOperationalExpenseDTO, OperationalExpenseDTO, PaymentStatus, UpdateOperationalExpenseDTO} from "../../../src/api/generated";
 import {isNotEqual} from "../../../src/utils/typeguards";
 import {formatMonthLabel, useCurrentMonth} from "../../components/layout/CurrentMonth.ts";
+
+// today when the selected month is the current one, else its first day: the cost lands in the month on screen
+const defaultDueDate = (month: Date) => {
+    const today = new Date();
+    const sameMonth = today.getFullYear() === month.getFullYear() && today.getMonth() === month.getMonth();
+    return sameMonth ? today : new Date(month.getFullYear(), month.getMonth(), 1);
+};
 
 const ExpensePaymentsPage = () => {
     const {month: dateSelected} = useCurrentMonth();
@@ -31,6 +42,9 @@ const ExpensePaymentsPage = () => {
     const updateAction = useUpdateExpense();
     const confirmAction = useConfirmExpense();
     const handleGenerate = useGenerateExpensesFromTemplates(dateSelected);
+    const addAction = useAddExpense();
+    const {isOpen: isAddDialogVisible, setOpen: setIsAddDialogVisible} = useModal();
+    const {data: apartments = []} = getApartments({enabled: isAddDialogVisible});
 
     const {isOpen: isDetailsDialogVisible, setOpen: setIsDetailsDialogVisible} = useModal();
     const {isOpen: isEditDialogVisible, setOpen: setIsEditDialogVisible} = useModal();
@@ -67,7 +81,7 @@ const ExpensePaymentsPage = () => {
     };
 
     const categoryBody = (row: OperationalExpenseDTO) => (
-        <Badge tone="neutral">{expensesMap[row.category] ?? row.category}</Badge>
+        <Badge tone={EXPENSE_CATEGORY_TONE[row.category]}>{expensesMap[row.category] ?? row.category}</Badge>
     );
 
     const statusBody = (row: OperationalExpenseDTO) => (
@@ -107,13 +121,18 @@ const ExpensePaymentsPage = () => {
             title="Koszty operacyjne"
             subtitle="Media, podatki, czynsz do właściciela"
             actions={
-                <Button
-                    variant={(expenses?.length ?? 0) > 0 ? "secondary" : "primary"}
-                    loading={handleGenerate.isPending}
-                    onClick={() => handleGenerate.mutate()}
-                >
-                    Wygeneruj koszty za {formatMonthLabel(dateSelected)}
-                </Button>
+                <>
+                    <Button
+                        variant={(expenses?.length ?? 0) > 0 ? "secondary" : "primary"}
+                        loading={handleGenerate.isPending}
+                        onClick={() => handleGenerate.mutate()}
+                    >
+                        Wygeneruj koszty za {formatMonthLabel(dateSelected)}
+                    </Button>
+                    <Button variant="secondary" icon={<IconPlus size={15}/>} onClick={() => setIsAddDialogVisible(true)}>
+                        Dodaj koszt
+                    </Button>
+                </>
             }
         >
             <MonthSettlementSummary items={expenses ?? []} settledLabel="Zapłacono" outstandingLabel="Do zapłaty"/>
@@ -127,6 +146,15 @@ const ExpensePaymentsPage = () => {
                     saving={updateAction.isPending}
                     onSave={(dto: UpdateOperationalExpenseDTO) => updateAction.mutate(dto, {onSuccess: closeDialogs})}
                     onHide={closeDialogs}
+                />
+            )}
+            {isAddDialogVisible && (
+                <AddExpenseDialog
+                    defaultDate={defaultDueDate(dateSelected)}
+                    apartments={apartments}
+                    saving={addAction.isPending}
+                    onSave={(dto: NewOperationalExpenseDTO) => addAction.mutate(dto, {onSuccess: () => setIsAddDialogVisible(false)})}
+                    onHide={() => setIsAddDialogVisible(false)}
                 />
             )}
             {selectedExpense && isConfirmDialogVisible && (

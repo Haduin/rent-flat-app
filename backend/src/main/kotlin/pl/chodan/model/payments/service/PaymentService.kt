@@ -20,7 +20,6 @@ import pl.chodan.database.Person
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
-import pl.chodan.model.contract.database.ContractStatus
 import pl.chodan.model.contract.dto.RawContract
 import pl.chodan.model.payments.dto.PaymentDTO
 import pl.chodan.model.payments.dto.PaymentEdit
@@ -32,9 +31,11 @@ import pl.chodan.model.payments.routing.PaymentSortableField
 import pl.chodan.model.persons.dto.PaymentConfirmationDTO
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 import pl.chodan.routing.SortOrder
+import pl.chodan.error.ValidationException
 import pl.chodan.toLocalDateWithFullPattern
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.YearMonth
 
 class PaymentService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
@@ -45,11 +46,7 @@ class PaymentService : KoinComponent {
         val endDate = startDate.plusMonths(1).minusDays(1)
 
         val activeContracts = Contract.selectAll()
-            .where {
-                (Contract.startDate lessEq endDate) and
-                        (Contract.endDate greaterEq startDate) and
-                        (Contract.status eq ContractStatus.ACTIVE)
-            }
+            .where { Contract.activeBetween(startDate, endDate) }
             .orderBy(Contract.id)
             .forUpdate(ForUpdateOption.PostgreSQL.ForKeyShare)
             .map { row ->
@@ -103,13 +100,26 @@ class PaymentService : KoinComponent {
     )
 
 
-    suspend fun editPayment(paymentEdit: PaymentEdit) = databaseProvider.dbQuery {
-        val updated = Payment.update({ Payment.id eq paymentEdit.paymentId }) {
+    /** Only a confirmed (PAID) payment is edited, and only its date and amount; the status follows from confirm/split. */
+    suspend fun editPayment(paymentEdit: PaymentEdit): Unit = databaseProvider.dbQuery {
+        val payment = lockPayment(paymentEdit.paymentId)
+        if (PaymentStatus.PAID != payment[Payment.status]) throw PaymentError.NotEditable(payment[Payment.status])
+        paymentEdit.amount?.let { amount ->
+            val newAmount = BigDecimal.valueOf(amount)
+            val contractAmount = Contract.select(Contract.amount).where { Contract.id eq payment[Payment.contractId] }
+                .single()[Contract.amount]
+            if (newAmount > contractAmount) {
+                throw ValidationException("Należność nie może być wyższa niż czynsz z umowy ($contractAmount zł)")
+            }
+            val instalments = paidInInstalments(paymentEdit.paymentId)
+            if (newAmount < instalments) {
+                throw ValidationException("Należność nie może być niższa niż suma wpłaconych rat ($instalments zł)")
+            }
+        }
+        Payment.update({ Payment.id eq paymentEdit.paymentId }) {
             paymentEdit.amount?.let { amount -> it[Payment.amount] = BigDecimal.valueOf(amount) }
-            paymentEdit.status?.let { status -> it[Payment.status] = status }
             paymentEdit.payedDate?.let { payedDate -> it[Payment.payedDate] = payedDate.toLocalDateWithFullPattern() }
         }
-        if (0 == updated) throw PaymentError.NotFound(paymentEdit.paymentId)
     }
 
     suspend fun getAllPayments(): List<PaymentDTO> = databaseProvider.dbQuery {
@@ -169,6 +179,7 @@ class PaymentService : KoinComponent {
                         scopeDate = row[Payment.scopeDate],
                         payedDate = row[Payment.payedDate]?.toString(),
                         amount = row[Payment.amount].toDouble(),
+                        contractAmount = row[Contract.amount].toDouble(),
                         paidAmount = when (row[Payment.status]) {
                             PaymentStatus.PAID -> row[Payment.amount]
                             PaymentStatus.CANCELLED -> BigDecimal.ZERO
@@ -211,9 +222,7 @@ class PaymentService : KoinComponent {
         }
 
         val dueAmount = payment[Payment.amount]
-        val alreadyPaid = PaymentSplit.select(PaymentSplit.amount)
-            .where { PaymentSplit.paymentId eq paymentSplitDto.paymentId }
-            .sumOf { it[PaymentSplit.amount] }
+        val alreadyPaid = paidInInstalments(paymentSplitDto.paymentId)
 
         val remaining = dueAmount - alreadyPaid
         if (BigDecimal.valueOf(paymentSplitDto.amount) > remaining) {
@@ -251,6 +260,31 @@ class PaymentService : KoinComponent {
                 )
             }
     }
+
+    /**
+     * Marks PENDING payments as LATE once the contract's payment day of their month has passed.
+     * A day beyond the month's length (e.g. 31 in February) means its last day.
+     */
+    suspend fun markLatePayments(today: LocalDate): Int = databaseProvider.dbQuery {
+        val lateIds = Payment
+            .join(Contract, JoinType.INNER, Payment.contractId, Contract.id)
+            .select(Payment.id, Payment.scopeDate, Contract.payedTillDayOfMonth)
+            .where { Payment.status eq PaymentStatus.PENDING }
+            .filter { row ->
+                val month = YearMonth.parse(row[Payment.scopeDate])
+                val payDay = row[Contract.payedTillDayOfMonth].toInt().coerceAtMost(month.lengthOfMonth())
+                today.isAfter(month.atDay(payDay))
+            }
+            .map { it[Payment.id] }
+        if (lateIds.isEmpty()) return@dbQuery 0
+        Payment.update({ (Payment.id inList lateIds) and (Payment.status eq PaymentStatus.PENDING) }) {
+            it[status] = PaymentStatus.LATE
+        }
+    }
+
+    private fun paidInInstalments(paymentId: Int): BigDecimal =
+        PaymentSplit.select(PaymentSplit.amount).where { PaymentSplit.paymentId eq paymentId }
+            .sumOf { it[PaymentSplit.amount] }
 
     private fun lockPayment(id: Int) =
         Payment.selectAll().where { Payment.id eq id }.forUpdate().singleOrNull() ?: throw PaymentError.NotFound(id)

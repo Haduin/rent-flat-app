@@ -25,6 +25,7 @@ import pl.chodan.model.expenses.service.ExpenseTemplateService
 import pl.chodan.model.payments.dto.paymentValidation
 import pl.chodan.model.payments.routing.configurePaymentRouting
 import pl.chodan.model.payments.service.PaymentService
+import pl.chodan.model.payments.service.launchLatePaymentsJob
 import pl.chodan.model.persons.dto.personValidation
 import pl.chodan.model.persons.routing.configurePersonRouting
 import pl.chodan.model.persons.service.PersonService
@@ -62,6 +63,7 @@ fun Application.module() {
     configureExpenseRouting()
     configureExpenseTemplateRouting()
     configureStatisticsRouting()
+    launchLatePaymentsJob()
 }
 
 val appModule = { config: Config ->

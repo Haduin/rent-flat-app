@@ -72,19 +72,22 @@ class StatisticsServiceIntegrationTest {
         val pending = createContract(apartmentId, amount = 900.0)
         database.insertPayment(pending, scopeDate = month, amount = 900.0, status = PaymentStatus.PENDING)
 
-        ExpenseService().addExpense(
-            NewOperationalExpenseDTO(
-                apartmentId = apartmentId, roomId = null, insertDate = LocalDate.now().toString(),
-                costDate = null, amount = 400.0, category = ExpenseCategory.OWNER_RENT,
-                status = PaymentStatus.PENDING, description = null, invoiceNumber = null, templateId = null
+        for ((amount, status) in listOf(400.0 to PaymentStatus.PENDING, 250.0 to PaymentStatus.PAID)) {
+            ExpenseService().addExpense(
+                NewOperationalExpenseDTO(
+                    apartmentId = apartmentId, roomId = null, insertDate = LocalDate.now().toString(),
+                    costDate = null, amount = amount, category = ExpenseCategory.OWNER_RENT,
+                    status = status, description = null, invoiceNumber = null, templateId = null
+                )
             )
-        )
+        }
 
         val statistics = StatisticsService().getApartmentsStatistics()
 
         val apartment = statistics.apartments.single()
         assertEquals(1500.0, apartment.currentMonthIncomeCollected)
-        assertEquals(1500.0 - 400.0, apartment.netResultCurrentMonth)
+        // only the paid cost counts, the pending 400 does not
+        assertEquals(1500.0 - 250.0, apartment.netResultCurrentMonth)
         assertEquals(1500.0, statistics.overview.currentMonthIncomeCollected)
         assertEquals(3500.0, apartment.activeMonthlyRent)
     }

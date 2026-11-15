@@ -116,13 +116,52 @@ class PaymentServiceIntegrationTest {
     @Test
     fun `editPayment only overwrites the provided fields`() = runBlocking {
         val contractId = createContract()
-        val paymentId = database.insertPayment(contractId, scopeDate = "2026-08", amount = 1000.0)
+        val paymentId = database.insertPayment(
+            contractId, scopeDate = "2026-08", amount = 1000.0, status = PaymentStatus.PAID, payedDate = "2026-08-05"
+        )
 
-        PaymentService().editPayment(PaymentEdit(paymentId = paymentId, amount = 1234.0, status = null, payedDate = null))
+        PaymentService().editPayment(PaymentEdit(paymentId = paymentId, amount = 1234.0, payedDate = null))
 
         val payment = PaymentService().getAllPayments().single { it.id == paymentId }
         assertEquals(1234.0, payment.amount)
-        assertEquals(PaymentStatus.PENDING, payment.status)
+        assertEquals(PaymentStatus.PAID, payment.status)
+        assertEquals("2026-08-05", payment.payedDate)
+    }
+
+    @Test
+    fun `editPayment edits only a confirmed payment`() = runBlocking {
+        val paymentId = database.insertPayment(createContract(), scopeDate = "2026-08", amount = 1000.0)
+
+        assertApiError("PAYMENT_NOT_EDITABLE") {
+            PaymentService().editPayment(PaymentEdit(paymentId = paymentId, amount = 900.0, payedDate = null))
+        }
+    }
+
+    @Test
+    fun `editPayment keeps the amount between the paid instalments and the contract rent`() = runBlocking {
+        val paymentId = database.insertPayment(
+            createContract(amount = 2000.0), "2026-08", amount = 2000.0, status = PaymentStatus.PAID, payedDate = "2026-08-09"
+        )
+        database.insertPaymentSplit(paymentId, 1500.0, "2026-08-05")
+        database.insertPaymentSplit(paymentId, 500.0, "2026-08-09")
+
+        assertApiError("VALIDATION_FAILED") { PaymentService().editPayment(PaymentEdit(paymentId, 2000.01, null)) }
+        assertApiError("VALIDATION_FAILED") { PaymentService().editPayment(PaymentEdit(paymentId, 1999.0, null)) }
+        assertEquals(2000.0, PaymentService().getAllPayments().single { it.id == paymentId }.amount)
+    }
+
+    @Test
+    fun `markLatePayments marks pending payments past the contract payment day`() = runBlocking {
+        // createContract uses payment day 10
+        val due = database.insertPayment(createContract(), "2026-08")
+        val notYet = database.insertPayment(createContract(), "2026-09")
+        val paid = database.insertPayment(createContract(), "2026-08", status = PaymentStatus.PAID, payedDate = "2026-08-05")
+
+        val marked = PaymentService().markLatePayments(LocalDate.parse("2026-09-10"))
+
+        val statuses = PaymentService().getAllPayments().associate { it.id to it.status }
+        assertEquals(1, marked)
+        assertEquals(mapOf(due to PaymentStatus.LATE, notYet to PaymentStatus.PENDING, paid to PaymentStatus.PAID), statuses)
     }
 
     @Test

@@ -10,6 +10,7 @@ import {Page} from "../../components/layout/Page.tsx";
 import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
+import {EXPENSE_CATEGORY_TONE} from "../../components/ui/expense-category.ts";
 import {IconPlus} from "../../components/ui/icons.tsx";
 import {OperationalExpenseTemplateResponse} from "../../../src/api/generated";
 
@@ -54,19 +55,18 @@ const ExpenseTemplatesPage = () => {
     };
 
     const categoryBody = (row: OperationalExpenseTemplateResponse) => (
-        <Badge tone="neutral">{getExpenseCategoryLabel(row.category)}</Badge>
+        <Badge tone={EXPENSE_CATEGORY_TONE[row.category]}>{getExpenseCategoryLabel(row.category)}</Badge>
     );
 
     const statusBody = (row: OperationalExpenseTemplateResponse) => (
         <Badge tone={row.active ? "success" : "neutral"}>{row.active ? "Aktywny" : "Nieaktywny"}</Badge>
     );
 
-    const rowActions = (row: OperationalExpenseTemplateResponse) => (
+    // a deactivated template is frozen: the backend rejects edits with EXPENSE_TEMPLATE_INACTIVE
+    const rowActions = (row: OperationalExpenseTemplateResponse) => row.active && (
         <>
             <Button variant="secondary" size="small" icon="pi pi-pencil" aria-label="Edytuj szablon" onClick={() => handleSelectEditExpense(row)}/>
-            {row.active && (
-                <Button variant="danger-outline" size="small" icon="pi pi-ban" aria-label="Wyłącz szablon" onClick={() => handleDeactivate(row)}/>
-            )}
+            <Button variant="danger-outline" size="small" icon="pi pi-ban" aria-label="Wyłącz szablon" onClick={() => handleDeactivate(row)}/>
         </>
     );
 

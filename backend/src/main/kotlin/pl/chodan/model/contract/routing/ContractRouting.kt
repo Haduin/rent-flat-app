@@ -80,7 +80,7 @@ fun Application.configureContractRouting() {
                     operationId = "createContract"
                     errors(
                         ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
-                        ErrorCode.PERSON_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND
+                        ErrorCode.PERSON_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND, ErrorCode.ROOM_OCCUPIED
                     )
                     request { body<NewContractDTO> { description = "New contract details" } }
                     response {
@@ -97,7 +97,8 @@ fun Application.configureContractRouting() {
                     operationId = "updateContract"
                     errors(
                         ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
-                        ErrorCode.CONTRACT_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND, ErrorCode.CONTRACT_TERMINATED
+                        ErrorCode.CONTRACT_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND, ErrorCode.CONTRACT_TERMINATED,
+                        ErrorCode.ROOM_OCCUPIED
                     )
                     request { body<UpdateContractDetails> { description = "Contract update details" } }
                     response {

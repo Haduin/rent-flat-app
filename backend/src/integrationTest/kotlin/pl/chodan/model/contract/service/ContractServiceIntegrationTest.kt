@@ -485,6 +485,7 @@ class ContractServiceIntegrationTest {
         database.insertPayment(id, scopeDate = "2026-08", status = PaymentStatus.PENDING)
         database.insertPayment(id, scopeDate = "2026-09", status = PaymentStatus.PENDING)
         val alreadyPaidId = database.insertPayment(id, scopeDate = "2026-07", status = PaymentStatus.PAID)
+        val unpaidBeforeId = database.insertPayment(id, scopeDate = "2026-06", status = PaymentStatus.LATE)
 
         contractService.deleteContract(
             DeleteContractDTO(
@@ -494,9 +495,51 @@ class ContractServiceIntegrationTest {
         )
 
         val payments = PaymentService().getAllPayments()
-        val pendingCancelled = payments.filter { it.id != alreadyPaidId }
+        val pendingCancelled = payments.filter { it.id != alreadyPaidId && it.id != unpaidBeforeId }
         assertTrue(pendingCancelled.all { it.status == PaymentStatus.CANCELLED })
         assertEquals(PaymentStatus.PAID, payments.single { it.id == alreadyPaidId }.status)
+        // rent owed for a month before the termination month stays owed
+        assertEquals(PaymentStatus.LATE, payments.single { it.id == unpaidBeforeId }.status)
+    }
+
+    @Test
+    fun `createContract rejects a room with an overlapping active contract`() = runBlocking {
+        val contractService = ContractService()
+        val roomId = createRoom()
+        createBaselineContract(contractService, roomId) // 2026-08-01 .. 2027-07-31
+
+        assertApiError("ROOM_OCCUPIED") { createBaselineContract(contractService, roomId) }
+        val afterIt = contractService.createContract(
+            NewContractDTO(
+                personId = createTenant(), roomId = roomId, startDate = "2027-08-01", endDate = "2028-07-31",
+                amount = 2000.0, deposit = 500.0, payedDate = 10
+            )
+        )
+        assertTrue(afterIt > 0)
+    }
+
+    @Test
+    fun `updateContract rejects moving to an occupied room but allows changing its own dates`() = runBlocking {
+        val contractService = ContractService()
+        val occupiedRoom = createRoom()
+        createBaselineContract(contractService, occupiedRoom)
+        val id = createBaselineContract(contractService, createRoom())
+
+        assertApiError("ROOM_OCCUPIED") {
+            contractService.updateContract(UpdateContractDetails(id, occupiedRoom, null, null, null, null, null))
+        }
+        contractService.updateContract(UpdateContractDetails(id, null, null, null, null, "2027-12-31", null))
+        assertEquals("2027-12-31", contractService.contractById(id).endDate)
+    }
+
+    @Test
+    fun `updateContract rejects an end date before the stored start date`() = runBlocking {
+        val contractService = ContractService()
+        val id = createBaselineContract(contractService, createRoom()) // starts 2026-08-01
+
+        assertApiError("VALIDATION_FAILED") {
+            contractService.updateContract(UpdateContractDetails(id, null, null, null, null, "2026-07-31", null))
+        }
     }
 
     @Test

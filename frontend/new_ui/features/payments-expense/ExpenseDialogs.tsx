@@ -6,13 +6,16 @@ import {InfoDialog} from "../../components/form/InfoDialog.tsx";
 import {DetailList, DetailItem} from "../../components/form/DetailList.tsx";
 import {AmountField, DateField, SelectField, TextAreaField, TextField} from "../../components/form/fields.tsx";
 import {positiveAmount, requiredDate} from "../../components/form/schemas.ts";
+import {CostScopeFields} from "../../components/form/CostScopeFields.tsx";
+import {costScopeIds, costScopeSchema, CostScopeValues} from "../../components/form/cost-scope.ts";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE} from "../../components/ui/payment-status.ts";
 import {formatDatePl, parseIsoDate} from "../../utils/date.ts";
 import {expensesMap} from "../../../src/pages/expenses-template/add-edit-expenses-template/add-edit-expenses-template-dialog.types.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {dateToStringFullYearMouthDay} from "../../../src/components/commons/dateFormatter.ts";
-import type {ExpenseCategory, OperationalExpenseDTO, UpdateOperationalExpenseDTO} from "../../../src/api/generated";
+import {PaymentStatus} from "../../../src/api/generated";
+import type {ApartmentWithRooms, ExpenseCategory, NewOperationalExpenseDTO, OperationalExpenseDTO, UpdateOperationalExpenseDTO} from "../../../src/api/generated";
 
 const categoryLabel = (expense: OperationalExpenseDTO) => expensesMap[expense.category] ?? expense.category;
 const expenseTarget = (expense: OperationalExpenseDTO) =>
@@ -110,6 +113,73 @@ export const EditExpenseDialog = ({expense, saving, onSave, onHide}: {
             <SelectField formik={formik} name="category" label="Kategoria" options={CATEGORY_OPTIONS}/>
             <AmountField formik={formik} name="amount" label="Kwota"/>
             <DateField formik={formik} name="insertDate" label="Termin płatności" hint="Zmiana miesiąca przeniesie koszt do tego miesiąca"/>
+            <TextField formik={formik} name="invoiceNumber" label="Nr faktury (opcjonalnie)"/>
+            <TextAreaField formik={formik} name="description" label="Opis (opcjonalnie)"/>
+        </FormDialog>
+    );
+};
+
+interface NewExpenseValues extends CostScopeValues {
+    category: ExpenseCategory | null;
+    amount: number | null;
+    insertDate: Date | null;
+    invoiceNumber: string;
+    description: string;
+}
+
+/** A one-off cost outside any template; it starts unpaid and is confirmed like a generated one. */
+export const AddExpenseDialog = ({defaultDate, apartments, saving, onSave, onHide}: {
+    defaultDate: Date;
+    apartments: ApartmentWithRooms[];
+    saving: boolean;
+    onSave: (dto: NewOperationalExpenseDTO) => void;
+    onHide: () => void;
+}) => {
+    const formik = useFormik<NewExpenseValues>({
+        initialValues: {
+            category: null,
+            amount: null,
+            insertDate: defaultDate,
+            scope: "general",
+            apartmentId: null,
+            roomId: null,
+            invoiceNumber: "",
+            description: "",
+        },
+        validationSchema: Yup.object({
+            category: Yup.string().nullable().required("Wybierz kategorię"),
+            amount: positiveAmount(),
+            insertDate: requiredDate("Termin płatności jest wymagany"),
+            invoiceNumber: Yup.string().max(255, "Maksymalnie 255 znaków"),
+            ...costScopeSchema,
+        }),
+        onSubmit: (values) => onSave({
+            category: values.category!,
+            amount: values.amount!,
+            insertDate: dateToStringFullYearMouthDay(values.insertDate!),
+            status: PaymentStatus.Pending,
+            ...costScopeIds(values),
+            invoiceNumber: values.invoiceNumber.trim() || null,
+            description: values.description.trim() || null,
+        }),
+    });
+
+    return (
+        <FormDialog
+            visible
+            title="Nowy koszt"
+            onHide={onHide}
+            formId="expense-add-form"
+            onSubmit={formik.handleSubmit}
+            submitLabel="Dodaj koszt"
+            saving={saving}
+        >
+            <SelectField formik={formik} name="category" label="Kategoria" placeholder="Wybierz kategorię" options={CATEGORY_OPTIONS}/>
+            <div className="ku-form-row">
+                <AmountField formik={formik} name="amount" label="Kwota"/>
+                <DateField formik={formik} name="insertDate" label="Termin płatności" hint="Koszt trafi do miesiąca tego terminu"/>
+            </div>
+            <CostScopeFields formik={formik} apartments={apartments}/>
             <TextField formik={formik} name="invoiceNumber" label="Nr faktury (opcjonalnie)"/>
             <TextAreaField formik={formik} name="description" label="Opis (opcjonalnie)"/>
         </FormDialog>

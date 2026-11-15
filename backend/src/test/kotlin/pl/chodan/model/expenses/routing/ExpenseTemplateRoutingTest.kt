@@ -285,6 +285,7 @@ class ExpenseTemplateRoutingTest {
         coEvery { expenseTemplateService.updateExpenseTemplate(1, update) } throws ExpenseError.TemplateNotFound(1)
         coEvery { expenseTemplateService.updateExpenseTemplate(2, update) } throws ApartmentError.NotFound(10)
         coEvery { expenseTemplateService.updateExpenseTemplate(3, update) } throws ApartmentError.RoomNotFound(20)
+        coEvery { expenseTemplateService.updateExpenseTemplate(4, update) } throws ExpenseError.TemplateInactive(4)
         coEvery { expenseTemplateService.deleteExpenseTemplate(1) } throws ExpenseError.TemplateNotFound(1)
         val cases = listOf(
             Triple(client.postJson(create), "POST apartment", ErrorCode.APARTMENT_NOT_FOUND),
@@ -292,6 +293,7 @@ class ExpenseTemplateRoutingTest {
             Triple(client.putJson(1, update), "PUT template", ErrorCode.EXPENSE_TEMPLATE_NOT_FOUND),
             Triple(client.putJson(2, update), "PUT apartment", ErrorCode.APARTMENT_NOT_FOUND),
             Triple(client.putJson(3, update), "PUT room", ErrorCode.ROOM_NOT_FOUND),
+            Triple(client.putJson(4, update), "PUT inactive template", ErrorCode.EXPENSE_TEMPLATE_INACTIVE),
             Triple(client.delete("/expense-template/1") { testAuthHeader() }, "DELETE template", ErrorCode.EXPENSE_TEMPLATE_NOT_FOUND),
         )
 

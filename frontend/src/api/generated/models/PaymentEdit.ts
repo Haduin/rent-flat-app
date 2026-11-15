@@ -13,13 +13,6 @@
  */
 
 import { mapValues } from '../runtime';
-import type { PaymentStatus } from './PaymentStatus';
-import {
-    PaymentStatusFromJSON,
-    PaymentStatusFromJSONTyped,
-    PaymentStatusToJSON,
-} from './PaymentStatus';
-
 /**
  * 
  * @export
@@ -40,19 +33,11 @@ export interface PaymentEdit {
     amount?: number | null;
     /**
      * 
-     * @type {PaymentStatus}
-     * @memberof PaymentEdit
-     */
-    status?: PaymentStatus | null;
-    /**
-     * 
      * @type {string}
      * @memberof PaymentEdit
      */
     payedDate?: string | null;
 }
-
-
 
 /**
  * Check if a given object implements the PaymentEdit interface.
@@ -74,7 +59,6 @@ export function PaymentEditFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
         'paymentId': json['paymentId'],
         'amount': json['amount'] == null ? undefined : json['amount'],
-        'status': json['status'] == null ? undefined : PaymentStatusFromJSON(json['status']),
         'payedDate': json['payedDate'] == null ? undefined : json['payedDate'],
     };
 }
@@ -87,7 +71,6 @@ export function PaymentEditToJSON(value?: PaymentEdit | null): any {
         
         'paymentId': value['paymentId'],
         'amount': value['amount'],
-        'status': PaymentStatusToJSON(value['status']),
         'payedDate': value['payedDate'],
     };
 }

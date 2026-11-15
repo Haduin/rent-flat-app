@@ -14,6 +14,8 @@ data class PaymentHistoryWithPersonDTO(
     val payedDate: String?,
     val scopeDate: String?,
     val amount: Double,
+    /** Monthly rent from the contract: the upper limit when a confirmed payment is edited. */
+    val contractAmount: Double,
     /** What has come in so far: the full amount once PAID, the instalment sum while PARTIALLY_PAID. */
     val paidAmount: Double,
     val status: PaymentStatus

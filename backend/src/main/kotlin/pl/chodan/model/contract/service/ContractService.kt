@@ -4,6 +4,10 @@ import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
@@ -16,7 +20,7 @@ import pl.chodan.database.Person
 import pl.chodan.database.PersonStatus
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
-import pl.chodan.model.apartment.service.lockRoom
+import pl.chodan.model.apartment.service.ApartmentError
 import pl.chodan.model.contract.database.Contract
 import pl.chodan.model.contract.database.ContractChangeType
 import pl.chodan.model.contract.database.ContractHistory
@@ -29,9 +33,11 @@ import pl.chodan.model.contract.dto.UpdateContractDetails
 import pl.chodan.model.persons.dto.PersonDTO
 import pl.chodan.model.persons.service.lockPerson
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
+import pl.chodan.error.ValidationException
 import pl.chodan.toLocalDateWithFullPattern
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 
 class ContractService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
@@ -39,7 +45,7 @@ class ContractService : KoinComponent {
     suspend fun createContract(newContractDTO: NewContractDTO): Int = databaseProvider.dbQuery {
         // Lock order person -> room, same in every writer, so concurrent deletes cannot slip past the checks.
         lockPerson(newContractDTO.personId)
-        lockRoom(newContractDTO.roomId)
+        lockFreeRoom(newContractDTO.roomId, LocalDate.parse(newContractDTO.startDate), LocalDate.parse(newContractDTO.endDate))
         Person.update({ Person.id eq newContractDTO.personId }) {
             it[status] = PersonStatus.RESIDENT
         }
@@ -59,8 +65,14 @@ class ContractService : KoinComponent {
     }
 
     suspend fun updateContract(contractDetails: UpdateContractDetails) = databaseProvider.dbQuery {
-        lockActiveContract(contractDetails.contractId)
-        contractDetails.roomId?.let { lockRoom(it) }
+        val current = lockActiveContract(contractDetails.contractId)
+        val newRoomId = contractDetails.roomId ?: current[Contract.roomId]
+        val newStart = contractDetails.startDate?.toLocalDateWithFullPattern() ?: current[Contract.startDate]
+        val newEnd = contractDetails.endDate?.toLocalDateWithFullPattern() ?: current[Contract.endDate]
+        if (newEnd < newStart) throw ValidationException("Koniec umowy nie może być przed jej początkiem")
+        if (null != contractDetails.roomId || null != contractDetails.startDate || null != contractDetails.endDate) {
+            lockFreeRoom(newRoomId, newStart, newEnd, exceptContractId = contractDetails.contractId)
+        }
 
         Contract.update({ Contract.id eq contractDetails.contractId }) {
             contractDetails.roomId?.let { value -> it[roomId] = value }
@@ -71,6 +83,19 @@ class ContractService : KoinComponent {
             contractDetails.payedTillDayOfMonth?.let { value -> it[payedTillDayOfMonth] = value }
         }
         recordContractHistory(contractDetails.contractId, ContractChangeType.UPDATED)
+    }
+
+    /**
+     * Locks the room row (FOR UPDATE, so two contracts for the same room are checked one after another)
+     * and rejects it when another active contract overlaps [startDate]..[endDate].
+     */
+    private fun lockFreeRoom(roomId: Int, startDate: LocalDate, endDate: LocalDate, exceptContractId: Int? = null) {
+        if (Room.selectAll().where { Room.id eq roomId }.forUpdate().empty()) throw ApartmentError.RoomNotFound(roomId)
+        val overlapping = Contract.select(Contract.id).where {
+            (Contract.roomId eq roomId) and Contract.activeBetween(startDate, endDate)
+        }
+        exceptContractId?.let { id -> overlapping.andWhere { Contract.id neq id } }
+        if (!overlapping.empty()) throw ContractError.RoomOccupied(roomId)
     }
 
     /** Locks the contract row for the rest of the transaction; rejects unknown and terminated contracts. */
@@ -155,6 +180,7 @@ class ContractService : KoinComponent {
                         Apartment.id +
                         Apartment.name
             )
+            .orderBy(Contract.id)
             .map { row ->
                 val isActive = ContractStatus.ACTIVE == row[Contract.status]
                 val endDate = row[Contract.endDate]
@@ -193,9 +219,12 @@ class ContractService : KoinComponent {
     suspend fun deleteContract(details: DeleteContractDTO) = databaseProvider.dbQuery {
         val contract = lockActiveContract(details.contractId)
 
+        // only the termination month and later: unpaid rent of earlier months stays owed
+        val terminationMonth = YearMonth.from(details.terminationDate.toLocalDateWithFullPattern()).toString()
         Payment.update({
             (Payment.contractId eq details.contractId) and
-                    (Payment.status eq PaymentStatus.PENDING)
+                    (Payment.status inList listOf(PaymentStatus.PENDING, PaymentStatus.LATE)) and
+                    (Payment.scopeDate greaterEq terminationMonth)
         }) {
             it[status] = PaymentStatus.CANCELLED
             it[payedDate] = details.terminationDate.toLocalDateWithFullPattern()

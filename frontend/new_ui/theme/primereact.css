@@ -154,6 +154,11 @@ body[data-ku-theme='a'] .p-tag.p-tag-secondary {
     color: var(--ku-text-secondary);
 }
 
+body[data-ku-theme='a'] .p-tag.p-tag-contrast {
+    background: var(--ku-ink);
+    color: var(--ku-surface);
+}
+
 /* Cards */
 body[data-ku-theme='a'] .p-card {
     border-radius: var(--ku-radius-md);

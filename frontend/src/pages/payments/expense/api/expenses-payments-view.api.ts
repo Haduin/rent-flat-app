@@ -1,6 +1,6 @@
 import {queryClient} from "../../../../main.tsx";
 import {client} from "../../../../api/client.ts";
-import {ExpenseConfirmationDTO, OperationalExpenseDTO, UpdateOperationalExpenseDTO} from "../../../../api/generated";
+import {ExpenseConfirmationDTO, NewOperationalExpenseDTO, OperationalExpenseDTO, UpdateOperationalExpenseDTO} from "../../../../api/generated";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {dateToStringWithYearMonth} from "../../../../components/commons/dateFormatter.ts";
 import {useMemo} from "react";
@@ -108,6 +108,25 @@ export function useGenerateExpensesFromTemplates(dateSelected?: Date) {
         },
         onError: async (error) => {
             showToast("error", "Wystąpił błąd podczas generowania wydatków", await apiErrorMessage(error));
+        },
+    });
+}
+
+export function useAddExpense() {
+    const {showToast} = useToast();
+
+    return useMutation({
+        mutationFn: (newOperationalExpenseDTO: NewOperationalExpenseDTO) =>
+            client.expensesApi.createExpense({newOperationalExpenseDTO}),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: [PAYMENTS_QUERY_KEYS.EXPENSES_BY_MONTH_QUERY_KEY],
+                refetchType: "active",
+            });
+            showToast("success", "Dodano koszt");
+        },
+        onError: async (error) => {
+            showToast("error", "Nie udało się dodać kosztu", await apiErrorMessage(error));
         },
     });
 }

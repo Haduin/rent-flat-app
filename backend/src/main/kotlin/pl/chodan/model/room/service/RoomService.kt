@@ -8,7 +8,6 @@ import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
-import pl.chodan.model.contract.database.ContractStatus
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 import java.time.LocalDate
 
@@ -34,10 +33,7 @@ class RoomService : KoinComponent {
                 .where {
                     (Room.apartmentId eq Apartment.id)
                         .and(Room.id notInSubQuery (Contract.select(Contract.roomId).where {
-                            (Contract.status eq ContractStatus.ACTIVE) and (
-                                    (Contract.startDate lessEq LocalDate.parse(endDate)) and
-                                            (Contract.endDate greaterEq LocalDate.parse(startDate))
-                                    )
+                            Contract.activeBetween(LocalDate.parse(startDate), LocalDate.parse(endDate))
                         }))
                 }.map {
                     RoomWithApartmentDTO(

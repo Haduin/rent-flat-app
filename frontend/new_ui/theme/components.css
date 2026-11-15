@@ -491,6 +491,11 @@ body[data-ku-theme='a'] .p-datatable .ku-col-actions {
         padding-top: var(--ku-space-3);
     }
 
+    /* a row without actions (e.g. a deactivated template) gets no empty divider row */
+    body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td.ku-col-actions:has(.ku-row-actions:empty) {
+        display: none;
+    }
+
     /* touch targets (min 44x44px) for row actions and paginator */
     body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td .p-button,
     body[data-ku-theme='a'] .p-paginator .p-paginator-element {

@@ -3,15 +3,14 @@ import {useFormik} from "formik";
 import * as Yup from "yup";
 import {FormDialog} from "../../components/form/FormDialog.tsx";
 import {DetailList, DetailItem} from "../../components/form/DetailList.tsx";
-import {AmountField, DateField, SelectField} from "../../components/form/fields.tsx";
+import {AmountField, DateField} from "../../components/form/fields.tsx";
 import {positiveAmount, requiredDate} from "../../components/form/schemas.ts";
-import {PAYMENT_STATUS_LABEL} from "../../components/ui/payment-status.ts";
 import {formatDatePl, parseIsoDate} from "../../utils/date.ts";
 import {useGetPaymentSplits} from "../../../src/pages/payments/income/api/income-payments-view.api.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
 import {dateToStringFullYearMouthDay} from "../../../src/components/commons/dateFormatter.ts";
 import type {EditPayment} from "../../../src/components/commons/types.ts";
-import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../src/api/generated";
+import {PaymentHistoryWithPersonDTO} from "../../../src/api/generated";
 import {isNullable} from "../../../src/utils/typeguards";
 
 /** Today when the payment's month ("YYYY-MM") is the current one; otherwise the 1st of that month, so catching up on old months doesn't stamp today's date. */
@@ -123,7 +122,6 @@ export const SplitIncomeDialog = ({payment, onConfirm, onHide}: {
     );
 };
 
-const STATUS_OPTIONS = Object.values(PaymentStatus).map((status) => ({label: PAYMENT_STATUS_LABEL[status], value: status}));
 
 export const EditIncomeDialog = ({payment, onConfirm, onHide}: {
     payment: PaymentHistoryWithPersonDTO;
@@ -135,18 +133,18 @@ export const EditIncomeDialog = ({payment, onConfirm, onHide}: {
         initialValues: {
             payedDate: (parseIsoDate(payment.payedDate) ?? defaultPaymentDate(payment.scopeDate)) as Date | null,
             amount: payment.amount as number | null,
-            status: payment.status as PaymentStatus,
         },
+        // the status follows from confirm/split; here only the date and the amount (instalments ≤ amount ≤ contract rent)
         validationSchema: Yup.object({
             payedDate: requiredDate("Data wpłaty jest wymagana"),
-            amount: positiveAmount("Należność jest wymagana"),
-            status: Yup.string().required("Wybierz status"),
+            amount: positiveAmount("Należność jest wymagana")
+                .max(payment.contractAmount, `Nie więcej niż czynsz z umowy: ${formatCurrency(payment.contractAmount)}`)
+                .min(paid, `Nie mniej niż suma wpłaconych rat: ${formatCurrency(paid)}`),
         }),
         onSubmit: (values) => onConfirm({
             paymentId: payment.id,
             payedDate: toIso(values.payedDate),
             amount: values.amount!,
-            status: values.status,
         }),
     });
 
@@ -165,7 +163,6 @@ export const EditIncomeDialog = ({payment, onConfirm, onHide}: {
                     <p className="ku-form-note">Wpłacono łącznie {formatCurrency(paid)} z {formatCurrency(payment.amount)}.</p>
                 </>
             )}
-            <SelectField formik={formik} name="status" label="Status" options={STATUS_OPTIONS}/>
             <DateField formik={formik} name="payedDate" label="Data wpłaty"/>
             <AmountField formik={formik} name="amount" label="Należność"/>
         </FormDialog>

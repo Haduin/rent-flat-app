@@ -13,6 +13,7 @@ enum class ErrorCode(val status: HttpStatusCode) {
     APARTMENT_NOT_FOUND(HttpStatusCode.NotFound),
     ROOM_NOT_FOUND(HttpStatusCode.NotFound),
     ROOM_IN_USE(HttpStatusCode.Conflict),
+    ROOM_OCCUPIED(HttpStatusCode.Conflict),
     CONTRACT_NOT_FOUND(HttpStatusCode.NotFound),
     CONTRACT_TERMINATED(HttpStatusCode.Conflict),
     PERSON_NOT_FOUND(HttpStatusCode.NotFound),
@@ -21,9 +22,11 @@ enum class ErrorCode(val status: HttpStatusCode) {
     PAYMENT_NOT_SPLITTABLE(HttpStatusCode.Conflict),
     PAYMENT_NOT_CONFIRMABLE(HttpStatusCode.Conflict),
     PAYMENT_OVERPAID(HttpStatusCode.Conflict),
+    PAYMENT_NOT_EDITABLE(HttpStatusCode.Conflict),
     EXPENSE_NOT_FOUND(HttpStatusCode.NotFound),
     EXPENSE_NOT_CONFIRMABLE(HttpStatusCode.Conflict),
     EXPENSE_TEMPLATE_NOT_FOUND(HttpStatusCode.NotFound),
+    EXPENSE_TEMPLATE_INACTIVE(HttpStatusCode.Conflict),
     EXPENSE_ALREADY_GENERATED(HttpStatusCode.Conflict),
 }
 

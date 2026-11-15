@@ -13,6 +13,7 @@ import pl.chodan.model.expenses.dto.UpdateExpenseTemplate
 import pl.chodan.testutil.assertApiError
 import pl.chodan.testutil.cleanTables
 import pl.chodan.testutil.connectTestDatabase
+import pl.chodan.testutil.deactivateExpenseTemplate
 import pl.chodan.testutil.insertApartment
 import pl.chodan.testutil.insertRoom
 import pl.chodan.testutil.startTestKoin
@@ -92,6 +93,35 @@ class ExpenseTemplateServiceIntegrationTest {
         assertEquals(150.0, updated.amount)
         assertEquals(ExpenseCategory.OTHER, updated.category)
         assertEquals(10, updated.dayOfMonth)
+    }
+
+    @Test
+    fun `findAll keeps the order after a template is updated or deactivated`() = runBlocking {
+        val service = ExpenseTemplateService()
+        val ids = (1..3).map { service.createExpenseTemplate(template()) }
+
+        service.updateExpenseTemplate(
+            ids.first(),
+            UpdateExpenseTemplate(apartmentId = null, roomId = null, amount = 999.0, category = null, expenseDate = null)
+        )
+        service.deleteExpenseTemplate(ids[1])
+
+        assertEquals(ids, service.findAll().map { it.id })
+    }
+
+    @Test
+    fun `updateExpenseTemplate rejects a deactivated template and leaves it unchanged`() = runBlocking {
+        val service = ExpenseTemplateService()
+        val id = service.createExpenseTemplate(template())
+        database.deactivateExpenseTemplate(id)
+
+        assertApiError("EXPENSE_TEMPLATE_INACTIVE") {
+            service.updateExpenseTemplate(
+                id,
+                UpdateExpenseTemplate(apartmentId = null, roomId = null, amount = 999.0, category = null, expenseDate = null)
+            )
+        }
+        assertEquals(100.0, service.findAll().single().amount)
     }
 
     @Test

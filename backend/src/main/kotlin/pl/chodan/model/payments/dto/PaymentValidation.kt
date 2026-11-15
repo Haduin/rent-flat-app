@@ -15,7 +15,7 @@ fun RequestValidationConfig.paymentValidation() {
     }
     validate<PaymentEdit> { dto ->
         val errors = buildList {
-            if (listOf(dto.amount, dto.status, dto.payedDate).all { null == it }) add("Podaj co najmniej jedno pole do zmiany")
+            if (listOf(dto.amount, dto.payedDate).all { null == it }) add("Podaj co najmniej jedno pole do zmiany")
             if (dto.amount != null && dto.amount <= 0) add("amount: kwota musi być większa od 0")
             if (dto.payedDate != null && !dto.payedDate.isIsoDate()) add("payedDate: wymagany format yyyy-MM-dd")
         }

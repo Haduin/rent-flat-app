@@ -43,6 +43,8 @@ class ExpenseTemplateService : KoinComponent {
             .leftJoin(Apartment, { OperationalExpenseTemplate.apartmentId }, { Apartment.id })
             .leftJoin(Room, { OperationalExpenseTemplate.roomId }, { Room.id })
             .selectAll()
+            // without it Postgres returns an updated row last, so an edited/deactivated template jumps to another table page
+            .orderBy(OperationalExpenseTemplate.id)
 
         query.map { row ->
             val apartmentId = row[OperationalExpenseTemplate.apartmentId]
@@ -80,8 +82,9 @@ class ExpenseTemplateService : KoinComponent {
     }
 
     suspend fun updateExpenseTemplate(id: Int, updated: UpdateExpenseTemplate): Unit = databaseProvider.dbQuery {
-        OperationalExpenseTemplate.selectAll().where { OperationalExpenseTemplate.id eq id }.forUpdate().singleOrNull()
+        val template = OperationalExpenseTemplate.selectAll().where { OperationalExpenseTemplate.id eq id }.forUpdate().singleOrNull()
             ?: throw ExpenseError.TemplateNotFound(id)
+        if (!template[OperationalExpenseTemplate.active]) throw ExpenseError.TemplateInactive(id)
         updated.apartmentId?.let { requireApartment(it) }
         updated.roomId?.let { lockRoom(it) }
         OperationalExpenseTemplate.update({ OperationalExpenseTemplate.id eq id }) {

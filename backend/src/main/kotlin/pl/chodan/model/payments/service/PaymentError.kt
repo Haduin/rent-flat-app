@@ -11,6 +11,8 @@ sealed class PaymentError(code: ErrorCode, message: String) : ApiException(code,
         PaymentError(ErrorCode.PAYMENT_NOT_SPLITTABLE, "Nie można podzielić płatności w statusie $status")
     class NotConfirmable(status: PaymentStatus) :
         PaymentError(ErrorCode.PAYMENT_NOT_CONFIRMABLE, "Nie można potwierdzić płatności w statusie $status")
+    class NotEditable(status: PaymentStatus) :
+        PaymentError(ErrorCode.PAYMENT_NOT_EDITABLE, "Można edytować tylko opłaconą płatność, ta jest w statusie $status")
     class Overpaid(remaining: BigDecimal) :
         PaymentError(ErrorCode.PAYMENT_OVERPAID, "Kwota wpłaty przekracza pozostałą do zapłaty kwotę $remaining")
 }

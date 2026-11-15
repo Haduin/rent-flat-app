@@ -85,6 +85,12 @@ export interface PaymentHistoryWithPersonDTO {
      * @type {number}
      * @memberof PaymentHistoryWithPersonDTO
      */
+    contractAmount: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PaymentHistoryWithPersonDTO
+     */
     paidAmount: number;
     /**
      * 
@@ -103,6 +109,7 @@ export function instanceOfPaymentHistoryWithPersonDTO(value: object): value is P
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('contractId' in value) || value['contractId'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
+    if (!('contractAmount' in value) || value['contractAmount'] === undefined) return false;
     if (!('paidAmount' in value) || value['paidAmount'] === undefined) return false;
     if (!('status' in value) || value['status'] === undefined) return false;
     return true;
@@ -125,6 +132,7 @@ export function PaymentHistoryWithPersonDTOFromJSONTyped(json: any, ignoreDiscri
         'payedDate': json['payedDate'] == null ? undefined : json['payedDate'],
         'scopeDate': json['scopeDate'] == null ? undefined : json['scopeDate'],
         'amount': json['amount'],
+        'contractAmount': json['contractAmount'],
         'paidAmount': json['paidAmount'],
         'status': PaymentStatusFromJSON(json['status']),
     };
@@ -143,6 +151,7 @@ export function PaymentHistoryWithPersonDTOToJSON(value?: PaymentHistoryWithPers
         'payedDate': value['payedDate'],
         'scopeDate': value['scopeDate'],
         'amount': value['amount'],
+        'contractAmount': value['contractAmount'],
         'paidAmount': value['paidAmount'],
         'status': PaymentStatusToJSON(value['status']),
     };

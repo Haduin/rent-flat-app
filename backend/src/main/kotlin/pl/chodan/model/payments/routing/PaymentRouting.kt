@@ -91,7 +91,7 @@ fun Application.configurePaymentRouting() {
                 put("/edit", {
                     description = "Edit a payment"
                     operationId = "editPayment"
-                    errors(ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD, ErrorCode.PAYMENT_NOT_FOUND)
+                    errors(ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD, ErrorCode.PAYMENT_NOT_FOUND, ErrorCode.PAYMENT_NOT_EDITABLE)
                     request { body<PaymentEdit> { description = "Payment edit payload" } }
                     response { code(HttpStatusCode.NoContent) { description = "Payment updated" } }
                 }) {

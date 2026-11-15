@@ -3,6 +3,7 @@ package pl.chodan.model.contract.dto
 import io.ktor.server.plugins.requestvalidation.*
 import pl.chodan.error.isIsoDate
 import pl.chodan.error.toValidationResult
+import java.time.LocalDate
 
 fun RequestValidationConfig.contractValidation() {
     validate<NewContractDTO> { dto ->
@@ -12,6 +13,9 @@ fun RequestValidationConfig.contractValidation() {
             if (dto.payedDate !in 1..28) add("payedDate: dzień płatności musi być z zakresu 1-28")
             if (!dto.startDate.isIsoDate()) add("startDate: wymagany format yyyy-MM-dd")
             if (!dto.endDate.isIsoDate()) add("endDate: wymagany format yyyy-MM-dd")
+            if (dto.startDate.isIsoDate() && dto.endDate.isIsoDate() && LocalDate.parse(dto.endDate) < LocalDate.parse(dto.startDate)) {
+                add("endDate: koniec umowy nie może być przed jej początkiem")
+            }
         }
         errors.toValidationResult()
     }

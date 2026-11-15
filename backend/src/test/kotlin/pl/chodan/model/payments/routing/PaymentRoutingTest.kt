@@ -85,7 +85,7 @@ class PaymentRoutingTest {
             id = 1, contractId = 10,
             person = PersonSmallDetailsDTO(id = 1, firstName = "Jan", lastName = "Kowalski"),
             room = RoomWithApartmentDTO(id = 5, number = "1", apartment = "Mieszkanie A"),
-            payedDate = null, scopeDate = "2026-08", amount = 2000.0, paidAmount = 0.0, status = PaymentStatus.PENDING
+            payedDate = null, scopeDate = "2026-08", amount = 2000.0, contractAmount = 2000.0, paidAmount = 0.0, status = PaymentStatus.PENDING
         )
         coEvery {
             paymentService.getPaymentsForMonth("2026-08", PaymentSortableField.ID, SortOrder.ASC)
@@ -165,7 +165,7 @@ class PaymentRoutingTest {
     @Test
     fun `PUT payments edit updates a payment`() = testApplication {
         setup()
-        val dto = PaymentEdit(paymentId = 1, amount = 2200.0, status = PaymentStatus.PAID, payedDate = "2026-08-04")
+        val dto = PaymentEdit(paymentId = 1, amount = 2200.0, payedDate = "2026-08-04")
         coEvery { paymentService.editPayment(dto) } returns Unit
 
         val response = client.put("/payments/edit") {
@@ -228,7 +228,7 @@ class PaymentRoutingTest {
     @Test
     fun `PUT payments edit without any field to change returns bad request`() = testApplication {
         setup()
-        val dto = PaymentEdit(paymentId = 1, amount = null, status = null, payedDate = null)
+        val dto = PaymentEdit(paymentId = 1, amount = null, payedDate = null)
 
         val response = client.put("/payments/edit") {
             testAuthHeader()
@@ -256,13 +256,16 @@ class PaymentRoutingTest {
         coEvery { paymentService.splitPayment(match { 7 == it.paymentId }) } throws
                 PaymentError.Overpaid(100.toBigDecimal())
         coEvery { paymentService.getPaymentSplits(99) } throws PaymentError.NotFound(99)
+        coEvery { paymentService.editPayment(match { 8 == it.paymentId }) } throws
+                PaymentError.NotEditable(PaymentStatus.PENDING)
 
-        fun edit(id: Int) = Json.encodeToString(PaymentEdit.serializer(), PaymentEdit(id, 100.0, null, null))
+        fun edit(id: Int) = Json.encodeToString(PaymentEdit.serializer(), PaymentEdit(id, 100.0, null))
         fun confirm(id: Int) = Json.encodeToString(PaymentConfirmationDTO.serializer(), PaymentConfirmationDTO(id, "2026-08-04", 100.0))
         fun split(id: Int) = Json.encodeToString(PaymentSplitDTO.serializer(), PaymentSplitDTO(id, 100.0, "2026-08-08"))
         data class Case(val method: HttpMethod, val path: String, val body: String?, val code: ErrorCode)
         val cases = listOf(
             Case(HttpMethod.Put, "/payments/edit", edit(99), ErrorCode.PAYMENT_NOT_FOUND),
+            Case(HttpMethod.Put, "/payments/edit", edit(8), ErrorCode.PAYMENT_NOT_EDITABLE),
             Case(HttpMethod.Post, "/payments/confirm", confirm(99), ErrorCode.PAYMENT_NOT_FOUND),
             Case(HttpMethod.Post, "/payments/confirm", confirm(8), ErrorCode.PAYMENT_NOT_CONFIRMABLE),
             Case(HttpMethod.Post, "/payments/split", split(99), ErrorCode.PAYMENT_NOT_FOUND),

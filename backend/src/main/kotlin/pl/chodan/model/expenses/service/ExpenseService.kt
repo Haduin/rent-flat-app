@@ -64,7 +64,7 @@ class ExpenseService : KoinComponent {
                 query.andWhere { OperationalExpense.roomId eq roomId }
             }
 
-            query.orderBy(OperationalExpense.insertDate, SortOrder.DESC)
+            query.orderBy(OperationalExpense.insertDate to SortOrder.DESC, OperationalExpense.id to SortOrder.ASC)
                 .map { row ->
                     OperationalExpenseDTO(
                         id = row[OperationalExpense.id],

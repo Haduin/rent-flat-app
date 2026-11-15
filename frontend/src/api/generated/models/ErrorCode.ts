@@ -25,6 +25,7 @@ export const ErrorCode = {
     ApartmentNotFound: 'APARTMENT_NOT_FOUND',
     RoomNotFound: 'ROOM_NOT_FOUND',
     RoomInUse: 'ROOM_IN_USE',
+    RoomOccupied: 'ROOM_OCCUPIED',
     ContractNotFound: 'CONTRACT_NOT_FOUND',
     ContractTerminated: 'CONTRACT_TERMINATED',
     PersonNotFound: 'PERSON_NOT_FOUND',
@@ -33,9 +34,11 @@ export const ErrorCode = {
     PaymentNotSplittable: 'PAYMENT_NOT_SPLITTABLE',
     PaymentNotConfirmable: 'PAYMENT_NOT_CONFIRMABLE',
     PaymentOverpaid: 'PAYMENT_OVERPAID',
+    PaymentNotEditable: 'PAYMENT_NOT_EDITABLE',
     ExpenseNotFound: 'EXPENSE_NOT_FOUND',
     ExpenseNotConfirmable: 'EXPENSE_NOT_CONFIRMABLE',
     ExpenseTemplateNotFound: 'EXPENSE_TEMPLATE_NOT_FOUND',
+    ExpenseTemplateInactive: 'EXPENSE_TEMPLATE_INACTIVE',
     ExpenseAlreadyGenerated: 'EXPENSE_ALREADY_GENERATED'
 } as const;
 export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];

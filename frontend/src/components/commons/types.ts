@@ -63,7 +63,7 @@ export enum ContractStatus {
 export interface EditPayment {
     paymentId: number,
     amount?: number
-    status: string,
+    status?: string,
     payedDate: string
 }
 

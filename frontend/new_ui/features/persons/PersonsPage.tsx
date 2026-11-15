@@ -24,7 +24,6 @@ const PersonsPage = () => {
         handleAddPerson,
         setIsNewPersonDialogVisible,
         setEditDialogVisible,
-        handleDeletePerson,
         showOnlyActivePeople,
         setShowOnlyActivePeople,
         showPeople,
@@ -52,7 +51,6 @@ const PersonsPage = () => {
     const rowActions = (person: PersonDTO) => (
         <>
             <Button variant="secondary" size="small" icon="pi pi-pencil" aria-label={`Edytuj ${person.firstName} ${person.lastName}`} onClick={() => openEditDialog(person as Person)}/>
-            <Button variant="danger-outline" size="small" icon="pi pi-trash" aria-label="Usuwanie osób jest niedostępne" disabled onClick={() => handleDeletePerson(person as Person)}/>
         </>
     );
 

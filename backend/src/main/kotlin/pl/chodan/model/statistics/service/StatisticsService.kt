@@ -13,7 +13,6 @@ import pl.chodan.database.PaymentStatus
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
-import pl.chodan.model.contract.database.ContractStatus
 import pl.chodan.model.statistics.dto.ApartmentStatisticsDTO
 import pl.chodan.model.statistics.dto.ApartmentsStatisticsOverviewDTO
 import pl.chodan.model.statistics.dto.ApartmentsStatisticsResponse
@@ -43,14 +42,14 @@ class StatisticsService : KoinComponent {
             .flatMap { (apartmentId, roomIds) -> roomIds.map { it to apartmentId } }
             .toMap()
 
+        val activeTodayIds = Contract.select(Contract.id).where { Contract.activeBetween(today, today) }
+            .map { it[Contract.id] }.toSet()
         val contractRows = Contract
             .join(Room, JoinType.INNER, Contract.roomId, Room.id)
-            .select(Contract.amount, Contract.status, Contract.startDate, Contract.endDate, Room.id, Room.apartmentId)
+            .select(Contract.id, Contract.amount, Room.id, Room.apartmentId)
             .mapNotNull { row ->
                 val apartmentId = row[Room.apartmentId] ?: return@mapNotNull null
-                val isActive = ContractStatus.ACTIVE == row[Contract.status] &&
-                        row[Contract.startDate] <= today && row[Contract.endDate] >= today
-                ContractRow(apartmentId, row[Room.id], row[Contract.amount], isActive)
+                ContractRow(apartmentId, row[Room.id], row[Contract.amount], row[Contract.id] in activeTodayIds)
             }
         val contractsByApartment = contractRows.groupBy { it.apartmentId }
 
@@ -75,7 +74,8 @@ class StatisticsService : KoinComponent {
             }
         val paymentsByApartment = paymentRows.groupBy { it.apartmentId }
 
-        val expenseRows = OperationalExpense.selectAll().map { row ->
+        // costs count once paid, like income: an unpaid or cancelled cost is not money spent yet
+        val expenseRows = OperationalExpense.selectAll().where { OperationalExpense.status eq PaymentStatus.PAID }.map { row ->
             val apartmentId = row[OperationalExpense.apartmentId]
                 ?: row[OperationalExpense.roomId]?.let { roomToApartment[it] }
             ExpenseRow(apartmentId, row[OperationalExpense.amount], YearMonth.from(row[OperationalExpense.insertDate]))

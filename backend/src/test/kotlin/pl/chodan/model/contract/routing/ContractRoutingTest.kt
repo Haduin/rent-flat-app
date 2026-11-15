@@ -299,6 +299,8 @@ class ContractRoutingTest {
         coEvery { contractService.updateContract(updateDetails) } throws ContractError.NotFound(1)
         coEvery { contractService.updateContract(updateDetails.copy(contractId = 2)) } throws ApartmentError.RoomNotFound(10)
         coEvery { contractService.updateContract(updateDetails.copy(contractId = 3)) } throws ContractError.Terminated()
+        coEvery { contractService.createContract(newContract.copy(personId = 3)) } throws ContractError.RoomOccupied(10)
+        coEvery { contractService.updateContract(updateDetails.copy(contractId = 4)) } throws ContractError.RoomOccupied(10)
         coEvery { contractService.deleteContract(deleteDetails) } throws ContractError.NotFound(1)
         coEvery { contractService.deleteContract(deleteDetails.copy(contractId = 3)) } throws ContractError.Terminated()
         val cases = listOf(
@@ -308,6 +310,8 @@ class ContractRoutingTest {
             Triple(client.putJson("/contracts", UpdateContractDetails.serializer(), updateDetails), "PUT contract", ErrorCode.CONTRACT_NOT_FOUND),
             Triple(client.putJson("/contracts", UpdateContractDetails.serializer(), updateDetails.copy(contractId = 2)), "PUT room", ErrorCode.ROOM_NOT_FOUND),
             Triple(client.putJson("/contracts", UpdateContractDetails.serializer(), updateDetails.copy(contractId = 3)), "PUT terminated", ErrorCode.CONTRACT_TERMINATED),
+            Triple(client.postJson("/contracts", NewContractDTO.serializer(), newContract.copy(personId = 3)), "POST occupied", ErrorCode.ROOM_OCCUPIED),
+            Triple(client.putJson("/contracts", UpdateContractDetails.serializer(), updateDetails.copy(contractId = 4)), "PUT occupied", ErrorCode.ROOM_OCCUPIED),
             Triple(client.deleteJson("/contracts", DeleteContractDTO.serializer(), deleteDetails), "DELETE contract", ErrorCode.CONTRACT_NOT_FOUND),
             Triple(client.deleteJson("/contracts", DeleteContractDTO.serializer(), deleteDetails.copy(contractId = 3)), "DELETE terminated", ErrorCode.CONTRACT_TERMINATED),
         )
@@ -345,7 +349,7 @@ class ContractRoutingTest {
 
         fun description(status: String) = responses[status]!!.jsonObject["description"]!!.jsonPrimitive.content
         assertEquals("CONTRACT_NOT_FOUND, ROOM_NOT_FOUND", description("404"))
-        assertEquals("CONTRACT_TERMINATED", description("409"))
+        assertEquals("CONTRACT_TERMINATED, ROOM_OCCUPIED", description("409"))
         assertEquals("UNAUTHORIZED", description("401"))
     }
 }
