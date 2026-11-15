@@ -24,7 +24,8 @@ class ApiClientFactory {
                 post: async (context) => context.response,
                 pre: async (context) => {
                     const oidc = await getOidc();
-                    // @ts-expect-error
+                    // without a session the request goes out unauthenticated and the backend answers 401
+                    if (!oidc.isUserLoggedIn) return context;
                     const accessToken = await oidc.getAccessToken();
                     return {
                         ...context,

@@ -101,7 +101,7 @@ export const AppShell = ({children}: { children: ReactNode }) => {
             acceptLabel: "Tak",
             rejectLabel: "Nie",
             accept() {
-                logout({redirectTo: "current page"});
+                logout({redirectTo: "home"});
             },
         });
     };

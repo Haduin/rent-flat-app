@@ -23,7 +23,8 @@ export const {
         // oidc-spa will log the decoded token for you.
         decodedIdTokenSchema: z.object({
             sub: z.string(),
-            name: z.string(),
+            // Keycloak omits `name` for users without a first/last name; requiring it would fail the login
+            name: z.string().optional(),
             picture: z.string().optional(),
             email: z.string().email().optional(),
             preferred_username: z.string().optional(),
@@ -47,7 +48,7 @@ await bootstrapOidc(
         scopes: import.meta.env.VITE_OIDC_SCOPE
             ? import.meta.env.VITE_OIDC_SCOPE.split(" ")
             : ["openid", "profile", "email"],
-        // Enable for detailed initialization and token lifecycle logs.
-        debugLogs: true,
+        // Detailed initialization and token lifecycle logs (incl. the decoded ID token), dev only.
+        debugLogs: import.meta.env.DEV,
     }
 );
