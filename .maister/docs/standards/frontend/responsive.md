@@ -31,7 +31,10 @@ Show the most important content first on smaller screens.
 The new UI uses 520px (small phone: full-width inputs and filter toggles), 1024px (phone/tablet vs. desktop: tables stack into cards) and 1440px (wide desktop: optional table columns return). Reuse these values in media queries instead of inventing new ones.
 
 ### Tables Stack Below 1024px
-`DataTableCard` switches to PrimeReact's stacked layout at ≤1024px; its `breakpoint` prop and the matching `@media (max-width: 1024px)` block in `frontend/new_ui/theme/tokens.css` must stay in sync. In stacked mode each row is a card: column labels stay on one line (never shrink/break mid-word), values right-align and wrap instead, and row actions sit on their own right-aligned row. Verify list pages show no page- or table-level horizontal overflow at 360px, 900px, 1040px and 1280px.
+`DataTableCard` switches to PrimeReact's stacked layout at ≤1024px; its `breakpoint` prop and the matching `@media (max-width: 1024px)` block in `frontend/new_ui/theme/components.css` must stay in sync. In stacked mode each row is a card: column labels stay on one line (never shrink/break mid-word), values right-align and wrap instead, and row actions sit on their own right-aligned row. Verify list pages show no page- or table-level horizontal overflow at 360px, 900px, 1040px and 1280px.
+
+### Stack Layout Owned by components.css
+The whole `DataTableCard` card layout is defined in `frontend/new_ui/theme/components.css` inside the 1024px media query: hiding `thead`/`tfoot` cells, `td` at `width: 100%`, showing `.p-column-title`, plus the card polish. Never rely on PrimeReact's runtime-injected per-table stack `<style>`: in PrimeReact 10.9.7 it is created only from an update effect, which fires on the dev server (React StrictMode double-mount) but never in a production build — so stacking works locally and breaks in prod. Verify responsive table changes on a production build (`pnpm build` + `vite preview`, or the deployed app), not only on the dev server.
 
 ### Touch Targets in Tables
 In the stacked (touch) layout, row-action buttons and paginator controls are at least `2.75rem` (44×44px); compact sizes are acceptable only in the desktop table layout.

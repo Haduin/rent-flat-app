@@ -15,22 +15,20 @@ else
     exit 1
 fi
 
-echo "🔑 Sprawdzam logowanie do Docker Hub"
-if ! docker info 2>/dev/null | grep "Username:" > /dev/null; then
-    echo "🔐 Wymagane logowanie do Docker Hub"
-    docker login
-    if [ $? -ne 0 ]; then
+echo "📤 Publikuję obraz: $FULL_IMAGE_NAME"
+# docker info no longer prints "Username:" (Docker Desktop keeps credentials in its own store), so instead of
+# guessing the login state: push with the stored credentials and log in only when Docker Hub rejects it
+if ! docker push "$FULL_IMAGE_NAME"; then
+    echo "🔐 Publikacja odrzucona, loguję do Docker Hub"
+    if ! docker login; then
         echo "❌ Błąd logowania do Docker Hub"
         exit 1
     fi
+    if ! docker push "$FULL_IMAGE_NAME"; then
+        echo "❌ Błąd podczas publikacji obrazu"
+        exit 1
+    fi
 fi
-
-echo "📤 Publikuję obraz: $FULL_IMAGE_NAME"
-if docker push $FULL_IMAGE_NAME; then
-    echo "✅ Opublikowano obraz pomyślnie"
-else
-    echo "❌ Błąd podczas publikacji obrazu"
-    exit 1
-fi
+echo "✅ Opublikowano obraz pomyślnie"
 
 echo "🎉 Deployment zakończony sukcesem!"
