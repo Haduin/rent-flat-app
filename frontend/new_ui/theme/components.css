@@ -436,9 +436,23 @@ body[data-ku-theme='a'] .p-datatable .ku-col-actions {
 }
 
 /* DataTable stacked (card) layout on phones/tablets — mirrors the
-   `breakpoint` prop in DataTableCard (1024px). Polish on top of
-   PrimeReact's own stack-mode CSS, gated behind the same media query. */
+   `breakpoint` prop in DataTableCard (1024px). The stack layout itself lives here too:
+   PrimeReact 10.9.7 injects its per-table stack <style> only from an update effect, which
+   fires in dev (StrictMode remounts) but never in a production build. */
 @media screen and (max-width: 1024px) {
+    body[data-ku-theme='a'] .p-datatable-responsive-stack .p-datatable-thead > tr > th,
+    body[data-ku-theme='a'] .p-datatable-responsive-stack .p-datatable-tfoot > tr > td {
+        display: none;
+    }
+
+    body[data-ku-theme='a'] .p-datatable-responsive-stack .p-datatable-tbody > tr > td {
+        width: 100%;
+    }
+
+    body[data-ku-theme='a'] .p-datatable-responsive-stack .p-datatable-tbody > tr > td > .p-column-title {
+        display: block;
+    }
+
     body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr {
         border: 1px solid var(--ku-border);
         border-radius: var(--ku-radius-md);

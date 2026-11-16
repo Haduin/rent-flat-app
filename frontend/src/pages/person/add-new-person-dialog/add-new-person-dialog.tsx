@@ -9,7 +9,7 @@ import {ModalFooter} from "../../../components/modal/footer/modal-footer.tsx";
 
 interface AddPersonDialogProps {
     visible: boolean;
-    onSave: UseMutationResult<void, Error, NewPerson, unknown>
+    onSave: UseMutationResult<unknown, Error, NewPerson, unknown>
     onHide: () => void;
 }
 
