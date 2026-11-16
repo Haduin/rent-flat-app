@@ -8,7 +8,6 @@ import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
-import pl.chodan.model.contract.database.ContractStatus
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 import java.time.LocalDate
 
@@ -26,25 +25,6 @@ class RoomService : KoinComponent {
                 id = row[Room.id], number = row[Room.name], apartment = row[Apartment.name]
             )
         }
-
-//        val sqlQuery =
-//            "select  a.name as apartment_name, r.id as room_id, r.name as room_name " +
-//                    "from flat.apartment a, flat.room r where a.id = r.apartment_id"
-//        transaction {
-//            val result = mutableListOf<RoomWithApartmentDTO>()
-//            exec(sqlQuery) { rs ->
-//                while (rs.next()) {
-//                    result.add(
-//                        RoomWithApartmentDTO(
-//                            rs.getInt("room_id"),
-//                            rs.getString("room_name"),
-//                            rs.getString("apartment_name")
-//                        )
-//                    )
-//                }
-//            }
-//            result
-//        }
     }
 
     suspend fun fetchFreeRoomsBetweenDates(startDate: String, endDate: String): List<RoomWithApartmentDTO> =
@@ -53,10 +33,7 @@ class RoomService : KoinComponent {
                 .where {
                     (Room.apartmentId eq Apartment.id)
                         .and(Room.id notInSubQuery (Contract.select(Contract.roomId).where {
-                            (Contract.status eq ContractStatus.ACTIVE) and (
-                                    (Contract.startDate lessEq LocalDate.parse(endDate)) and
-                                            (Contract.endDate greaterEq LocalDate.parse(startDate))
-                                    )
+                            Contract.activeBetween(LocalDate.parse(startDate), LocalDate.parse(endDate))
                         }))
                 }.map {
                     RoomWithApartmentDTO(

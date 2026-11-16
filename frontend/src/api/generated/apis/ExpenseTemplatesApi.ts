@@ -16,12 +16,18 @@
 import * as runtime from '../runtime';
 import type {
   AddExpenseTemplateRequest,
+  ApiError,
+  IdResponse,
   OperationalExpenseTemplateResponse,
   UpdateExpenseTemplate,
 } from '../models/index';
 import {
     AddExpenseTemplateRequestFromJSON,
     AddExpenseTemplateRequestToJSON,
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
+    IdResponseFromJSON,
+    IdResponseToJSON,
     OperationalExpenseTemplateResponseFromJSON,
     OperationalExpenseTemplateResponseToJSON,
     UpdateExpenseTemplateFromJSON,
@@ -49,7 +55,7 @@ export class ExpenseTemplatesApi extends runtime.BaseAPI {
     /**
      * Create a new expense template
      */
-    async createExpenseTemplateRaw(requestParameters: CreateExpenseTemplateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async createExpenseTemplateRaw(requestParameters: CreateExpenseTemplateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<IdResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -64,14 +70,15 @@ export class ExpenseTemplatesApi extends runtime.BaseAPI {
             body: AddExpenseTemplateRequestToJSON(requestParameters['addExpenseTemplateRequest']),
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => IdResponseFromJSON(jsonValue));
     }
 
     /**
      * Create a new expense template
      */
-    async createExpenseTemplate(requestParameters: CreateExpenseTemplateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.createExpenseTemplateRaw(requestParameters, initOverrides);
+    async createExpenseTemplate(requestParameters: CreateExpenseTemplateRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<IdResponse> {
+        const response = await this.createExpenseTemplateRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

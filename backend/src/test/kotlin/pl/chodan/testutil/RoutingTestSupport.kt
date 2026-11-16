@@ -10,6 +10,8 @@ import kotlinx.serialization.json.Json
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.module.Module
+import pl.chodan.allValidations
+import pl.chodan.error.configureErrorHandling
 import java.util.Base64
 
 /**
@@ -48,3 +50,5 @@ fun HttpRequestBuilder.testAuthHeader() {
     val token = Base64.getEncoder().encodeToString("test:test".toByteArray())
     header(HttpHeaders.Authorization, "Basic $token")
 }
+
+fun Application.installTestErrorHandling() = configureErrorHandling { allValidations() }

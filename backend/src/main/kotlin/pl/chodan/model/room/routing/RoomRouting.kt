@@ -8,6 +8,9 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import pl.chodan.error.ErrorCode
+import pl.chodan.error.errors
+import pl.chodan.error.isoDateQuery
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
 import pl.chodan.model.room.service.RoomService
 
@@ -33,6 +36,7 @@ fun Application.configureRoomRouting() {
                 get("/non-occupied", {
                     description = "Get non-occupied rooms between dates"
                     operationId = "getNonOccupiedRooms"
+                    errors(ErrorCode.VALIDATION_FAILED)
                     request {
                         queryParameter<String>("startDate") { description = "Start date (YYYY-MM-DD)"; required = true }
                         queryParameter<String>("endDate") { description = "End date (YYYY-MM-DD)"; required = true }
@@ -42,17 +46,11 @@ fun Application.configureRoomRouting() {
                             description = "Returns available rooms between dates"
                             body<List<RoomWithApartmentDTO>>()
                         }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid or missing dates" }
                     }
                 }) {
-                    try {
-                        val startDate = call.request.queryParameters["startDate"].orEmpty()
-                        val endDate = call.request.queryParameters["endDate"].orEmpty()
-                        call.respond(roomService.fetchFreeRoomsBetweenDates(startDate, endDate))
-                    } catch (_: Exception) {
-                        call.respond(HttpStatusCode.BadRequest)
-                    }
-
+                    call.respond(
+                        roomService.fetchFreeRoomsBetweenDates(call.isoDateQuery("startDate"), call.isoDateQuery("endDate"))
+                    )
                 }
             }
         }

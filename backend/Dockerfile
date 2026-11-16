@@ -1,7 +1,7 @@
 FROM gradle:8.5-jdk21 AS build
 WORKDIR /app
 COPY . /app/
-RUN gradle clean jar --no-daemon --info
+RUN gradle clean buildFatJar --no-daemon --info
 
 FROM amazoncorretto:21
 WORKDIR /app

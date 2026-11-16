@@ -29,6 +29,8 @@ import org.slf4j.event.Level
 import pl.chodan.config.Config
 import pl.chodan.context.KtorUserDetailsPrincipal
 import pl.chodan.context.UserDetails
+import pl.chodan.error.ApiError
+import pl.chodan.error.ErrorCode
 import java.net.URL
 
 fun Application.configureModules() {
@@ -40,7 +42,11 @@ fun Application.configureModules() {
             verifier(
                 JwkProviderBuilder(URL("${config.keycloak.url}/realms/${config.keycloak.realm}/protocol/openid-connect/certs")).build(),
                 issuer = "${config.keycloak.url}/realms/${config.keycloak.realm}",
-            )
+            ) {
+                // Tolerancja różnicy zegarów między Keycloak a backendem (iat/exp/nbf).
+                // Bez niej świeżo wydany token bywa odrzucany (401), gdy zegar Keycloak się spieszy.
+                acceptLeeway(5)
+            }
             validate { credential ->
                 try {
                     val username = credential.payload.getClaim("preferred_username").asString()
@@ -65,8 +71,8 @@ fun Application.configureModules() {
                 }
             }
 
-            challenge { defaultScheme, realm ->
-                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+            challenge { _, _ ->
+                call.respond(HttpStatusCode.Unauthorized, ApiError(ErrorCode.UNAUTHORIZED, "Brak ważnego tokenu"))
             }
         }
     }
@@ -119,7 +125,12 @@ fun Application.configureOpenAPI() {
         examples {
             exampleEncoder = ExampleEncoder.jackson()
         }
-
+        security {
+            defaultUnauthorizedResponse {
+                description = "UNAUTHORIZED"
+                body<ApiError>()
+            }
+        }
     }
     routing {
         route("openapi.json") {

@@ -19,6 +19,12 @@ import {
     ExpenseCategoryFromJSONTyped,
     ExpenseCategoryToJSON,
 } from './ExpenseCategory';
+import type { PaymentStatus } from './PaymentStatus';
+import {
+    PaymentStatusFromJSON,
+    PaymentStatusFromJSONTyped,
+    PaymentStatusToJSON,
+} from './PaymentStatus';
 
 /**
  * 
@@ -64,6 +70,12 @@ export interface NewOperationalExpenseDTO {
     category: ExpenseCategory;
     /**
      * 
+     * @type {PaymentStatus}
+     * @memberof NewOperationalExpenseDTO
+     */
+    status: PaymentStatus;
+    /**
+     * 
      * @type {string}
      * @memberof NewOperationalExpenseDTO
      */
@@ -91,6 +103,7 @@ export function instanceOfNewOperationalExpenseDTO(value: object): value is NewO
     if (!('insertDate' in value) || value['insertDate'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('category' in value) || value['category'] === undefined) return false;
+    if (!('status' in value) || value['status'] === undefined) return false;
     return true;
 }
 
@@ -110,6 +123,7 @@ export function NewOperationalExpenseDTOFromJSONTyped(json: any, ignoreDiscrimin
         'costDate': json['costDate'] == null ? undefined : json['costDate'],
         'amount': json['amount'],
         'category': ExpenseCategoryFromJSON(json['category']),
+        'status': PaymentStatusFromJSON(json['status']),
         'description': json['description'] == null ? undefined : json['description'],
         'invoiceNumber': json['invoiceNumber'] == null ? undefined : json['invoiceNumber'],
         'templateId': json['templateId'] == null ? undefined : json['templateId'],
@@ -128,6 +142,7 @@ export function NewOperationalExpenseDTOToJSON(value?: NewOperationalExpenseDTO 
         'costDate': value['costDate'],
         'amount': value['amount'],
         'category': ExpenseCategoryToJSON(value['category']),
+        'status': PaymentStatusToJSON(value['status']),
         'description': value['description'],
         'invoiceNumber': value['invoiceNumber'],
         'templateId': value['templateId'],

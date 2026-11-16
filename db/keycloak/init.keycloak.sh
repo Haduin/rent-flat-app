@@ -59,11 +59,11 @@ docker exec -it $KEYCLOAK_CONTAINER /opt/keycloak/bin/kcadm.sh create clients \
 # Znalezienie ID klienta
 CLIENT_INTERNAL_ID=$(docker exec -it $KEYCLOAK_CONTAINER /opt/keycloak/bin/kcadm.sh get clients -r $REALM_NAME --fields id,clientId | grep -B 1 "\"$CLIENT_ID\"" | grep '"id"' | awk -F '"' '{print $4}')
 
-# Aktualizacja klienta w celu ustawienia Valid Post Logout Redirect URIs i Home URL --- to do fixniecia bo zle paramy wpisuje
+# Aktualizacja klienta: Valid Post Logout Redirect URIs (Keycloak rozdziela je "##", nie spacja) i Home URL
 echo "Aktualizowanie klienta: $CLIENT_ID (ID: $CLIENT_INTERNAL_ID)..."
 docker exec -it $KEYCLOAK_CONTAINER /opt/keycloak/bin/kcadm.sh update clients/$CLIENT_INTERNAL_ID \
   -r $REALM_NAME \
-  -s 'attributes={"post.logout.redirect.uris": "'$VALID_POST_LOGOUT_URIS1' '$VALID_POST_LOGOUT_URIS2' '$VALID_POST_LOGOUT_URIS3'"}' \
+  -s 'attributes."post.logout.redirect.uris"='$VALID_POST_LOGOUT_URIS1'##'$VALID_POST_LOGOUT_URIS2'##'$VALID_POST_LOGOUT_URIS3 \
   -s baseUrl=$HOME_URL
 
 # Tworzenie użytkownika

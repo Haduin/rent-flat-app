@@ -2,13 +2,17 @@ package pl.chodan.model.contract.service
 
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.slf4j.LoggerFactory
 import pl.chodan.database.DatabaseProviderContract
 import pl.chodan.database.Payment
 import pl.chodan.database.PaymentStatus
@@ -16,27 +20,32 @@ import pl.chodan.database.Person
 import pl.chodan.database.PersonStatus
 import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
+import pl.chodan.model.apartment.service.ApartmentError
 import pl.chodan.model.contract.database.Contract
 import pl.chodan.model.contract.database.ContractChangeType
 import pl.chodan.model.contract.database.ContractHistory
 import pl.chodan.model.contract.database.ContractStatus
-import pl.chodan.model.contract.dto.ContractDB
 import pl.chodan.model.contract.dto.ContractDTO
 import pl.chodan.model.contract.dto.ContractHistoryDTO
 import pl.chodan.model.contract.dto.DeleteContractDTO
 import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.dto.UpdateContractDetails
 import pl.chodan.model.persons.dto.PersonDTO
+import pl.chodan.model.persons.service.lockPerson
 import pl.chodan.model.room.dto.RoomWithApartmentDTO
+import pl.chodan.error.ValidationException
 import pl.chodan.toLocalDateWithFullPattern
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 
 class ContractService : KoinComponent {
     private val databaseProvider by inject<DatabaseProviderContract>()
-    private val logger = LoggerFactory.getLogger(ContractService::class.java)
 
     suspend fun createContract(newContractDTO: NewContractDTO): Int = databaseProvider.dbQuery {
+        // Lock order person -> room, same in every writer, so concurrent deletes cannot slip past the checks.
+        lockPerson(newContractDTO.personId)
+        lockFreeRoom(newContractDTO.roomId, LocalDate.parse(newContractDTO.startDate), LocalDate.parse(newContractDTO.endDate))
         Person.update({ Person.id eq newContractDTO.personId }) {
             it[status] = PersonStatus.RESIDENT
         }
@@ -55,28 +64,14 @@ class ContractService : KoinComponent {
         contractId
     }
 
-    suspend fun getContractById(id: Int): ContractDB? = databaseProvider.dbQuery {
-        Contract.selectAll()
-            .where { Contract.id eq id }
-            .singleOrNull()?.let { resultRow ->
-                ContractDB(
-                    id = resultRow[Contract.id],
-                    personId = resultRow[Contract.personId],
-                    roomId = resultRow[Contract.roomId],
-                    amount = resultRow[Contract.amount],
-                    deposit = resultRow[Contract.deposit],
-                    startDate = resultRow[Contract.startDate].toString(),
-                    endDate = resultRow[Contract.endDate].toString(),
-                )
-            }
-    }
-
     suspend fun updateContract(contractDetails: UpdateContractDetails) = databaseProvider.dbQuery {
-        val currentStatus = Contract.select(Contract.status)
-            .where { Contract.id eq contractDetails.contractId }
-            .singleOrNull()?.get(Contract.status)
-        check(ContractStatus.TERMINATED != currentStatus) {
-            "Kontrakt jest zakończony i nie można go edytować"
+        val current = lockActiveContract(contractDetails.contractId)
+        val newRoomId = contractDetails.roomId ?: current[Contract.roomId]
+        val newStart = contractDetails.startDate?.toLocalDateWithFullPattern() ?: current[Contract.startDate]
+        val newEnd = contractDetails.endDate?.toLocalDateWithFullPattern() ?: current[Contract.endDate]
+        if (newEnd < newStart) throw ValidationException("Koniec umowy nie może być przed jej początkiem")
+        if (null != contractDetails.roomId || null != contractDetails.startDate || null != contractDetails.endDate) {
+            lockFreeRoom(newRoomId, newStart, newEnd, exceptContractId = contractDetails.contractId)
         }
 
         Contract.update({ Contract.id eq contractDetails.contractId }) {
@@ -88,6 +83,27 @@ class ContractService : KoinComponent {
             contractDetails.payedTillDayOfMonth?.let { value -> it[payedTillDayOfMonth] = value }
         }
         recordContractHistory(contractDetails.contractId, ContractChangeType.UPDATED)
+    }
+
+    /**
+     * Locks the room row (FOR UPDATE, so two contracts for the same room are checked one after another)
+     * and rejects it when another active contract overlaps [startDate]..[endDate].
+     */
+    private fun lockFreeRoom(roomId: Int, startDate: LocalDate, endDate: LocalDate, exceptContractId: Int? = null) {
+        if (Room.selectAll().where { Room.id eq roomId }.forUpdate().empty()) throw ApartmentError.RoomNotFound(roomId)
+        val overlapping = Contract.select(Contract.id).where {
+            (Contract.roomId eq roomId) and Contract.activeBetween(startDate, endDate)
+        }
+        exceptContractId?.let { id -> overlapping.andWhere { Contract.id neq id } }
+        if (!overlapping.empty()) throw ContractError.RoomOccupied(roomId)
+    }
+
+    /** Locks the contract row for the rest of the transaction; rejects unknown and terminated contracts. */
+    private fun lockActiveContract(contractId: Int): ResultRow {
+        val contract = Contract.selectAll().where { Contract.id eq contractId }.forUpdate().singleOrNull()
+            ?: throw ContractError.NotFound(contractId)
+        if (ContractStatus.TERMINATED == contract[Contract.status]) throw ContractError.Terminated()
+        return contract
     }
 
     /**
@@ -115,7 +131,18 @@ class ContractService : KoinComponent {
         }
     }
 
+    /** A tenant whose last active contract ended can be picked for a new one again (see getNonResidentPersons). */
+    private fun releasePersonWithoutActiveContract(personId: Int) {
+        val hasActiveContract = Contract.selectAll()
+            .where { (Contract.personId eq personId) and (Contract.status eq ContractStatus.ACTIVE) }
+            .any()
+        if (!hasActiveContract) {
+            Person.update({ Person.id eq personId }) { it[status] = PersonStatus.NON_RESIDENT }
+        }
+    }
+
     suspend fun getContractHistory(contractId: Int): List<ContractHistoryDTO> = databaseProvider.dbQuery {
+        if (Contract.selectAll().where { Contract.id eq contractId }.empty()) throw ContractError.NotFound(contractId)
         ContractHistory.selectAll()
             .where { ContractHistory.contractId eq contractId }
             .orderBy(ContractHistory.changedAt to SortOrder.ASC)
@@ -153,6 +180,7 @@ class ContractService : KoinComponent {
                         Apartment.id +
                         Apartment.name
             )
+            .orderBy(Contract.id)
             .map { row ->
                 val isActive = ContractStatus.ACTIVE == row[Contract.status]
                 val endDate = row[Contract.endDate]
@@ -188,57 +216,28 @@ class ContractService : KoinComponent {
     }
 
 
-    suspend fun deleteContract(details: DeleteContractDTO): ContractDeleteResult = databaseProvider.dbQuery {
-        try {
-            Contract.selectAll().where { Contract.id eq details.contractId }
-                .singleOrNull() ?: return@dbQuery ContractDeleteResult.NotFound
+    suspend fun deleteContract(details: DeleteContractDTO) = databaseProvider.dbQuery {
+        val contract = lockActiveContract(details.contractId)
 
-            val updatedPayments = Payment.update({
-                (Payment.contractId eq details.contractId) and
-                        (Payment.status eq PaymentStatus.PENDING)
-            }) {
-                it[status] = PaymentStatus.CANCELLED
-                it[payedDate] = details.terminationDate.toLocalDateWithFullPattern()
-            }
-
-            if (updatedPayments < 0) {
-                val message = "Błąd podczas aktualizacji płatności dla kontraktu ${details.contractId}"
-                logger.info(message)
-                return@dbQuery ContractDeleteResult.PaymentUpdateError(message)
-            }
-
-            val updatedContract = Contract.update({ Contract.id eq details.contractId }) {
-                it[Contract.terminationDate] = details.terminationDate.toLocalDateWithFullPattern()
-                it[Contract.status] = ContractStatus.TERMINATED
-                it[Contract.depositReturned] = details.depositReturned
-                it[Contract.description] = details.description
-            }
-
-            when (updatedContract) {
-                1 -> {
-                    recordContractHistory(details.contractId, ContractChangeType.TERMINATED)
-                    ContractDeleteResult.Success(details.contractId)
-                }
-
-                0 -> ContractDeleteResult.ContractUpdateError("Nie znaleziono kontraktu do aktualizacji")
-
-                else -> ContractDeleteResult.ContractUpdateError(
-                    "Nieoczekiwana liczba zaktualizowanych kontraktów: $updatedContract"
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("Błąd podczas usuwania kontraktu: ${e.message}", e)
-            ContractDeleteResult.ContractUpdateError(
-                "Wystąpił błąd podczas usuwania kontraktu: ${e.message}"
-            )
+        // only the termination month and later: unpaid rent of earlier months stays owed
+        val terminationMonth = YearMonth.from(details.terminationDate.toLocalDateWithFullPattern()).toString()
+        Payment.update({
+            (Payment.contractId eq details.contractId) and
+                    (Payment.status inList listOf(PaymentStatus.PENDING, PaymentStatus.LATE)) and
+                    (Payment.scopeDate greaterEq terminationMonth)
+        }) {
+            it[status] = PaymentStatus.CANCELLED
+            it[payedDate] = details.terminationDate.toLocalDateWithFullPattern()
         }
+
+        Contract.update({ Contract.id eq details.contractId }) {
+            it[Contract.terminationDate] = details.terminationDate.toLocalDateWithFullPattern()
+            it[Contract.status] = ContractStatus.TERMINATED
+            it[Contract.depositReturned] = details.depositReturned
+            it[Contract.description] = details.description
+        }
+
+        recordContractHistory(details.contractId, ContractChangeType.TERMINATED)
+        releasePersonWithoutActiveContract(contract[Contract.personId])
     }
-
-}
-
-sealed class ContractDeleteResult {
-    data class Success(val contractId: Int) : ContractDeleteResult()
-    data class PaymentUpdateError(val message: String) : ContractDeleteResult()
-    data class ContractUpdateError(val message: String) : ContractDeleteResult()
-    data object NotFound : ContractDeleteResult()
 }

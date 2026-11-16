@@ -4,7 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdatePersonDTO(
-    val id: Int,
     val firstName: String,
     val lastName: String,
     val documentNumber: String,

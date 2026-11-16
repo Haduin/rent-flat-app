@@ -1,10 +1,16 @@
 package pl.chodan.model.contract.database
 
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import pl.chodan.database.Person
 import pl.chodan.database.Room
+import java.time.LocalDate
 
 object Contract : Table("flat.contract") {
     val id = integer("id").autoIncrement()
@@ -25,6 +31,10 @@ object Contract : Table("flat.contract") {
     )
     val payedTillDayOfMonth = varchar("payed_till_day_of_month", 2)
     override val primaryKey = PrimaryKey(id)
+
+    /** The one occupancy rule: an active contract whose term overlaps [from]..[to] (both inclusive) holds its room then. */
+    fun activeBetween(from: LocalDate, to: LocalDate): Op<Boolean> =
+        (status eq ContractStatus.ACTIVE) and (startDate lessEq to) and (endDate greaterEq from)
 }
 
 enum class ContractStatus {

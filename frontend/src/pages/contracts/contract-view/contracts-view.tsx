@@ -9,6 +9,7 @@ import {UpdateContractModal} from "../update-contract-modal/update-contract-moda
 import ContractDetailsModal from "../contract-details/contract-details-modal.tsx";
 import ContractHistoryDialog from "../contract-history/contract-history-dialog.tsx";
 
+/** @deprecated Legacy UI view, no longer routed — replaced by new_ui/features/contracts/ContractsPage.tsx. Kept only until the legacy UI is deleted; do not import. */
 const ContractsView = () => {
 
     const {

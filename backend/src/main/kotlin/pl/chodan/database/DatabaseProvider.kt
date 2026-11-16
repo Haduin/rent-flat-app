@@ -1,8 +1,11 @@
 package pl.chodan.database
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -15,26 +18,29 @@ class DatabaseProvider : DatabaseProviderContract, KoinComponent {
     init {
         exposedLogger.info("Connecting to database")
 
-        // baselineOnMigrate: on an existing (pre-Flyway) production DB, the `flat` schema is
-        // already populated, so Flyway marks V1 as already applied instead of re-running it and
-        // failing on "table already exists" - no data is touched. On a fresh DB, V1 runs normally.
+        val dataSource = HikariDataSource(HikariConfig().apply {
+            jdbcUrl = config.ktor.database.url
+            driverClassName = config.ktor.database.driver
+            username = config.ktor.database.user
+            password = config.ktor.database.password
+            maximumPoolSize = config.ktor.database.maxPoolSize
+            isAutoCommit = false
+            poolName = "mieszkania-db"
+        })
+
         Flyway.configure()
-            .dataSource(config.ktor.database.url, config.ktor.database.user, config.ktor.database.password)
+            .dataSource(dataSource)
             .schemas("flat")
             .baselineOnMigrate(true)
+            .validateMigrationNaming(true)
             .load()
             .migrate()
 
-        Database.connect(
-            url = config.ktor.database.url,
-            driver = config.ktor.database.driver,
-            user = config.ktor.database.user,
-            password = config.ktor.database.password,
-        )
+        Database.connect(dataSource)
     }
 
+    // SQL is logged by Exposed at DEBUG level (logger "Exposed") — enable it in logback.xml when needed.
     override suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) {
-        addLogger(StdOutSqlLogger)
         block()
     }
 }

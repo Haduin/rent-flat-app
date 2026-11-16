@@ -1,40 +1,31 @@
-import {DataTable} from "primereact/datatable";
-import {Column} from "primereact/column";
-import {Calendar} from "primereact/calendar";
+import {useEffect} from "react";
 import {usePaymentsView} from "../../../src/pages/payments/income/income-payments-view/income-payments-view.hook.ts";
-import {IncomeEditPaymentDialog} from "../../../src/pages/payments/income/income-edit-payment-dialog/income-edit-payment-dialog.tsx";
-import {IncomeConfirmPaymentDialog} from "../../../src/pages/payments/income/income-confirm-payment-dialog/income-confirm-payment-dialog.tsx";
-import {IncomeSplitPaymentDialog} from "../../../src/pages/payments/income/income-split-payment-dialog/income-split-payment-dialog.tsx";
-import {dateToStringWithYearMonth} from "../../../src/components/commons/dateFormatter.ts";
+import {ConfirmIncomeDialog, EditIncomeDialog, SplitIncomeDialog} from "./IncomePaymentDialogs.tsx";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {Card} from "../../components/ui/Card.tsx";
-import {Badge, BadgeTone} from "../../components/ui/Badge.tsx";
+import {Page} from "../../components/layout/Page.tsx";
+import {Text} from "../../components/ui/Text.tsx";
+import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
+import {Badge} from "../../components/ui/Badge.tsx";
+import {PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE} from "../../components/ui/payment-status.ts";
 import {Button} from "../../components/ui/Button.tsx";
+import {MonthSettlementSummary} from "../../components/ui/MonthSettlementSummary.tsx";
+import {formatDatePl} from "../../utils/date.ts";
 import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../src/api/generated";
-import {isNotEqual} from "../../../src/utils/typeguards";
+import {isEqual, isNotEqual} from "../../../src/utils/typeguards";
+import {formatMonthLabel, useCurrentMonth} from "../../components/layout/CurrentMonth.ts";
 
-const STATUS_LABEL: Record<string, string> = {
-    [PaymentStatus.Pending]: "Oczekuje",
-    [PaymentStatus.Paid]: "Opłacone",
-    [PaymentStatus.Late]: "Zaległe",
-    [PaymentStatus.Cancelled]: "Anulowane",
-    [PaymentStatus.PartiallyPaid]: "Częściowo",
-};
-
-const STATUS_TONE: Record<string, BadgeTone> = {
-    [PaymentStatus.Pending]: "neutral",
-    [PaymentStatus.Paid]: "success",
-    [PaymentStatus.Late]: "danger",
-    [PaymentStatus.Cancelled]: "neutral",
-    [PaymentStatus.PartiallyPaid]: "warning",
-};
+const STATUS_URGENCY: PaymentStatus[] = [
+    PaymentStatus.Late,
+    PaymentStatus.PartiallyPaid,
+    PaymentStatus.Pending,
+    PaymentStatus.Paid,
+    PaymentStatus.Cancelled,
+];
 
 const IncomePaymentsPage = () => {
     const {
         payments,
         loading,
-        dateSelected,
         selectedPayment,
         isConfirmationDialogVisible,
         handleDateSelectAndFetchPayments,
@@ -51,126 +42,101 @@ const IncomePaymentsPage = () => {
         closeEditDialog,
         handleEditPayment,
     } = usePaymentsView();
+    const {month} = useCurrentMonth();
+
+    // usePaymentsView (shared with the legacy UI) owns its month state; mirror the shell's month into it.
+    useEffect(() => handleDateSelectAndFetchPayments(month), [month, handleDateSelectAndFetchPayments]);
+
+    // who still owes comes first: late, partial, pending, then paid and cancelled
+    const sortedPayments = [...(payments ?? [])].sort(
+        (a, b) => STATUS_URGENCY.indexOf(a.status) - STATUS_URGENCY.indexOf(b.status)
+    );
 
     const payerBody = (payment: PaymentHistoryWithPersonDTO) => (
-        <span style={{fontWeight: 600}}>
+        <Text weight="semibold">
             {payment.person?.firstName} {payment.person?.lastName}
-        </span>
+        </Text>
     );
 
     const amountBody = (payment: PaymentHistoryWithPersonDTO) => (
-        <span
-            style={{
-                fontWeight: 600,
-                textDecoration: PaymentStatus.Cancelled === payment.status ? "line-through" : "none",
-                color: PaymentStatus.Cancelled === payment.status ? "var(--ku-text-muted)" : "inherit",
-            }}
+        <Text
+            weight="semibold"
+            tone={PaymentStatus.Cancelled === payment.status ? "muted" : "default"}
+            strike={PaymentStatus.Cancelled === payment.status}
         >
             {formatCurrency(payment.amount)}
-        </span>
+        </Text>
     );
 
     const statusBody = (payment: PaymentHistoryWithPersonDTO) => (
-        <Badge tone={STATUS_TONE[payment.status] ?? "neutral"}>{STATUS_LABEL[payment.status] ?? payment.status}</Badge>
+        <Badge tone={PAYMENT_STATUS_TONE[payment.status]}>{PAYMENT_STATUS_LABEL[payment.status]}</Badge>
     );
 
-    const actionsBody = (payment: PaymentHistoryWithPersonDTO) => {
-        const canConfirm = isNotEqual(PaymentStatus.Paid, payment.status) && isNotEqual(PaymentStatus.Cancelled, payment.status);
-        return canConfirm ? (
-            <div style={{display: "flex", flexWrap: "nowrap", gap: 8, justifyContent: "flex-end"}}>
-                <Button
-                    variant="primary"
-                    size="small"
-                    style={{flexShrink: 0, whiteSpace: "nowrap"}}
-                    onClick={() => openConfirmationDialog(payment)}
-                >
-                    Potwierdź
-                </Button>
-                <Button
-                    variant="secondary"
-                    size="small"
-                    icon="pi pi-percentage"
-                    style={{flexShrink: 0, whiteSpace: "nowrap"}}
-                    onClick={() => openSplitDialog(payment)}
-                >
+    const rowActions = (payment: PaymentHistoryWithPersonDTO) => {
+        const isOpen = isNotEqual(PaymentStatus.Paid, payment.status) && isNotEqual(PaymentStatus.Cancelled, payment.status);
+        // a partially paid payment is settled through splits only, so the instalment history stays complete
+        const canConfirm = isOpen && isNotEqual(PaymentStatus.PartiallyPaid, payment.status);
+        return isOpen ? (
+            <>
+                {canConfirm && (
+                    <Button variant="primary" size="small" onClick={() => openConfirmationDialog(payment)}>
+                        Potwierdź
+                    </Button>
+                )}
+                <Button variant="secondary" size="small" icon="pi pi-percentage" onClick={() => openSplitDialog(payment)}>
                     Podziel
                 </Button>
-            </div>
-        ) : (
-            <div style={{textAlign: "right"}}>
-                <Button
-                    variant="secondary"
-                    size="small"
-                    icon="pi pi-pencil"
-                    style={{whiteSpace: "nowrap"}}
-                    onClick={() => openEditDialog(payment)}
-                >
-                    Edytuj
-                </Button>
-            </div>
+            </>
+        ) : isEqual(PaymentStatus.Paid, payment.status) && (
+            // only a confirmed payment is edited (its date and amount); a cancelled one stays as it is
+            <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => openEditDialog(payment)}>
+                Edytuj
+            </Button>
         );
     };
 
+    const columns: DataTableColumn<PaymentHistoryWithPersonDTO>[] = [
+        {header: "Płatnik", body: payerBody},
+        {header: "Mieszkanie", body: (row) => row.room?.apartment},
+        {header: "Kwota", body: amountBody},
+        {header: "Data wpłaty", body: (row) => formatDatePl(row.payedDate)},
+        {header: "Status", body: statusBody},
+    ];
+
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader title="Wpłaty najemców" subtitle="Historia i rozliczanie czynszu"/>
-
-            <Card padding={20} style={{display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap"}}>
-                <Calendar
-                    value={dateSelected}
-                    onChange={(event) => handleDateSelectAndFetchPayments(event.value as Date)}
-                    view="month"
-                    locale="pl"
-                    dateFormat="yy-mm"
-                    placeholder="Wybierz miesiąc"
-                />
-                {dateSelected && (
-                    <Button variant="primary" onClick={() => handleGenerateNewMonthPayments.mutate()}>
-                        Wygeneruj płatności za {dateToStringWithYearMonth(dateSelected)}
-                    </Button>
-                )}
-            </Card>
-
-            <Card padding={0} style={{overflow: "hidden"}}>
-                <DataTable
-                    value={payments ?? []}
-                    loading={loading}
-                    paginator
-                    rows={10}
-                    rowsPerPageOptions={[10, 20, 50]}
-                    stripedRows
-                    responsiveLayout="stack"
-                    breakpoint="860px"
-                    emptyMessage="Wybierz miesiąc, aby zobaczyć płatności"
+        <Page
+            title="Wpłaty najemców"
+            subtitle="Historia i rozliczanie czynszu"
+            actions={
+                <Button
+                    variant={(payments?.length ?? 0) > 0 ? "secondary" : "primary"}
+                    loading={handleGenerateNewMonthPayments.isPending}
+                    onClick={() => handleGenerateNewMonthPayments.mutate()}
                 >
-                    <Column header="Płatnik" body={payerBody}/>
-                    <Column header="Mieszkanie" body={(row: PaymentHistoryWithPersonDTO) => row.room?.apartment}/>
-                    <Column header="Kwota" body={amountBody}/>
-                    <Column header="Data" body={(row: PaymentHistoryWithPersonDTO) => row.payedDate ?? "—"}/>
-                    <Column header="Status" body={statusBody}/>
-                    <Column header="" body={actionsBody} style={{width: 260}}/>
-                </DataTable>
-            </Card>
+                    Wygeneruj płatności za {formatMonthLabel(month)}
+                </Button>
+            }
+        >
+            <MonthSettlementSummary items={payments ?? []} settledLabel="Wpłacono" outstandingLabel="Do zebrania"/>
 
-            <IncomeConfirmPaymentDialog
-                isVisible={isConfirmationDialogVisible}
-                onHide={closeConfirmationDialog}
-                onConfirm={handleConfirmPayment}
-                selectedPayment={selectedPayment}
+            <DataTableCard
+                value={sortedPayments}
+                columns={columns}
+                rowActions={rowActions}
+                loading={loading}
+                emptyMessage="Brak płatności w tym miesiącu"
             />
-            <IncomeSplitPaymentDialog
-                isVisible={isSplitDialogVisible}
-                onHide={closeSplitDialog}
-                onConfirm={handleSplitPayment}
-                selectedPayment={selectedPayment}
-            />
-            <IncomeEditPaymentDialog
-                onHide={closeEditDialog}
-                selectedPayment={selectedPayment}
-                isVisible={isEditPaymentVisible}
-                onConfirm={handleEditPayment}
-            />
-        </div>
+
+            {selectedPayment && isConfirmationDialogVisible && (
+                <ConfirmIncomeDialog payment={selectedPayment} onConfirm={handleConfirmPayment} onHide={closeConfirmationDialog}/>
+            )}
+            {selectedPayment && isSplitDialogVisible && (
+                <SplitIncomeDialog payment={selectedPayment} onConfirm={handleSplitPayment} onHide={closeSplitDialog}/>
+            )}
+            {selectedPayment && isEditPaymentVisible && (
+                <EditIncomeDialog payment={selectedPayment} onConfirm={handleEditPayment} onHide={closeEditDialog}/>
+            )}
+        </Page>
     );
 };
 

@@ -1,0 +1,335 @@
+/* PrimeReact theme: lara overrides mapped onto the --ku-* tokens (tokens.css). */
+
+/* ---------------------------------------------------------------------- *
+ * PrimeReact overrides, scoped to routes rendering the new UI. Reused
+ * dialogs/forms/DataTables from the legacy app pick these up automatically
+ * because they render while body[data-ku-theme="a"] is set (AppShell sets
+ * it on mount) — including portaled overlays (Dialog, Calendar panel,
+ * Toast, ConfirmDialog), which attach directly under <body>.
+ * ---------------------------------------------------------------------- */
+
+body[data-ku-theme='a'] {
+    --p-primary-color: var(--ku-accent);
+}
+
+body[data-ku-theme='a'] .p-component {
+    font-family: var(--ku-font-body);
+}
+
+/* Buttons */
+body[data-ku-theme='a'] .p-button {
+    border-radius: var(--ku-radius-sm);
+    font-weight: 600;
+    font-size: var(--ku-text-base);
+    padding: var(--ku-space-2) var(--ku-space-4);
+}
+
+/* Text passed as children (not `label`) gets no icon margin from PrimeReact; gap spaces icon and text. */
+body[data-ku-theme='a'] .p-button:not(:has(> .p-button-label)) {
+    gap: 0.5rem;
+}
+
+body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary) {
+    background: var(--ku-accent);
+    border-color: var(--ku-accent);
+}
+
+body[data-ku-theme='a'] .p-button:not(.p-button-text):not(.p-button-outlined):not(.p-button-secondary):not(:disabled):hover {
+    background: var(--ku-accent-hover);
+    border-color: var(--ku-accent-hover);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-secondary {
+    background: var(--ku-surface);
+    border-color: var(--ku-border-strong);
+    color: var(--ku-text);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-secondary:not(:disabled):hover {
+    background: var(--ku-surface-hover);
+}
+
+/* Ghost (text) buttons: Ledger Blue, not the base theme's indigo */
+body[data-ku-theme='a'] .p-button.p-button-text:not(.p-button-danger):not(.p-button-secondary) {
+    color: var(--ku-accent);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-text:not(.p-button-danger):not(.p-button-secondary):not(:disabled):hover {
+    background: var(--ku-accent-tint);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-outlined:not(.p-button-danger) {
+    color: var(--ku-accent);
+    border-color: var(--ku-accent-border);
+}
+
+/* Solid danger (Zakończ umowę, Usuń...): the theme's red, toned to the palette */
+body[data-ku-theme='a'] .p-button.p-button-danger:not(.p-button-text):not(.p-button-outlined) {
+    background: var(--ku-danger);
+    border-color: var(--ku-danger);
+    color: var(--ku-accent-contrast);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-danger:not(.p-button-text):not(.p-button-outlined):not(:disabled):hover {
+    background: var(--ku-danger-hover);
+    border-color: var(--ku-danger-hover);
+}
+
+body[data-ku-theme='a'] .p-button.p-button-rounded {
+    border-radius: var(--ku-radius-pill);
+}
+
+/* Disabled must read as "off" on its own - PrimeReact's default 0.6 opacity barely
+   registers on small icon-only buttons, especially against our own solid-colored
+   secondary/danger-outline variants above. Flatten every variant to the same muted
+   gray instead of just fading it. */
+body[data-ku-theme='a'] .p-button:disabled,
+body[data-ku-theme='a'] .p-button.p-disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    background: var(--ku-disabled-bg);
+    border-color: var(--ku-border-strong);
+    color: var(--ku-disabled-text);
+}
+
+/* SelectButton (e.g. the contracts list activity filter) - PrimeReact renders each
+   option as a plain .p-button, so without this it inherits the solid accent fill from
+   the default-button rule above and both options look identical/selected. The extra
+   :not(.p-highlight)/.p-component qualifiers only exist to out-specificity that rule. */
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component:not(.p-highlight) {
+    background: var(--ku-surface);
+    border-color: var(--ku-border-strong);
+    color: var(--ku-text-secondary);
+}
+
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component:not(.p-highlight):not(:disabled):hover {
+    background: var(--ku-surface-hover);
+}
+
+body[data-ku-theme='a'] .p-selectbutton .p-button.p-component.p-highlight {
+    background: var(--ku-accent);
+    border-color: var(--ku-accent);
+    color: var(--ku-accent-contrast);
+}
+
+/* Tags / badges */
+body[data-ku-theme='a'] .p-tag {
+    font-family: var(--ku-font-body);
+    font-size: var(--ku-text-xs);
+    font-weight: 600;
+    border-radius: var(--ku-radius-pill);
+    padding: var(--ku-space-1) var(--ku-space-2);
+    /* a status pill never breaks mid-word; the text beside it wraps instead */
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-success {
+    background: var(--ku-success-soft);
+    color: var(--ku-success);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-warning {
+    background: var(--ku-warning-soft);
+    color: var(--ku-warning);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-danger {
+    background: var(--ku-danger-soft);
+    color: var(--ku-danger);
+}
+
+body[data-ku-theme='a'] .p-tag.ku-tag-ended {
+    background: var(--ku-ended-soft);
+    color: var(--ku-ended);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-info {
+    background: var(--ku-accent-soft);
+    color: var(--ku-accent-hover);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-secondary {
+    background: var(--ku-neutral-soft);
+    color: var(--ku-text-secondary);
+}
+
+body[data-ku-theme='a'] .p-tag.p-tag-contrast {
+    background: var(--ku-ink);
+    color: var(--ku-surface);
+}
+
+/* Cards */
+body[data-ku-theme='a'] .p-card {
+    border-radius: var(--ku-radius-md);
+    border: 1px solid var(--ku-border);
+    box-shadow: none;
+    /* the base theme paints card text gray-600; cards carry ink like the page */
+    color: var(--ku-text);
+}
+
+body[data-ku-theme='a'] .p-card .p-card-title {
+    font-family: var(--ku-font-display);
+    font-size: var(--ku-text-md);
+}
+
+/* Inputs */
+body[data-ku-theme='a'] .p-inputtext,
+body[data-ku-theme='a'] .p-dropdown,
+body[data-ku-theme='a'] .p-multiselect,
+body[data-ku-theme='a'] .p-calendar .p-inputtext {
+    border-radius: var(--ku-radius-sm);
+    border-color: var(--ku-input-border);
+    font-size: var(--ku-text-base);
+}
+
+body[data-ku-theme='a'] .p-inputtext:enabled:focus,
+body[data-ku-theme='a'] .p-dropdown:not(.p-disabled).p-focus {
+    border-color: var(--ku-accent);
+    box-shadow: var(--ku-focus-halo);
+}
+
+/* DataTable */
+body[data-ku-theme='a'] .p-datatable {
+    font-family: var(--ku-font-body);
+    font-size: var(--ku-text-base);
+}
+
+body[data-ku-theme='a'] .p-datatable .p-datatable-thead > tr > th {
+    background: var(--ku-surface-hover);
+    color: var(--ku-text-secondary);
+    font-size: var(--ku-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-color: var(--ku-border);
+    padding: var(--ku-space-3) var(--ku-space-4);
+    /* .kwatera-a sets overflow-wrap: anywhere globally; on a table-layout:auto
+       table with many columns that lets the browser shrink a header cell
+       below its content width and break mid-word, one letter per line. Column
+       headers are short labels, never a reason to wrap - keep them on one
+       line and let the table (inside DataTableCard's overflow-x: auto) grow
+       wider and scroll instead. */
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+
+body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr {
+    background: var(--ku-surface);
+}
+
+body[data-ku-theme='a'] .p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+    background: var(--ku-surface-striped);
+}
+
+body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr > td {
+    /* break-word (not the inherited `anywhere`) keeps amounts like "1550,00 zł" from
+       being shrunk mid-word by table auto-layout, yet still wraps a value that truly overflows */
+    overflow-wrap: break-word;
+    padding: var(--ku-space-3) var(--ku-space-4);
+    border-color: var(--ku-border);
+    color: var(--ku-text);
+}
+
+body[data-ku-theme='a'] .p-datatable .p-datatable-tbody > tr:hover {
+    background: var(--ku-accent-tint);
+}
+
+body[data-ku-theme='a'] .p-paginator {
+    border-radius: 0 0 var(--ku-radius-md) var(--ku-radius-md);
+    background: var(--ku-surface);
+    border-color: var(--ku-border);
+}
+
+body[data-ku-theme='a'] .p-paginator .p-paginator-page.p-highlight {
+    background: var(--ku-accent);
+    color: var(--ku-accent-contrast);
+}
+
+/* Dialog */
+body[data-ku-theme='a'] .p-dialog {
+    border-radius: var(--ku-radius-lg);
+    overflow: hidden;
+}
+
+body[data-ku-theme='a'] .p-dialog .p-dialog-header {
+    font-family: var(--ku-font-display);
+}
+
+/* ConfirmDialog without an icon: drop the icon gutter so the message lines up with the header */
+body[data-ku-theme='a'] .p-confirm-dialog .p-confirm-dialog-message:first-child {
+    margin-left: 0;
+}
+
+/* Checkbox - PrimeReact 10 puts .p-highlight on the root, not on the box */
+body[data-ku-theme='a'] .p-checkbox.p-highlight .p-checkbox-box {
+    background: var(--ku-accent);
+    border-color: var(--ku-accent);
+}
+
+body[data-ku-theme='a'] .p-checkbox:not(.p-disabled):has(.p-checkbox-input:hover) .p-checkbox-box,
+body[data-ku-theme='a'] .p-checkbox:not(.p-disabled):has(.p-checkbox-input:focus-visible) .p-checkbox-box {
+    border-color: var(--ku-accent);
+}
+
+body[data-ku-theme='a'] .p-checkbox:not(.p-disabled):has(.p-checkbox-input:hover).p-highlight .p-checkbox-box {
+    background: var(--ku-accent-hover);
+    border-color: var(--ku-accent-hover);
+}
+
+/* Focus ring: one Ledger Blue treatment for every non-text control (text inputs keep
+   the border + soft halo above). Selectors mirror the lara theme's own focus rules;
+   semantic button variants (danger, secondary...) keep their theme rings. */
+body[data-ku-theme='a'] .p-button:focus,
+body[data-ku-theme='a'] .p-link:focus-visible,
+body[data-ku-theme='a'] .p-dialog .p-dialog-header .p-dialog-header-icon:focus-visible,
+body[data-ku-theme='a'] .p-checkbox:not(.p-disabled):has(.p-checkbox-input:focus-visible) .p-checkbox-box,
+body[data-ku-theme='a'] .p-datepicker .p-datepicker-header .p-datepicker-prev:focus-visible,
+body[data-ku-theme='a'] .p-datepicker .p-datepicker-header .p-datepicker-next:focus-visible,
+body[data-ku-theme='a'] .p-datepicker table td > span:focus,
+body[data-ku-theme='a'] .p-datepicker:not(.p-disabled) table td span:not(.p-highlight):not(.p-disabled):focus,
+body[data-ku-theme='a'] .p-datepicker:not(.p-disabled) .p-monthpicker .p-monthpicker-month:not(.p-disabled):focus {
+    box-shadow: var(--ku-focus-ring);
+}
+
+body[data-ku-theme='a'] .p-calendar:not(.p-calendar-disabled).p-focus > .p-inputtext {
+    border-color: var(--ku-accent);
+    box-shadow: var(--ku-focus-halo);
+}
+
+/* Selected option in overlays (Dropdown panel, Calendar day/month) */
+body[data-ku-theme='a'] .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight,
+body[data-ku-theme='a'] .p-datepicker table td > span.p-highlight,
+body[data-ku-theme='a'] .p-datepicker .p-monthpicker .p-monthpicker-month.p-highlight {
+    background: var(--ku-accent-soft);
+    color: var(--ku-accent-hover);
+}
+
+body[data-ku-theme='a'] .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight.p-focus {
+    background: var(--ku-accent-soft-strong);
+}
+
+/* Menubar (top nav) */
+body[data-ku-theme='a'] .p-menubar {
+    background: var(--ku-surface);
+    border-color: var(--ku-border);
+    align-items: center;
+}
+
+body[data-ku-theme='a'] .p-menubar .p-menuitem-link {
+    border-radius: var(--ku-radius-sm);
+    padding: var(--ku-space-2) var(--ku-space-4);
+    font-size: var(--ku-text-base);
+    font-weight: 500;
+    color: var(--ku-text-secondary);
+}
+
+body[data-ku-theme='a'] .p-menubar .p-menuitem-link:not(.p-disabled):hover {
+    background: var(--ku-accent-tint);
+}
+
+body[data-ku-theme='a'] .p-menubar .p-menuitem-link.ku-nav-active {
+    background: var(--ku-accent-soft);
+    color: var(--ku-accent-hover);
+    font-weight: 600;
+}

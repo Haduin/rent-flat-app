@@ -1,7 +1,11 @@
 package pl.chodan.database
 
+import org.jetbrains.exposed.sql.CustomFunction
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.castTo
+import org.jetbrains.exposed.sql.javatime.JavaLocalDateTimeColumnType
 import org.jetbrains.exposed.sql.javatime.date
+import org.jetbrains.exposed.sql.stringLiteral
 import pl.chodan.model.apartment.database.Apartment
 
 /**
@@ -15,6 +19,7 @@ object OperationalExpense : Table("flat.operational_expense") {
     val roomId = (integer("room_id") references Room.id).nullable()
     val insertDate = date("insert_date")
     val costDate = date("cost_date").nullable()
+    val paidDate = date("paid_date").nullable()
     val amount = decimal("amount", 10, 2)
     val category = customEnumeration(
         name = "category",
@@ -22,11 +27,33 @@ object OperationalExpense : Table("flat.operational_expense") {
         fromDb = { value -> ExpenseCategory.valueOf(value as String) },
         toDb = { value -> value.name }
     )
+    val status = customEnumeration(
+        name = "status",
+        sql = "VARCHAR(50)",
+        fromDb = { value -> PaymentStatus.valueOf(value as String) },
+        toDb = { value -> value.name }
+    )
     val description = varchar("description", 255).nullable()
     val invoiceNumber = varchar("invoice_number", 100).nullable()
     val templateId = integer("template_id").references(OperationalExpenseTemplate.id).nullable()
 
     override val primaryKey = PrimaryKey(id)
+
+    init {
+        // Mirrors Flyway V7 so integration tests (SchemaUtils.create) see the same constraint.
+        uniqueIndex(
+            "operational_expense_template_month_unique",
+            templateId,
+            functions = listOf(
+                CustomFunction(
+                    "date_trunc",
+                    JavaLocalDateTimeColumnType(),
+                    stringLiteral("month"),
+                    insertDate.castTo(JavaLocalDateTimeColumnType())
+                )
+            )
+        )
+    }
 }
 
 /**

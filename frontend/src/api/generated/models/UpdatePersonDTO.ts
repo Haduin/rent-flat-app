@@ -21,12 +21,6 @@ import { mapValues } from '../runtime';
 export interface UpdatePersonDTO {
     /**
      * 
-     * @type {number}
-     * @memberof UpdatePersonDTO
-     */
-    id: number;
-    /**
-     * 
      * @type {string}
      * @memberof UpdatePersonDTO
      */
@@ -61,7 +55,6 @@ export interface UpdatePersonDTO {
  * Check if a given object implements the UpdatePersonDTO interface.
  */
 export function instanceOfUpdatePersonDTO(value: object): value is UpdatePersonDTO {
-    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('firstName' in value) || value['firstName'] === undefined) return false;
     if (!('lastName' in value) || value['lastName'] === undefined) return false;
     if (!('documentNumber' in value) || value['documentNumber'] === undefined) return false;
@@ -80,7 +73,6 @@ export function UpdatePersonDTOFromJSONTyped(json: any, ignoreDiscriminator: boo
     }
     return {
         
-        'id': json['id'],
         'firstName': json['firstName'],
         'lastName': json['lastName'],
         'documentNumber': json['documentNumber'],
@@ -95,7 +87,6 @@ export function UpdatePersonDTOToJSON(value?: UpdatePersonDTO | null): any {
     }
     return {
         
-        'id': value['id'],
         'firstName': value['firstName'],
         'lastName': value['lastName'],
         'documentNumber': value['documentNumber'],

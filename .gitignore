@@ -47,3 +47,14 @@ out/
 /prod
 /.playwright-mcp
 /design
+### Local tooling ###
+.openidea/
+loadtest/raport.html
+/.agents/
+/.claude/
+/.impeccable/
+/loadtest/
+/ui-audit/
+/frontend/ui-audit/
+/.maister/tasks/*
+/frontend/src/api/generated/dist/

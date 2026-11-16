@@ -1,26 +1,22 @@
 import {useMemo, useState} from "react";
-import {DataTable} from "primereact/datatable";
-import {Column} from "primereact/column";
-import {InputText} from "primereact/inputtext";
-import {IconField} from "primereact/iconfield";
-import {InputIcon} from "primereact/inputicon";
-import {SelectButton} from "primereact/selectbutton";
 import {ContractStatusFilter, useContractsView} from "../../../src/pages/contracts/contract-view/contracts-view.hook.tsx";
-import AddContractView from "../../../src/pages/contracts/add-contract-view/add-contract-view.tsx";
-import {DeleteContractModal} from "../../../src/pages/contracts/delete-contract-modal/delete-contract-modal.tsx";
-import {UpdateContractModal} from "../../../src/pages/contracts/update-contract-modal/update-contract-modal.tsx";
-import ContractDetailsModal from "../../../src/pages/contracts/contract-details/contract-details-modal.tsx";
-import ContractHistoryDialog from "../../../src/pages/contracts/contract-history/contract-history-dialog.tsx";
+import {AddContractDialog, ContractDetailsDialog, ContractHistoryDialog, EditContractDialog, TerminateContractDialog} from "./ContractDialogs.tsx";
+import {contractStatus} from "./contract-status.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {Card} from "../../components/ui/Card.tsx";
+import {Page} from "../../components/layout/Page.tsx";
+import {Text} from "../../components/ui/Text.tsx";
+import {FilterBar} from "../../components/ui/FilterBar.tsx";
+import {SearchInput} from "../../components/ui/SearchInput.tsx";
+import {SegmentedControl, SegmentOption} from "../../components/ui/SegmentedControl.tsx";
+import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
+import {formatDatePl} from "../../utils/date.ts";
 import {IconPlus} from "../../components/ui/icons.tsx";
 import type {ContractDTO} from "../../../src/api/generated";
 import {isNotEqual} from "../../../src/utils/typeguards";
 
-const STATUS_FILTER_OPTIONS: { label: string; value: ContractStatusFilter }[] = [
+const STATUS_FILTER_OPTIONS: SegmentOption<ContractStatusFilter>[] = [
     {label: "Aktywne", value: "ACTIVE"},
     {label: "Zakończone", value: "TERMINATED"},
     {label: "Wszystkie", value: "ALL"},
@@ -63,55 +59,57 @@ const ContractsPage = () => {
     const [search, setSearch] = useState("");
 
     const contracts = useMemo(() => {
-        const list = showContracts() ?? [];
-        if (!search.trim()) return list;
+        // most urgent first (past end date, ending soon), then by end date
+        const list = [...(showContracts() ?? [])].sort((a, b) =>
+            contractStatus(a).urgency - contractStatus(b).urgency || (a.endDate ?? "").localeCompare(b.endDate ?? "")
+        );
         const needle = search.trim().toLowerCase();
+        if (!needle) return list;
         return list.filter((contract: ContractDTO) =>
-            `${contract.person?.firstName ?? ""} ${contract.person?.lastName ?? ""}`.toLowerCase().includes(needle)
+            [contract.person?.firstName, contract.person?.lastName, contract.room?.apartment, contract.room?.number]
+                .join(" ")
+                .toLowerCase()
+                .includes(needle)
         );
     }, [showContracts, search]);
 
     const tenantBody = (contract: ContractDTO) => (
-        <span style={{fontWeight: 600}}>
+        <Text weight="semibold">
             {contract.person?.firstName} {contract.person?.lastName}
-        </span>
+        </Text>
     );
 
     const roomBody = (contract: ContractDTO) => `${contract.room?.apartment ?? ""} · ${contract.room?.number ?? ""}`;
 
     const periodBody = (contract: ContractDTO) => (
-        <div style={{display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap"}}>
-            <span>
-                {contract.startDate} – {contract.terminationDate ? (
-                    <>
-                        <span style={{textDecoration: "line-through"}}>{contract.endDate}</span>{" "}
-                        <span style={{color: "var(--ku-danger)"}}>{contract.terminationDate}</span>
-                    </>
-                ) : (
-                    contract.endDate
-                )}
-            </span>
-            {contract.alreadyExpired && <Badge tone="danger">Już się skończył</Badge>}
-            {contract.expiringSoon && <Badge tone="warning">Kończy się wkrótce</Badge>}
-        </div>
+        <span>
+            {formatDatePl(contract.startDate)} – {contract.terminationDate ? (
+                <>
+                    <Text tone="muted" strike>{formatDatePl(contract.endDate)}</Text>{" "}
+                    zakończona {formatDatePl(contract.terminationDate)}
+                </>
+            ) : (
+                formatDatePl(contract.endDate)
+            )}
+        </span>
     );
 
     const amountBody = (contract: ContractDTO) => (contract.amount != null ? formatCurrency(contract.amount) : "—");
     const depositBody = (contract: ContractDTO) => (contract.deposit != null ? formatCurrency(contract.deposit) : "—");
 
-    const statusBody = (contract: ContractDTO) => (
-        <Badge tone={"ACTIVE" === contract.status ? "success" : "ended"}>
-            {"ACTIVE" === contract.status ? "Aktywna" : "Zakończona"}
-        </Badge>
-    );
+    const statusBody = (contract: ContractDTO) => {
+        const {label, tone} = contractStatus(contract);
+        return <Badge tone={tone}>{label}</Badge>;
+    };
 
-    const actionsBody = (contract: ContractDTO) => (
-        <div style={{display: "flex", gap: 6, justifyContent: "flex-end"}}>
+    const rowActions = (contract: ContractDTO) => (
+        <>
             <Button
                 variant="secondary"
                 size="small"
                 icon="pi pi-eye"
                 tooltip="Szczegóły"
+                aria-label="Szczegóły"
                 tooltipOptions={{position: "top"}}
                 onClick={() => handleOpenDetailsDialog(contract)}
             />
@@ -120,6 +118,7 @@ const ContractsPage = () => {
                 size="small"
                 icon="pi pi-pencil"
                 tooltip="Edytuj"
+                aria-label="Edytuj"
                 tooltipOptions={{position: "top"}}
                 disabled={isNotEqual("ACTIVE", contract.status)}
                 onClick={() => handleOpenEditDialog(contract)}
@@ -129,6 +128,7 @@ const ContractsPage = () => {
                 size="small"
                 icon="pi pi-history"
                 tooltip="Historia"
+                aria-label="Historia"
                 tooltipOptions={{position: "top"}}
                 onClick={() => handleOpenHistoryDialog(contract)}
             />
@@ -137,107 +137,81 @@ const ContractsPage = () => {
                 size="small"
                 icon="pi pi-times"
                 tooltip="Zakończ kontrakt"
+                aria-label="Zakończ kontrakt"
                 tooltipOptions={{position: "top"}}
                 disabled={isNotEqual("ACTIVE", contract.status)}
                 onClick={() => handleOpenDeleteDialog(contract)}
             />
-        </div>
+        </>
     );
 
+    const columns: DataTableColumn<ContractDTO>[] = [
+        {header: "Najemca", body: tenantBody, sortable: true, field: "person.lastName"},
+        {header: "Mieszkanie / pokój", body: roomBody},
+        {header: "Okres", body: periodBody, sortable: true, field: "endDate"},
+        {header: "Czynsz", body: amountBody, sortable: true, field: "amount"},
+        {header: "Kaucja", body: depositBody, optional: true},
+        {header: "Status", body: statusBody, sortable: true, field: "status"},
+    ];
+
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader
-                title="Kontrakty"
-                actions={
-                    <Button variant="primary" icon={<IconPlus size={15}/>} onClick={openAddDialog}>
-                        Nowa umowa
-                    </Button>
-                }
+        <Page
+            title="Kontrakty"
+            actions={
+                <Button variant="primary" icon={<IconPlus size={15}/>} onClick={openAddDialog}>
+                    Nowa umowa
+                </Button>
+            }
+        >
+            <FilterBar>
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Szukaj najemcy lub pokoju…"
+                    ariaLabel="Szukaj najemcy lub pokoju"
+                />
+                <SegmentedControl value={contractStatusFilter} onChange={setContractStatusFilter} options={STATUS_FILTER_OPTIONS}/>
+            </FilterBar>
+
+            <DataTableCard
+                value={contracts}
+                columns={columns}
+                rowActions={rowActions}
+                loading={loading}
+                emptyMessage={search.trim() ? "Żadna umowa nie pasuje do wyszukiwania" : "Brak umów w tym widoku"}
             />
 
-            <Card padding={20} style={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12}}>
-                <IconField iconPosition="left" className="ku-search-input">
-                    <InputIcon className="pi pi-search"/>
-                    <InputText
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Szukaj najemcy..."
-                        style={{width: "100%"}}
-                    />
-                </IconField>
-                <SelectButton
-                    value={contractStatusFilter}
-                    onChange={(event) => {
-                        if (event.value !== null) setContractStatusFilter(event.value);
-                    }}
-                    options={STATUS_FILTER_OPTIONS}
-                    optionLabel="label"
-                    optionValue="value"
-                    allowEmpty={false}
-                />
-            </Card>
-
-            <Card padding={0} style={{overflow: "hidden"}}>
-                <DataTable
-                    value={contracts}
-                    loading={loading}
-                    paginator
-                    rows={10}
-                    rowsPerPageOptions={[10, 20, 50]}
-                    stripedRows
-                    responsiveLayout="stack"
-                    breakpoint="860px"
-                    emptyMessage="Brak kontraktów do wyświetlenia"
-                >
-                    <Column header="Najemca" body={tenantBody} sortable field="person.lastName"/>
-                    <Column header="Mieszkanie / pokój" body={roomBody}/>
-                    <Column header="Okres" body={periodBody}/>
-                    <Column header="Czynsz" body={amountBody} sortable field="amount"/>
-                    <Column header="Kaucja" body={depositBody}/>
-                    <Column header="Status" body={statusBody} sortable field="status"/>
-                    <Column header="" body={actionsBody} style={{width: 140}}/>
-                </DataTable>
-            </Card>
-
-            {isDeleteDialogVisible && (
-                <DeleteContractModal
-                    selectedContract={selectedContract}
-                    isVisible={isDeleteDialogVisible}
-                    onHide={handleCloseDeleteDialog}
-                    onConfirm={deleteContractMutation}
-                />
-            )}
             {isAddContractDialogVisible && (
-                <AddContractView
-                    isVisible={isAddContractDialogVisible}
-                    onSave={addContractMutation.mutate}
+                <AddContractDialog
                     unassignedPersons={unassignedPersons}
+                    saving={addContractMutation.isPending}
+                    onSave={addContractMutation.mutate}
                     onHide={closeAddDialog}
                 />
             )}
-            {isDetailsDialogVisible && (
-                <ContractDetailsModal
-                    selectedContract={selectedContract}
-                    visible={isDetailsDialogVisible}
-                    onHide={handleCloseDetailsDialog}
-                />
-            )}
-            {isEditContractVisible && (
-                <UpdateContractModal
-                    selectedContract={selectedContract}
-                    isVisible={isEditContractVisible}
+            {selectedContract && isEditContractVisible && (
+                <EditContractDialog
+                    contract={selectedContract}
+                    saving={editContractMutation.isPending}
+                    onSave={editContractMutation.mutate}
                     onHide={handleCloseEditDialog}
-                    onSave={editContractMutation}
                 />
             )}
-            {isHistoryDialogVisible && (
-                <ContractHistoryDialog
-                    selectedContract={selectedContract}
-                    visible={isHistoryDialogVisible}
-                    onHide={handleCloseHistoryDialog}
+            {selectedContract && isDeleteDialogVisible && (
+                <TerminateContractDialog
+                    contract={selectedContract}
+                    saving={deleteContractMutation.isPending}
+                    onConfirm={deleteContractMutation.mutate}
+                    onHide={handleCloseDeleteDialog}
                 />
             )}
-        </div>
+            {selectedContract && isDetailsDialogVisible && (
+                <ContractDetailsDialog contract={selectedContract} onHide={handleCloseDetailsDialog}/>
+            )}
+            {selectedContract && isHistoryDialogVisible && (
+                <ContractHistoryDialog contract={selectedContract} onHide={handleCloseHistoryDialog}/>
+            )}
+        </Page>
     );
 };
 

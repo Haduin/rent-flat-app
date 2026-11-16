@@ -23,5 +23,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "new_ui"]
+  "include": ["src", "new_ui"],
+  "exclude": ["src/api/generated"],
+  "references": [{ "path": "./src/api/generated" }]
 }

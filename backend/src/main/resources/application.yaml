@@ -9,6 +9,7 @@ ktor:
     user: "$DATABASE_USER:myuser"
     password: "$DATABASE_PASSWORD:mypassword"
     driver: "org.postgresql.Driver"
+    maxPoolSize: "$DATABASE_POOL_SIZE:10"
   cors:
     allowedHosts: "$HOSTS:localhost:8080, localhost:5173, localhost:8081"
 

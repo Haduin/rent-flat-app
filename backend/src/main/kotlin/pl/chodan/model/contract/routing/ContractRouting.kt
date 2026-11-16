@@ -12,16 +12,18 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import pl.chodan.error.ErrorCode
+import pl.chodan.error.errors
+import pl.chodan.error.intParam
+import pl.chodan.error.yearMonthQuery
 import pl.chodan.model.contract.dto.ContractDTO
 import pl.chodan.model.contract.dto.ContractHistoryDTO
 import pl.chodan.model.contract.dto.DeleteContractDTO
 import pl.chodan.model.contract.dto.NewContractDTO
 import pl.chodan.model.contract.dto.UpdateContractDetails
-import pl.chodan.model.contract.service.ContractDeleteResult
 import pl.chodan.model.contract.service.ContractService
 import pl.chodan.model.payments.service.PaymentService
-import pl.chodan.ultis.DateValidator
-import pl.chodan.ultis.ValidationResult
+import pl.chodan.routing.IdResponse
 
 fun Application.configureContractRouting() {
     val contractService by inject<ContractService>()
@@ -46,6 +48,7 @@ fun Application.configureContractRouting() {
                 get("/{id}/history", {
                     description = "Get the change history (snapshots) of a contract, oldest first"
                     operationId = "getContractHistory"
+                    errors(ErrorCode.VALIDATION_FAILED, ErrorCode.CONTRACT_NOT_FOUND)
                     request {
                         pathParameter<Int>("id") { description = "Contract id" }
                     }
@@ -54,133 +57,72 @@ fun Application.configureContractRouting() {
                             description = "Returns the contract's change history"
                             body<List<ContractHistoryDTO>>()
                         }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid contract id" }
                     }
                 }) {
-                    val contractId = call.parameters["id"]?.toIntOrNull()
-                    if (contractId == null) {
-                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Nieprawidłowe id kontraktu"))
-                        return@get
-                    }
-                    call.respond(contractService.getContractHistory(contractId))
+                    call.respond(contractService.getContractHistory(call.intParam("id")))
                 }
                 post("/generateMonthlyPayments/{month}", {
                     description = "Generate monthly payments for active contracts"
                     operationId = "generateMonthlyPayments"
+                    errors(ErrorCode.VALIDATION_FAILED)
                     request {
                         pathParameter<String>("month") { description = "Month in format YYYY-MM" }
                     }
                     response {
-                        code(HttpStatusCode.Created) { description = "Payments generated" }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid month format" }
-                        code(HttpStatusCode.InternalServerError) { description = "Generation failed" }
+                        code(HttpStatusCode.NoContent) { description = "Payments generated" }
                     }
                 }) {
-                    val monthParam = call.parameters["month"]
-
-                    when (val validationResult = DateValidator.instance.validateMonthParameter(monthParam)) {
-                        is ValidationResult.Error -> {
-                            call.respond(
-                                HttpStatusCode.BadRequest, mapOf("error" to validationResult.message)
-                            )
-                            return@post
-                        }
-
-                        is ValidationResult.Success -> {
-                            try {
-                                call.respond(
-                                    HttpStatusCode.Created,
-                                    paymentService.generateNewPaymentsForActiveContracts(validationResult.value)
-                                )
-                            } catch (e: Exception) {
-                                call.respond(
-                                    HttpStatusCode.InternalServerError,
-                                    mapOf("error" to "Failed to generate payments: ${e.message}")
-                                )
-                            }
-                        }
-                    }
-
+                    paymentService.generateNewPaymentsForActiveContracts(call.yearMonthQuery("month").value)
+                    call.respond(HttpStatusCode.NoContent)
                 }
                 post({
                     description = "Create a new contract"
                     operationId = "createContract"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
+                        ErrorCode.PERSON_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND, ErrorCode.ROOM_OCCUPIED
+                    )
                     request { body<NewContractDTO> { description = "New contract details" } }
                     response {
-                        code(HttpStatusCode.Created) { description = "Contract created" }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid contract details" }
+                        code(HttpStatusCode.Created) {
+                            description = "Contract created"
+                            body<IdResponse>()
+                        }
                     }
                 }) {
-                    val newContract = call.receive<NewContractDTO>()
-                    try {
-                        contractService.createContract(newContract)
-
-                        call.respond(HttpStatusCode.Created)
-                    } catch (ex: Exception) {
-                        println(ex.message)
-                    }
+                    call.respond(HttpStatusCode.Created, IdResponse(contractService.createContract(call.receive<NewContractDTO>())))
                 }
                 put({
                     description = "Update contract details"
                     operationId = "updateContract"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
+                        ErrorCode.CONTRACT_NOT_FOUND, ErrorCode.ROOM_NOT_FOUND, ErrorCode.CONTRACT_TERMINATED,
+                        ErrorCode.ROOM_OCCUPIED
+                    )
                     request { body<UpdateContractDetails> { description = "Contract update details" } }
                     response {
-                        code(HttpStatusCode.OK) { description = "Contract updated" }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid update details" }
+                        code(HttpStatusCode.NoContent) { description = "Contract updated" }
                     }
                 }) {
-                    val contract = call.receive<UpdateContractDetails>()
-                    try {
-                        contractService.updateContract(contract)
-                        call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zaktualizowany")
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            mapOf("error" to "Failed to edit contract: ${e.message}")
-                        )
-                    }
-
+                    contractService.updateContract(call.receive<UpdateContractDetails>())
+                    call.respond(HttpStatusCode.NoContent)
                 }
                 delete({
                     description = "Delete (finish) a contract"
                     operationId = "deleteContract"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
+                        ErrorCode.CONTRACT_NOT_FOUND, ErrorCode.CONTRACT_TERMINATED
+                    )
                     request { body<DeleteContractDTO> { description = "Contract delete details" } }
                     response {
-                        code(HttpStatusCode.OK) { description = "Contract finished" }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid delete details" }
-                        code(HttpStatusCode.InternalServerError) { description = "Deletion failed" }
-                        code(HttpStatusCode.NotFound) { description = "Contract not found" }
+                        code(HttpStatusCode.NoContent) { description = "Contract finished" }
                     }
                 }) {
-                    try {
-                        val details = call.receive<DeleteContractDTO>()
-
-                        when (val result = contractService.deleteContract(details)) {
-                            is ContractDeleteResult.Success -> {
-
-                                call.respond(HttpStatusCode.OK, "Kontrakt został pomyślnie zakończony")
-                            }
-
-                            is ContractDeleteResult.PaymentUpdateError -> {
-                                call.respond(HttpStatusCode.InternalServerError, result.message)
-                            }
-
-                            is ContractDeleteResult.ContractUpdateError -> {
-                                call.respond(HttpStatusCode.InternalServerError, result.message)
-                            }
-
-                            ContractDeleteResult.NotFound -> {
-                                call.respond(HttpStatusCode.NotFound, "Nie znaleziono kontraktu")
-                            }
-                        }
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            mapOf("error" to "Failed to delete contract: ${e.message}")
-                        )
-                    }
+                    contractService.deleteContract(call.receive<DeleteContractDTO>())
+                    call.respond(HttpStatusCode.NoContent)
                 }
-
             }
         }
     }

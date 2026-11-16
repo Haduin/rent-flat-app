@@ -10,6 +10,7 @@ import usePersonTable from "./person-table.hook.tsx";
 import AddNewPersonDialog from "../add-new-person-dialog/add-new-person-dialog.tsx";
 import EditPersonDialog from "../edit-person-dialog/edit-person-dialog.tsx";
 
+/** @deprecated Legacy UI view, no longer routed — replaced by new_ui/features/persons/PersonsPage.tsx. Kept only until the legacy UI is deleted; do not import. */
 const PersonTable: React.FC = () => {
     const [globalFilterValue, setGlobalFilterValue] = useState<string>('');
 

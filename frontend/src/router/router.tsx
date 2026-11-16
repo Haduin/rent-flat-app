@@ -1,19 +1,9 @@
 import {lazy, Suspense} from "react";
-import {createBrowserRouter} from "react-router";
+import {createBrowserRouter, redirect} from "react-router";
 import {Layout} from "./Layout";
 import {getOidc} from "../oidc.tsx";
-import ApartmentPage from "../pages/apartment/apartment-page.tsx";
-import {UtilityPage} from "../pages/utility/utility-page.tsx";
 
-const ExpensesTemplateView = lazy(() => import("../pages/expenses-template/expenses-template-view/expenses-template-view.tsx"));
 const PublicPage = lazy(() => import("../pages/PublicPage"));
-const NavigationComponent = lazy(() => import("../pages/NavigationComponent.tsx"));
-const HomePage = lazy(() => import ("../pages/home/home-page.tsx"))
-const ApartmentsPage = lazy(() => import ("../pages/apartment/apartments-page.tsx"))
-const PersonTable = lazy(() => import ("../pages/person/person-table/person-table.tsx"))
-const PaymentsView = lazy(() => import ("../pages/payments/payments-view.tsx"))
-const ContractsView = lazy(() => import ("../pages/contracts/contract-view/contracts-view.tsx"))
-const StatisticsPage = lazy(() => import ("../pages/statistics/statistics-page.tsx"))
 
 const NewUiLayout = lazy(() => import("../../new_ui/pages/NewUiLayout.tsx"))
 const NewUiDashboardPage = lazy(() => import("../../new_ui/features/dashboard/DashboardPage.tsx"))
@@ -25,58 +15,17 @@ const NewUiExpensePaymentsPage = lazy(() => import("../../new_ui/features/paymen
 const NewUiExpenseTemplatesPage = lazy(() => import("../../new_ui/features/expense-templates/ExpenseTemplatesPage.tsx"))
 
 
+const NEW_UI_HOME = "/protected/v2/dashboard";
+
 export const router = createBrowserRouter([
     {
         path: "/",
         Component: Layout,
         children: [
             {
-                path: "/protected",
-                loader: async ({request}) => {
-                    await enforceLogin(request);
-
-                    return null;
-                },
-                element: <NavigationComponent/>,
-                children: [
-                    {
-                        index: true,
-                        path: "/protected/home",
-                        element: <HomePage/>,
-                    },
-                    {
-                        path: "/protected/mieszkanie",
-                        element: <ApartmentsPage/>,
-                    },
-                    {
-                        path: "/protected/mieszkanie/:id",
-                        element: <ApartmentPage/>
-                    },
-                    {
-                        path: "/protected/osoby",
-                        element: <PersonTable/>,
-                    },
-                    {
-                        path: "/protected/platnosci",
-                        element: <PaymentsView/>,
-                    },
-                    {
-                        path: "/protected/kontract",
-                        element: <ContractsView/>,
-                    },
-                    {
-                        path: "/protected/koszta",
-                        element: <UtilityPage/>,
-                    },
-                    {
-                        path: "/protected/wydatki",
-                        element: <ExpensesTemplateView/>,
-                    },
-                    {
-                        path: "/protected/statystyki",
-                        element: <StatisticsPage/>,
-                    },
-                ],
+                // The legacy UI (src/pages, deprecated) is no longer routed; its old URLs land on the new dashboard.
+                path: "/protected/*",
+                loader: () => redirect(NEW_UI_HOME),
             },
             {
                 path: "/protected/v2",

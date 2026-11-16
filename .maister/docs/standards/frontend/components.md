@@ -30,3 +30,57 @@ Document usage, props, and examples to help team adoption.
 ### Functional Components with Formik + Yup for Forms
 Modal/dialog form components are functional components (no classes found) built with `useFormik` and a co-located Yup validation schema file (`*.validation-schema.ts`), composed from shared primitives (Modal, SelectField, DateSelector, TextField, ModalFooter).
 *Evidence: add-contract-view.tsx, update-contract-modal.tsx, add-edit-expenses-template-dialog.tsx, income-confirm-payment-dialog.tsx all follow this (confidence 70)*
+
+### List Tables via `DataTableCard`
+Every list/table view in `new_ui` renders through the shared `DataTableCard` (`frontend/new_ui/components/ui/DataTableCard.tsx`). Pages never import `primereact/datatable` or `primereact/column` directly — the component owns the Card wrapper, paginator (10/20/50), striping, stacked responsive layout and the conventions below, so a table fix lands once for every page.
+```tsx
+const columns: DataTableColumn<ContractDTO>[] = [
+    {header: "Najemca", body: tenantBody, sortable: true, field: "person.lastName"},
+    {header: "Okres", body: periodBody},
+    {header: "Nr faktury", body: (row) => row.invoiceNumber ?? "-", optional: true},
+];
+
+const rowActions = (contract: ContractDTO) => (
+    <>
+        <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => edit(contract)}/>
+        <Button variant="danger-outline" size="small" icon="pi pi-trash" onClick={() => remove(contract)}/>
+    </>
+);
+
+<DataTableCard value={contracts} columns={columns} rowActions={rowActions} loading={loading} emptyMessage="Brak danych"/>
+```
+
+### Typed Column Definitions
+Columns are a typed `DataTableColumn<T>[]` array (`header`, `field?`, `body?`, `sortable?`, `optional?`), not JSX `<Column>` children. `field` is both the plain-value accessor (when no `body`) and the sort key; dot paths like `"person.lastName"` work. Every `sortable: true` column must set `field` — sortable without a field silently does nothing.
+
+### Row Actions Through `rowActions`
+Row buttons are passed via the `rowActions` prop as a fragment of `Button`s — no wrapper div, no flex styles, no per-page column widths. `DataTableCard` renders them as the last, right-aligned, content-width column (`ku-col-actions`), and as a separate right-aligned row in the stacked mobile layout.
+
+### Optional (Low-Priority) Columns
+Mark secondary columns (descriptions, invoice numbers, audit dates) with `optional: true` rather than letting a wide table scroll horizontally. They are hidden on mid-size table layouts (1025–1439px) and still shown in the stacked card view and on screens ≥1440px; the full record must remain reachable (e.g. a details dialog).
+
+### Card Content Layout via `contentStyle`
+To lay out a `Card`'s children (flex, gap, wrapping) use the `contentStyle` prop, not `style`. `style` targets the outer `.p-card` element, whose only child is the PrimeReact body wrapper, so `display: flex`/`gap` on it never reaches the children.
+
+### `new_ui` Features Compose Wrappers Only
+Code in `new_ui/features/**` builds UI only from wrappers in `new_ui/components/` — never from `primereact/*` directly. ESLint `no-restricted-imports` enforces this for `new_ui/features/**` (`frontend/eslint.config.js`). If a wrapper is missing, add it to `new_ui/components/` (it owns the theme and PrimeReact styling) instead of importing PrimeReact into the feature.
+
+### Wrapper Catalog
+Pick the existing wrapper before writing markup or styles:
+- **Layout** (`components/layout/`): `Page` (`title`, `subtitle`, `actions` — the page header; there is no separate PageHeader), `Section` (`title`, `level` 2|3, `size`, `subtitle`, `actions`), `Stack` (`direction`, `gap` as a space token `"0-5"`…`"8"`, `align`, `justify`, `wrap`), `Grid` (`min` tile width, `gap`; responsive auto-fill).
+- **Typography** (`components/ui/`): `Heading` (`level` 2|3|4, `size` base|md|xl), `Text` (`as`, `tone` default|secondary|muted|success|danger, `size`, `weight`, `strike`).
+- **Surfaces**: `Card` (`padding` none|sm|md|lg, `highlighted`, `dashed`), `DetailList` (`variant` default|compact|footer), `DataTableCard`, `Badge`, `StatTile`.
+- **Controls**: `Button`, `FilterBar` (card holding list filters), `SearchInput`, `SegmentedControl<T>`, `ToggleCheckbox`, `Timeline<T>`, form fields in `components/form/` (`FormDialog`, `TextField`, `SegmentedField`, …).
+- **Destructive confirmation**: `confirmDanger({title, message, confirmLabel, onConfirm})` — default focus on "Anuluj", danger-styled accept.
+```tsx
+<Page title="Osoby" actions={<Button icon={<IconPlus size={15}/>}>Dodaj najemcę</Button>}>
+    <FilterBar>
+        <SearchInput value={search} onChange={setSearch} placeholder="Szukaj…" ariaLabel="Szukaj osoby"/>
+        <ToggleCheckbox checked={onlyActive} onChange={setOnlyActive} label="Tylko z aktywną umową"/>
+    </FilterBar>
+    <DataTableCard value={persons} columns={columns}/>
+</Page>
+```
+
+### No Inline Styles in Features
+Features don't set `style={{…}}` for layout, spacing, colors or typography — use `Stack`/`Grid`/`Section`/`Text` props or a `.ku-*` class owned by a wrapper. Inline style is allowed only for a unique, data-driven value (e.g. a status color coming from data).

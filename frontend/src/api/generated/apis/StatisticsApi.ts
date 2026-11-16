@@ -16,10 +16,13 @@
 import * as runtime from '../runtime';
 import type {
   ApartmentsStatisticsResponse,
+  ApiError,
 } from '../models/index';
 import {
     ApartmentsStatisticsResponseFromJSON,
     ApartmentsStatisticsResponseToJSON,
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
 } from '../models/index';
 
 /**

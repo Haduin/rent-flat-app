@@ -17,6 +17,10 @@ object Payment : Table("flat.payment") {
         toDb = { value -> value.name }
     )
     override val primaryKey = PrimaryKey(id)
+
+    init {
+        uniqueIndex("payment_contract_scope_unique", contractId, scopeDate)
+    }
 }
 
 enum class PaymentStatus {

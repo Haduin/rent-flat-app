@@ -15,7 +15,9 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApiError,
   PaymentConfirmationDTO,
+  PaymentDTO,
   PaymentEdit,
   PaymentHistoryWithPersonDTO,
   PaymentSortableField,
@@ -24,8 +26,12 @@ import type {
   SortOrder,
 } from '../models/index';
 import {
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
     PaymentConfirmationDTOFromJSON,
     PaymentConfirmationDTOToJSON,
+    PaymentDTOFromJSON,
+    PaymentDTOToJSON,
     PaymentEditFromJSON,
     PaymentEditToJSON,
     PaymentHistoryWithPersonDTOFromJSON,
@@ -53,7 +59,7 @@ export interface GetPaymentSplitsRequest {
 }
 
 export interface GetPaymentsForMonthRequest {
-    mouth: string;
+    month: string;
     sortField?: PaymentSortableField;
     sortOrder?: SortOrder;
 }
@@ -126,7 +132,7 @@ export class PaymentsApi extends runtime.BaseAPI {
     /**
      * Get all payments
      */
-    async getAllPaymentsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async getAllPaymentsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PaymentDTO>>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -138,14 +144,15 @@ export class PaymentsApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PaymentDTOFromJSON));
     }
 
     /**
      * Get all payments
      */
-    async getAllPayments(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.getAllPaymentsRaw(initOverrides);
+    async getAllPayments(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PaymentDTO>> {
+        const response = await this.getAllPaymentsRaw(initOverrides);
+        return await response.value();
     }
 
     /**
@@ -185,10 +192,10 @@ export class PaymentsApi extends runtime.BaseAPI {
      * Get payments for given month with sorting
      */
     async getPaymentsForMonthRaw(requestParameters: GetPaymentsForMonthRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PaymentHistoryWithPersonDTO>>> {
-        if (requestParameters['mouth'] == null) {
+        if (requestParameters['month'] == null) {
             throw new runtime.RequiredError(
-                'mouth',
-                'Required parameter "mouth" was null or undefined when calling getPaymentsForMonth().'
+                'month',
+                'Required parameter "month" was null or undefined when calling getPaymentsForMonth().'
             );
         }
 
@@ -205,7 +212,7 @@ export class PaymentsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/payments/{mouth}`.replace(`{${"mouth"}}`, encodeURIComponent(String(requestParameters['mouth']))),
+            path: `/payments/{month}`.replace(`{${"month"}}`, encodeURIComponent(String(requestParameters['month']))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,

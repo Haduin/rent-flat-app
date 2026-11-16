@@ -17,6 +17,7 @@ import pl.chodan.testutil.insertApartment
 import pl.chodan.testutil.insertRoom
 import pl.chodan.testutil.startTestKoin
 import pl.chodan.testutil.stopTestKoin
+import pl.chodan.testutil.assertApiError
 
 class PersonServiceIntegrationTest {
 
@@ -91,14 +92,14 @@ class PersonServiceIntegrationTest {
         val service = PersonService()
         val id = service.createPerson(CreatedPersonDTO("Jan", "Kowalski", "ABC123", "PL"))
 
-        val updatedRows = service.updatePerson(
+        service.updatePerson(
+            id,
             UpdatePersonDTO(
-                id = id, firstName = "Janusz", lastName = "Nowak",
+                firstName = "Janusz", lastName = "Nowak",
                 documentNumber = "NEW999", nationality = "DE", status = "RESIDENT"
             )
         )
 
-        assertEquals(1, updatedRows)
         val saved = service.getPersonById(id)
         assertEquals("Janusz", saved?.firstName)
         assertEquals("Nowak", saved?.lastName)
@@ -114,8 +115,9 @@ class PersonServiceIntegrationTest {
         val id = service.createPerson(CreatedPersonDTO("Jan", "Kowalski", "ABC123", "PL"))
 
         service.updatePerson(
+            id,
             UpdatePersonDTO(
-                id = id, firstName = "Jan", lastName = "Kowalski",
+                firstName = "Jan", lastName = "Kowalski",
                 documentNumber = "ABC123", nationality = "PL", status = "RESIDENT"
             )
         )
@@ -124,15 +126,13 @@ class PersonServiceIntegrationTest {
     }
 
     @Test
-    fun `updatePerson affects zero rows for an unknown id`() = runBlocking {
-        val updatedRows = PersonService().updatePerson(
-            UpdatePersonDTO(
-                id = 999, firstName = "Ghost", lastName = "Person",
-                documentNumber = "NONE", nationality = "PL", status = "RESIDENT"
-            )
+    fun `updatePerson rejects an unknown id with PERSON_NOT_FOUND`() {
+        val ghost = UpdatePersonDTO(
+            firstName = "Ghost", lastName = "Person",
+            documentNumber = "NONE", nationality = "PL", status = "RESIDENT"
         )
 
-        assertEquals(0, updatedRows)
+        assertApiError("PERSON_NOT_FOUND") { PersonService().updatePerson(999, ghost) }
     }
 
     @Test
@@ -140,17 +140,28 @@ class PersonServiceIntegrationTest {
         val service = PersonService()
         val id = service.createPerson(CreatedPersonDTO("Jan", "Kowalski", "ABC123", "PL"))
 
-        val deletedRows = service.deletePerson(id)
+        service.deletePerson(id)
 
-        assertEquals(1, deletedRows)
         assertNull(service.getPersonById(id))
         assertTrue(service.getAllPersons().isEmpty())
     }
 
     @Test
-    fun `deletePerson affects zero rows for an unknown id`() = runBlocking {
-        val deletedRows = PersonService().deletePerson(999)
+    fun `deletePerson rejects an unknown id with PERSON_NOT_FOUND`() {
+        assertApiError("PERSON_NOT_FOUND") { PersonService().deletePerson(999) }
+    }
 
-        assertEquals(0, deletedRows)
+    @Test
+    fun `deletePerson rejects a person with contracts with PERSON_IN_USE`() = runBlocking {
+        val personId = PersonService().createPerson(CreatedPersonDTO("Jan", "Kowalski", "ABC123", "PL"))
+        ContractService().createContract(
+            NewContractDTO(
+                personId = personId, roomId = database.insertRoom(database.insertApartment()),
+                startDate = "2026-01-01", endDate = "2026-12-31",
+                amount = 2000.0, deposit = 500.0, payedDate = 10
+            )
+        )
+
+        assertApiError("PERSON_IN_USE") { PersonService().deletePerson(personId) }
     }
 }

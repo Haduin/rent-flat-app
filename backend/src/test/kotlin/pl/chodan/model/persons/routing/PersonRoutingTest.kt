@@ -8,14 +8,21 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.koin.dsl.module
 import pl.chodan.model.persons.dto.CreatedPersonDTO
 import pl.chodan.model.persons.dto.PersonDTO
 import pl.chodan.model.persons.dto.UpdatePersonDTO
+import pl.chodan.model.persons.service.PersonError
 import pl.chodan.model.persons.service.PersonService
+import pl.chodan.error.ApiError
+import pl.chodan.error.ErrorCode
 import pl.chodan.testutil.installTestAuthentication
 import pl.chodan.testutil.installTestContentNegotiation
+import pl.chodan.testutil.installTestErrorHandling
 import pl.chodan.testutil.startTestKoin
 import pl.chodan.testutil.stopTestKoin
 import pl.chodan.testutil.testAuthHeader
@@ -31,6 +38,7 @@ class PersonRoutingTest {
         startTestKoin(module { single { personService } })
         application {
             installTestContentNegotiation()
+            installTestErrorHandling()
             installTestAuthentication()
             configurePersonRouting()
         }
@@ -92,14 +100,14 @@ class PersonRoutingTest {
         }
 
         assertEquals(HttpStatusCode.Created, response.status)
+        assertEquals(1, Json.parseToJsonElement(response.bodyAsText()).jsonObject["id"]?.jsonPrimitive?.int)
         coVerify(exactly = 1) { personService.createPerson(dto) }
     }
 
     @Test
-    fun `POST persons returns bad request when the service reports invalid state`() = testApplication {
+    fun `POST persons with a blank name returns validation details`() = testApplication {
         setup()
-        val dto = CreatedPersonDTO(firstName = "Jan", lastName = "Kowalski", documentNumber = "ABC123", nationality = "PL")
-        coEvery { personService.createPerson(dto) } throws IllegalStateException("boom")
+        val dto = CreatedPersonDTO(firstName = " ", lastName = "Kowalski", documentNumber = "ABC123", nationality = "PL")
 
         val response = client.post("/persons") {
             testAuthHeader()
@@ -108,6 +116,8 @@ class PersonRoutingTest {
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertEquals(listOf("firstName: imię jest wymagane"), Json.decodeFromString<ApiError>(response.bodyAsText()).details)
+        coVerify(exactly = 0) { personService.createPerson(any()) }
     }
 
     @Test
@@ -121,74 +131,57 @@ class PersonRoutingTest {
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
+        assertEquals(ErrorCode.INVALID_PAYLOAD, Json.decodeFromString<ApiError>(response.bodyAsText()).code)
         coVerify(exactly = 0) { personService.createPerson(any()) }
     }
 
     @Test
     fun `DELETE persons removes a person`() = testApplication {
         setup()
-        coEvery { personService.deletePerson(5) } returns 1
+        coEvery { personService.deletePerson(5) } returns Unit
 
         val response = client.delete("/persons/5") { testAuthHeader() }
 
-        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(HttpStatusCode.NoContent, response.status)
         coVerify(exactly = 1) { personService.deletePerson(5) }
     }
 
-    // No `else` branch is provided for a non-numeric id, so the handler never calls call.respond
-    // and Ktor's routing falls back to its default "no response produced" handling (404).
     @Test
-    fun `DELETE persons with a non numeric id sends no explicit response`() = testApplication {
+    fun `DELETE persons with a non numeric id returns bad request`() = testApplication {
         setup()
 
         val response = client.delete("/persons/abc") { testAuthHeader() }
 
-        assertEquals(HttpStatusCode.NotFound, response.status)
+        assertEquals(HttpStatusCode.BadRequest, response.status)
         coVerify(exactly = 0) { personService.deletePerson(any()) }
     }
 
+
     @Test
-    fun `PUT persons updates a person`() = testApplication {
+    fun `PUT persons takes the person id from the path`() = testApplication {
         setup()
         val dto = UpdatePersonDTO(
-            id = 5, firstName = "Jan", lastName = "Kowalski",
+            firstName = "Jan", lastName = "Kowalski",
             documentNumber = "ABC123", nationality = "PL", status = "RESIDENT"
         )
-        coEvery { personService.updatePerson(dto) } returns 1
+        coEvery { personService.updatePerson(1, dto) } returns Unit
 
-        val response = client.put("/persons/5") {
+        val response = client.put("/persons/1") {
             testAuthHeader()
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(UpdatePersonDTO.serializer(), dto))
         }
 
         assertEquals(HttpStatusCode.NoContent, response.status)
-        coVerify(exactly = 1) { personService.updatePerson(dto) }
+        coVerify(exactly = 1) { personService.updatePerson(1, dto) }
     }
 
-    @Test
-    fun `PUT persons returns bad request when the service reports invalid state`() = testApplication {
-        setup()
-        val dto = UpdatePersonDTO(
-            id = 5, firstName = "Jan", lastName = "Kowalski",
-            documentNumber = "ABC123", nationality = "PL", status = "RESIDENT"
-        )
-        coEvery { personService.updatePerson(dto) } throws IllegalStateException("boom")
-
-        val response = client.put("/persons/5") {
-            testAuthHeader()
-            contentType(ContentType.Application.Json)
-            setBody(Json.encodeToString(UpdatePersonDTO.serializer(), dto))
-        }
-
-        assertEquals(HttpStatusCode.BadRequest, response.status)
-    }
 
     @Test
     fun `PUT persons with a non numeric id returns bad request`() = testApplication {
         setup()
         val dto = UpdatePersonDTO(
-            id = 5, firstName = "Jan", lastName = "Kowalski",
+            firstName = "Jan", lastName = "Kowalski",
             documentNumber = "ABC123", nationality = "PL", status = "RESIDENT"
         )
 
@@ -199,6 +192,34 @@ class PersonRoutingTest {
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        coVerify(exactly = 0) { personService.updatePerson(any()) }
+        coVerify(exactly = 0) { personService.updatePerson(any(), any()) }
+    }
+
+    @Test
+    fun `domain errors of each endpoint map to their status and code`() = testApplication {
+        setup()
+        coEvery { personService.updatePerson(99, any()) } throws PersonError.NotFound(99)
+        coEvery { personService.deletePerson(99) } throws PersonError.NotFound(99)
+        coEvery { personService.deletePerson(8) } throws PersonError.InUse()
+        val body = Json.encodeToString(
+            UpdatePersonDTO.serializer(),
+            UpdatePersonDTO(firstName = "Jan", lastName = "Kowalski", documentNumber = "ABC123", nationality = "PL", status = "RESIDENT")
+        )
+        val cases = listOf(
+            Triple(HttpMethod.Put, "/persons/99", ErrorCode.PERSON_NOT_FOUND),
+            Triple(HttpMethod.Delete, "/persons/99", ErrorCode.PERSON_NOT_FOUND),
+            Triple(HttpMethod.Delete, "/persons/8", ErrorCode.PERSON_IN_USE),
+        )
+
+        for ((method, path, code) in cases) {
+            val response = client.request(path) {
+                this.method = method
+                testAuthHeader()
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+            assertEquals(code.status, response.status, "$method $path")
+            assertEquals(code, Json.decodeFromString<ApiError>(response.bodyAsText()).code, "$method $path")
+        }
     }
 }

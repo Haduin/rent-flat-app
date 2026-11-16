@@ -8,6 +8,7 @@ import {
 } from "../../../api/generated";
 import {AddExpenseTemplateProps, EditExpenseTemplateProps} from "./expenses-template.api.props.ts";
 import {useToast} from "../../../components/commons/ToastProvider.tsx";
+import {apiErrorMessage} from "../../../utils/api-error.ts";
 import {queryClient} from "../../../main.tsx";
 
 export const getExpensesTemplate = () => {
@@ -35,8 +36,8 @@ export const addExpensesTemplate = ({
             showToast('success', 'Poprawnie dodano szablon')
             onSuccess();
         },
-        onError: () => {
-            showToast('error', 'Nie udalo dodać szablonu wydatku')
+        onError: async (error) => {
+            showToast('error', 'Nie udało się dodać szablonu. Spróbuj ponownie.', await apiErrorMessage(error))
         },
     })
 }
@@ -60,7 +61,7 @@ export const editExpensesTemplate = (
             showToast('success', 'Poprawnie zaktualizowano szablon')
             onSuccess();
         },
-        onError: () => showToast('error', 'Wystąpił błąd podczas edycji szablonu wydatku')
+        onError: async (error) => showToast('error', 'Wystąpił błąd podczas edycji szablonu wydatku', await apiErrorMessage(error))
     })
 }
 
@@ -74,8 +75,8 @@ export const removeExpensesTemplate = () => {
         mutationFn: (expenseTemplateId: number) => client.expenseTemplatesApi.deleteExpenseTemplate({expenseTemplateId}),
         onSuccess: async () => {
             await queryClient.invalidateQueries({queryKey: [EXPENSES_TEMPLATE_QUERIES.ALL_EXPENSES_TEMPLATE]});
-            showToast('success', 'Poprawnie usunięto szablon')
+            showToast('success', 'Szablon wyłączony')
         },
-        onError: () => showToast('error', 'Wystąpił błąd podczas usuwania szablonu wydatku')
+        onError: async (error) => showToast('error', 'Nie udało się wyłączyć szablonu. Spróbuj ponownie.', await apiErrorMessage(error))
     })
 }

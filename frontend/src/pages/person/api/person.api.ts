@@ -2,6 +2,7 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 import {client} from "../../../api/client.ts";
 import {PERSONS_QUERY_KEYS} from "../../../api/keys/persons.ts";
 import {useToast} from "../../../components/commons/ToastProvider.tsx";
+import {apiErrorMessage} from "../../../utils/api-error.ts";
 import {NewPerson, Person} from "../person-table/person-table.types.ts";
 import {queryClient} from "../../../main.tsx";
 import {UseCreatePersonProps} from "./person.api.props.ts";
@@ -28,9 +29,9 @@ export const useCreatePerson = ({onSuccess}: UseCreatePersonProps) => {
             await queryClient.invalidateQueries({queryKey: [PERSONS_QUERY_KEYS.ALL_PERSONS]});
             onSuccess()
         },
-        onError: () => {
+        onError: async (error) => {
             console.error("Błąd podczas dodawania nowej osoby");
-            showToast('error', 'Nie udało się dodać nowej osoby');
+            showToast('error', 'Nie udało się dodać nowej osoby', await apiErrorMessage(error));
         }
     })
 }
@@ -46,8 +47,8 @@ export const useEditPerson = () => {
             showToast('success', 'Pomyślnie zaktualizowano dane');
             await queryClient.invalidateQueries({queryKey: [PERSONS_QUERY_KEYS.ALL_PERSONS]})
         },
-        onError: () => {
-            showToast('error', 'Nie udało się zaktualizować danych');
+        onError: async (error) => {
+            showToast('error', 'Nie udało się zaktualizować danych', await apiErrorMessage(error));
         }
     })
 }
@@ -59,8 +60,8 @@ export const useDeletePerson = () => {
             showToast('success', 'Pomyślnie usunięto rekord');
             await queryClient.invalidateQueries({queryKey: [PERSONS_QUERY_KEYS.ALL_PERSONS]})
         },
-        onError: (error: any) => {
-            showToast('error', 'Nie udało się usunąć rekordu', error.message);
+        onError: async (error: unknown) => {
+            showToast('error', 'Nie udało się usunąć rekordu', await apiErrorMessage(error));
         }
     })
 }

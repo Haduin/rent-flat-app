@@ -1,24 +1,32 @@
 package pl.chodan
 
 import io.ktor.server.application.*
-import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.requestvalidation.*
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import pl.chodan.config.*
 import pl.chodan.database.DatabaseProvider
 import pl.chodan.database.DatabaseProviderContract
+import pl.chodan.model.apartment.dto.apartmentValidation
 import pl.chodan.model.apartment.routing.configureApartmentRouting
 import pl.chodan.model.apartment.service.ApartmentService
+import pl.chodan.error.configureErrorHandling
+import pl.chodan.model.contract.dto.contractValidation
 import pl.chodan.model.contract.routing.configureContractRouting
 import pl.chodan.model.contract.service.ContractService
+import pl.chodan.model.expenses.dto.expenseTemplateValidation
+import pl.chodan.model.expenses.dto.expenseValidation
 import pl.chodan.model.expenses.routing.configureExpenseRouting
 import pl.chodan.model.expenses.routing.configureExpenseTemplateRouting
 import pl.chodan.model.expenses.service.ExpenseService
 import pl.chodan.model.expenses.service.ExpenseTemplateService
+import pl.chodan.model.payments.dto.paymentValidation
 import pl.chodan.model.payments.routing.configurePaymentRouting
 import pl.chodan.model.payments.service.PaymentService
+import pl.chodan.model.payments.service.launchLatePaymentsJob
+import pl.chodan.model.persons.dto.personValidation
 import pl.chodan.model.persons.routing.configurePersonRouting
 import pl.chodan.model.persons.service.PersonService
 import pl.chodan.model.room.routing.configureRoomRouting
@@ -26,9 +34,15 @@ import pl.chodan.model.room.service.RoomService
 import pl.chodan.model.statistics.routing.configureStatisticsRouting
 import pl.chodan.model.statistics.service.StatisticsService
 
-fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
+fun main(args: Array<String>) = EngineMain.main(args)
+
+fun RequestValidationConfig.allValidations() {
+    contractValidation()
+    expenseValidation()
+    expenseTemplateValidation()
+    paymentValidation()
+    apartmentValidation()
+    personValidation()
 }
 
 fun Application.module() {
@@ -39,6 +53,7 @@ fun Application.module() {
     }
 
     configureModules()
+    configureErrorHandling { allValidations() }
     configureOpenAPI()
     configureApartmentRouting()
     configurePersonRouting()
@@ -48,6 +63,7 @@ fun Application.module() {
     configureExpenseRouting()
     configureExpenseTemplateRouting()
     configureStatisticsRouting()
+    launchLatePaymentsJob()
 }
 
 val appModule = { config: Config ->
@@ -75,7 +91,8 @@ fun createConfigFromYaml(environment: ApplicationEnvironment): Config {
                 url = environment.config.property("ktor.database.url").getString(),
                 user = environment.config.property("ktor.database.user").getString(),
                 password = environment.config.property("ktor.database.password").getString(),
-                driver = environment.config.property("ktor.database.driver").getString()
+                driver = environment.config.property("ktor.database.driver").getString(),
+                maxPoolSize = environment.config.property("ktor.database.maxPoolSize").getString().toInt()
             ),
             cors = CorsConfig(
                 allowedHosts = environment.config.property("ktor.cors.allowedHosts")

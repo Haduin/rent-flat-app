@@ -11,7 +11,6 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
@@ -25,7 +24,6 @@ import pl.chodan.database.Room
 import pl.chodan.model.apartment.database.Apartment
 import pl.chodan.model.contract.database.Contract
 import pl.chodan.model.contract.database.ContractHistory
-import pl.chodan.model.expenses.service.ExpenseTemplateService
 
 private class KPostgresContainer(image: String) : PostgreSQLContainer<KPostgresContainer>(DockerImageName.parse(image))
 
@@ -85,14 +83,12 @@ class TestDatabaseProvider(private val database: Database) : DatabaseProviderCon
  * Global Koin wiring shared by every integration test: the services under test are plain
  * KoinComponents (constructed directly with `SomeService()`, mirroring how routing files use
  * them), so they resolve their dependencies from this global context rather than constructor
- * injection. ExpenseTemplateService is registered unconditionally since both PaymentService and
- * ExpenseService depend on it.
+ * injection.
  */
 fun startTestKoin(database: Database) {
     startKoin {
         modules(module {
             single<DatabaseProviderContract> { TestDatabaseProvider(database) }
-            singleOf(::ExpenseTemplateService)
         })
     }
 }

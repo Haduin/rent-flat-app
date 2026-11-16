@@ -25,4 +25,16 @@ export default tseslint.config(
             ],
         },
     },
+    {
+        // new_ui features compose new_ui/components; only those wrappers may touch PrimeReact
+        files: ['new_ui/features/**/*.{ts,tsx}'],
+        rules: {
+            'no-restricted-imports': ['error', {
+                patterns: [{
+                    group: ['primereact', 'primereact/*'],
+                    message: 'Use a wrapper from new_ui/components (add one there if it is missing).',
+                }],
+            }],
+        },
+    },
 )

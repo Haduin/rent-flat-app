@@ -1,39 +1,54 @@
 import {useState} from "react";
-import {DataTable} from "primereact/datatable";
-import {Column} from "primereact/column";
-import {Calendar} from "primereact/calendar";
-import {Tag} from "primereact/tag";
 import {
+    useAddExpense,
+    useConfirmExpense,
     useExpensesBySelectedMonth,
     useGenerateExpensesFromTemplates,
     useRemoveExpense,
     useUpdateExpense,
 } from "../../../src/pages/payments/expense/api/expenses-payments-view.api.ts";
-import {categorySeverity} from "../../../src/pages/payments/expense/expenses-payments-view/expenses-payments-view.utils.ts";
 import {expensesMap} from "../../../src/pages/expenses-template/add-edit-expenses-template/add-edit-expenses-template-dialog.types.ts";
-import {ExpenseDetailsDialog} from "../../../src/pages/payments/expense/expense-details-dialog/expense-details-dialog.tsx";
-import {EditExpenseDialog} from "../../../src/pages/payments/expense/edit-expense-dialog/edit-expense-dialog.tsx";
-import {ConfirmationDialog} from "../../../src/components/confirmation-dialog/confirmation-dialog.tsx";
+import {AddExpenseDialog, ConfirmExpenseDialog, confirmDeleteExpense, EditExpenseDialog, ExpenseDetailsDialog} from "./ExpenseDialogs.tsx";
 import {useModal} from "../../../src/hooks/use-modal";
-import {dateToStringWithYearMonth} from "../../../src/components/commons/dateFormatter.ts";
+import {getApartments} from "../../../src/pages/apartment/api/apartments.api.ts";
+import {dateToStringFullYearMouthDay} from "../../../src/components/commons/dateFormatter.ts";
 import {formatCurrency} from "../../../src/components/commons/currencyFormatter.ts";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {Card} from "../../components/ui/Card.tsx";
+import {Page} from "../../components/layout/Page.tsx";
+import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
-import {OperationalExpenseDTO, UpdateOperationalExpenseDTO} from "../../../src/api/generated";
+import {IconPlus} from "../../components/ui/icons.tsx";
+import {Badge} from "../../components/ui/Badge.tsx";
+import {EXPENSE_CATEGORY_TONE} from "../../components/ui/expense-category.ts";
+import {PAYMENT_STATUS_LABEL, PAYMENT_STATUS_TONE} from "../../components/ui/payment-status.ts";
+import {MonthSettlementSummary} from "../../components/ui/MonthSettlementSummary.tsx";
+import {formatDatePl} from "../../utils/date.ts";
+import {NewOperationalExpenseDTO, OperationalExpenseDTO, PaymentStatus, UpdateOperationalExpenseDTO} from "../../../src/api/generated";
+import {isNotEqual} from "../../../src/utils/typeguards";
+import {formatMonthLabel, useCurrentMonth} from "../../components/layout/CurrentMonth.ts";
+
+// today when the selected month is the current one, else its first day: the cost lands in the month on screen
+const defaultDueDate = (month: Date) => {
+    const today = new Date();
+    const sameMonth = today.getFullYear() === month.getFullYear() && today.getMonth() === month.getMonth();
+    return sameMonth ? today : new Date(month.getFullYear(), month.getMonth(), 1);
+};
 
 const ExpensePaymentsPage = () => {
-    const [dateSelected, setDateSelected] = useState<Date>();
+    const {month: dateSelected} = useCurrentMonth();
     const [selectedExpense, setSelectedExpense] = useState<OperationalExpenseDTO | null>(null);
 
     const {expenses, isLoading} = useExpensesBySelectedMonth(dateSelected);
     const removeAction = useRemoveExpense();
     const updateAction = useUpdateExpense();
+    const confirmAction = useConfirmExpense();
     const handleGenerate = useGenerateExpensesFromTemplates(dateSelected);
+    const addAction = useAddExpense();
+    const {isOpen: isAddDialogVisible, setOpen: setIsAddDialogVisible} = useModal();
+    const {data: apartments = []} = getApartments({enabled: isAddDialogVisible});
 
     const {isOpen: isDetailsDialogVisible, setOpen: setIsDetailsDialogVisible} = useModal();
     const {isOpen: isEditDialogVisible, setOpen: setIsEditDialogVisible} = useModal();
-    const {isOpen: isDeleteDialogVisible, setOpen: setIsDeleteDialogVisible} = useModal();
+    const {isOpen: isConfirmDialogVisible, setOpen: setIsConfirmDialogVisible} = useModal();
 
     const handleView = (expense: OperationalExpenseDTO) => {
         setSelectedExpense(expense);
@@ -43,97 +58,109 @@ const ExpensePaymentsPage = () => {
         setSelectedExpense(expense);
         setIsEditDialogVisible(true);
     };
-    const handleDelete = (expense: OperationalExpenseDTO) => {
+    const handleDelete = (expense: OperationalExpenseDTO) =>
+        confirmDeleteExpense(expense, () => removeAction.mutate(expense.id));
+    const handleConfirm = (expense: OperationalExpenseDTO) => {
         setSelectedExpense(expense);
-        setIsDeleteDialogVisible(true);
+        setIsConfirmDialogVisible(true);
     };
     const closeDialogs = () => {
         setIsDetailsDialogVisible(false);
         setIsEditDialogVisible(false);
-        setIsDeleteDialogVisible(false);
+        setIsConfirmDialogVisible(false);
         setSelectedExpense(null);
     };
 
-    const getSelectedExpenseLabel = (expense: OperationalExpenseDTO | null) => {
-        if (!expense) return "";
-        const target = expense.roomDetails?.roomName ?? expense.apartmentDetails?.name ?? "ogólny";
-        return `${target} - ${expense.amount.toFixed(2)} zł`;
+    const handleConfirmExpense = (date: Date, expenseId: number, amount: number) => {
+        closeDialogs();
+        confirmAction.mutate({
+            expenseId,
+            paidDate: dateToStringFullYearMouthDay(date),
+            payedAmount: amount,
+        });
     };
 
     const categoryBody = (row: OperationalExpenseDTO) => (
-        <Tag severity={categorySeverity(row.category)} value={expensesMap[row.category] ?? row.category}/>
+        <Badge tone={EXPENSE_CATEGORY_TONE[row.category]}>{expensesMap[row.category] ?? row.category}</Badge>
     );
 
-    const actionsBody = (row: OperationalExpenseDTO) => (
-        <div style={{display: "flex", gap: 6, justifyContent: "flex-end"}}>
-            <Button variant="secondary" size="small" icon="pi pi-eye" onClick={() => handleView(row)}/>
-            <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => handleEdit(row)}/>
-            <Button variant="danger-outline" size="small" icon="pi pi-trash" onClick={() => handleDelete(row)}/>
-        </div>
+    const statusBody = (row: OperationalExpenseDTO) => (
+        <Badge tone={PAYMENT_STATUS_TONE[row.status]}>{PAYMENT_STATUS_LABEL[row.status]}</Badge>
     );
 
-    return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader title="Koszty operacyjne" subtitle="Media, podatki, czynsz do właściciela"/>
-
-            <Card padding={20} style={{display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap"}}>
-                <Calendar
-                    value={dateSelected}
-                    onChange={(event) => setDateSelected(event.value as Date)}
-                    view="month"
-                    locale="pl"
-                    dateFormat="yy-mm"
-                    placeholder="Wybierz miesiąc"
-                />
-                {dateSelected && (
-                    <Button variant="primary" onClick={() => handleGenerate.mutate()}>
-                        Wygeneruj koszty za {dateToStringWithYearMonth(dateSelected)}
+    const rowActions = (row: OperationalExpenseDTO) => {
+        const canConfirm = isNotEqual(PaymentStatus.Paid, row.status) && isNotEqual(PaymentStatus.Cancelled, row.status);
+        return (
+            <>
+                {canConfirm && (
+                    <Button variant="primary" size="small" onClick={() => handleConfirm(row)}>
+                        Potwierdź
                     </Button>
                 )}
-            </Card>
+                <Button variant="secondary" size="small" icon="pi pi-eye" aria-label="Szczegóły kosztu" onClick={() => handleView(row)}/>
+                <Button variant="secondary" size="small" icon="pi pi-pencil" aria-label="Edytuj koszt" onClick={() => handleEdit(row)}/>
+                <Button variant="danger-outline" size="small" icon="pi pi-trash" aria-label="Usuń koszt" onClick={() => handleDelete(row)}/>
+            </>
+        );
+    };
 
-            <Card padding={0} style={{overflow: "hidden"}}>
-                <DataTable
-                    value={expenses}
-                    loading={isLoading}
-                    paginator
-                    rows={10}
-                    rowsPerPageOptions={[10, 20, 50]}
-                    stripedRows
-                    responsiveLayout="stack"
-                    breakpoint="860px"
-                    emptyMessage="Brak danych"
-                >
-                    <Column header="Mieszkanie" body={(row: OperationalExpenseDTO) => row.apartmentDetails?.name ?? "-"} sortable/>
-                    <Column header="Pokój" body={(row: OperationalExpenseDTO) => row.roomDetails?.roomName ?? "-"} sortable/>
-                    <Column header="Kategoria" body={categoryBody} sortable field="category"/>
-                    <Column header="Kwota" body={(row: OperationalExpenseDTO) => formatCurrency(row.amount)} sortable field="amount"/>
-                    <Column header="Termin płatności" body={(row: OperationalExpenseDTO) => row.costDate ?? "-"} sortable field="costDate"/>
-                    <Column header="Data wpływu" body={(row: OperationalExpenseDTO) => row.insertDate ?? "-"} sortable field="insertDate"/>
-                    <Column header="Nr faktury" body={(row: OperationalExpenseDTO) => row.invoiceNumber ?? "-"}/>
-                    <Column header="Opis" body={(row: OperationalExpenseDTO) => row.description ?? "-"}/>
-                    <Column header="" body={actionsBody} style={{width: 150}}/>
-                </DataTable>
-            </Card>
+    const columns: DataTableColumn<OperationalExpenseDTO>[] = [
+        {header: "Mieszkanie", body: (row) => row.apartmentDetails?.name ?? "-", sortable: true, field: "apartmentDetails.name"},
+        {header: "Pokój", body: (row) => row.roomDetails?.roomName ?? "-", sortable: true, field: "roomDetails.roomName"},
+        {header: "Kategoria", body: categoryBody, sortable: true, field: "category"},
+        {header: "Kwota", body: (row) => formatCurrency(row.amount), sortable: true, field: "amount"},
+        // insertDate is the due date generated from the template's day of month
+        {header: "Termin płatności", body: (row) => formatDatePl(row.insertDate), sortable: true, field: "insertDate"},
+        {header: "Data zapłaty", body: (row) => formatDatePl(row.paidDate), sortable: true, field: "paidDate", optional: true},
+        {header: "Status", body: statusBody, sortable: true, field: "status"},
+        {header: "Nr faktury", body: (row) => row.invoiceNumber ?? "-", optional: true},
+    ];
 
-            <ExpenseDetailsDialog isVisible={isDetailsDialogVisible} onHide={closeDialogs} selectedExpense={selectedExpense}/>
-            <EditExpenseDialog
-                isVisible={isEditDialogVisible}
-                onHide={closeDialogs}
-                selectedExpense={selectedExpense}
-                onConfirm={(dto: UpdateOperationalExpenseDTO) => updateAction.mutate(dto, {onSuccess: closeDialogs})}
-            />
-            <ConfirmationDialog
-                title={`Czy na pewno chcesz usunąć wydatek: ${getSelectedExpenseLabel(selectedExpense)}?`}
-                isOpen={isDeleteDialogVisible}
-                onClose={closeDialogs}
-                onConfirm={() => {
-                    if (selectedExpense) removeAction.mutate(selectedExpense.id, {onSuccess: closeDialogs});
-                }}
-                confirmLabel="Usuń"
-                cancelLabel="Anuluj"
-            />
-        </div>
+    return (
+        <Page
+            title="Koszty operacyjne"
+            subtitle="Media, podatki, czynsz do właściciela"
+            actions={
+                <>
+                    <Button
+                        variant={(expenses?.length ?? 0) > 0 ? "secondary" : "primary"}
+                        loading={handleGenerate.isPending}
+                        onClick={() => handleGenerate.mutate()}
+                    >
+                        Wygeneruj koszty za {formatMonthLabel(dateSelected)}
+                    </Button>
+                    <Button variant="secondary" icon={<IconPlus size={15}/>} onClick={() => setIsAddDialogVisible(true)}>
+                        Dodaj koszt
+                    </Button>
+                </>
+            }
+        >
+            <MonthSettlementSummary items={expenses ?? []} settledLabel="Zapłacono" outstandingLabel="Do zapłaty"/>
+
+            <DataTableCard value={expenses} columns={columns} rowActions={rowActions} loading={isLoading} emptyMessage="Brak kosztów w tym miesiącu"/>
+
+            {selectedExpense && isDetailsDialogVisible && <ExpenseDetailsDialog expense={selectedExpense} onHide={closeDialogs}/>}
+            {selectedExpense && isEditDialogVisible && (
+                <EditExpenseDialog
+                    expense={selectedExpense}
+                    saving={updateAction.isPending}
+                    onSave={(dto: UpdateOperationalExpenseDTO) => updateAction.mutate(dto, {onSuccess: closeDialogs})}
+                    onHide={closeDialogs}
+                />
+            )}
+            {isAddDialogVisible && (
+                <AddExpenseDialog
+                    defaultDate={defaultDueDate(dateSelected)}
+                    apartments={apartments}
+                    saving={addAction.isPending}
+                    onSave={(dto: NewOperationalExpenseDTO) => addAction.mutate(dto, {onSuccess: () => setIsAddDialogVisible(false)})}
+                    onHide={() => setIsAddDialogVisible(false)}
+                />
+            )}
+            {selectedExpense && isConfirmDialogVisible && (
+                <ConfirmExpenseDialog expense={selectedExpense} onConfirm={handleConfirmExpense} onHide={closeDialogs}/>
+            )}
+        </Page>
     );
 };
 

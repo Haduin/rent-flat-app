@@ -1,4 +1,5 @@
 import {useToast} from "../../../components/commons/ToastProvider.tsx";
+import {apiErrorMessage} from "../../../utils/api-error.ts";
 import {DeleteContractDTO, NewContract} from "../../../components/commons/types.ts";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {client} from "../../../api/client.ts";
@@ -72,8 +73,8 @@ export const useAddContractMutation = ({onSuccess, onError}: UseAddContractProps
             showToast('success', 'Pomyślnie dodano nowy kontrakt.');
             onSuccess();
         },
-        onError: (error: unknown) => {
-            showToast('error', "Wystąpił błąd podczas dodawania kontraktu");
+        onError: async (error: unknown) => {
+            showToast('error', "Wystąpił błąd podczas dodawania kontraktu", await apiErrorMessage(error));
             onError?.(error);
         }
     });
@@ -89,8 +90,8 @@ export const useEditContractMutation = ({onSuccess, onError}: UseEditContractPro
             showToast('success', 'Pomyślnie zaktualizowano kontrakt.');
             onSuccess();
         },
-        onError: (error: unknown) => {
-            showToast('error', "Wystąpił błąd podczas aktualizacji kontraktu");
+        onError: async (error: unknown) => {
+            showToast('error', "Wystąpił błąd podczas aktualizacji kontraktu", await apiErrorMessage(error));
             onError?.(error);
         }
     });
@@ -106,8 +107,8 @@ export const useDeleteContractMutation = ({onSuccess, onError}: UseDeleteContrac
             showToast('success', 'Pomyślnie zamknięto kontrakt.');
             onSuccess();
         },
-        onError: (error: unknown) => {
-            showToast('error', "Wystąpił błąd podczas zamykania kontraktu");
+        onError: async (error: unknown) => {
+            showToast('error', "Wystąpił błąd podczas zamykania kontraktu", await apiErrorMessage(error));
             onError?.(error);
         }
     });

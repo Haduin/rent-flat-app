@@ -11,7 +11,7 @@ import {
     usePaymentsQuery,
     useSplitPayment
 } from "../api/income-payments-view.api.ts";
-import {PaymentHistoryWithPersonDTO, PaymentStatus} from "../../../../api/generated";
+import {PaymentHistoryWithPersonDTO} from "../../../../api/generated";
 import {SortOrder} from "primereact/api";
 
 export const fieldMapping: Record<string, PaymentSortableField> = {
@@ -123,7 +123,6 @@ export const usePaymentsView = () => {
             paymentId: payment.paymentId,
             amount: payment.amount,
             payedDate: payment.payedDate,
-            status: payment.status as PaymentStatus
         })
         closeEditDialog()
     }

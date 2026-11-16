@@ -8,11 +8,17 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import pl.chodan.error.ErrorCode
+import pl.chodan.error.errors
+import pl.chodan.error.intParam
+import pl.chodan.error.optionalIntQuery
+import pl.chodan.error.yearMonthQuery
+import pl.chodan.model.expenses.dto.ExpenseConfirmationDTO
 import pl.chodan.model.expenses.dto.NewOperationalExpenseDTO
 import pl.chodan.model.expenses.dto.OperationalExpenseDTO
 import pl.chodan.model.expenses.dto.UpdateOperationalExpenseDTO
 import pl.chodan.model.expenses.service.ExpenseService
-import pl.chodan.ultis.YearMonthString
+import pl.chodan.routing.IdResponse
 
 fun Application.configureExpenseRouting() {
     val expenseService by inject<ExpenseService>()
@@ -25,6 +31,7 @@ fun Application.configureExpenseRouting() {
                 get({
                     description = "Get expenses with optional filters"
                     operationId = "getExpenses"
+                    errors(ErrorCode.VALIDATION_FAILED)
                     request {
                         queryParameter<String>("yearMonth") {
                             description = "Year and month in format YYYY-MM"; required = true
@@ -39,111 +46,83 @@ fun Application.configureExpenseRouting() {
                         }
                     }
                 }) {
-                    val yearMonth = YearMonthString.parse(call.request.queryParameters["yearMonth"])
-                    val apartmentId = call.request.queryParameters["apartmentId"]?.toIntOrNull()
-                    val roomId = call.request.queryParameters["roomId"]?.toIntOrNull()
-                    val result = expenseService.getExpenses(yearMonth, apartmentId, roomId)
-                    call.respond(result)
+                    call.respond(
+                        expenseService.getExpenses(
+                            call.yearMonthQuery(),
+                            call.optionalIntQuery("apartmentId"),
+                            call.optionalIntQuery("roomId")
+                        )
+                    )
                 }
                 post({
                     description = "Create a new operational expense"
                     operationId = "createExpense"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD, ErrorCode.APARTMENT_NOT_FOUND,
+                        ErrorCode.ROOM_NOT_FOUND, ErrorCode.EXPENSE_TEMPLATE_NOT_FOUND, ErrorCode.EXPENSE_ALREADY_GENERATED
+                    )
                     request { body<NewOperationalExpenseDTO> { description = "Expense payload" } }
                     response {
                         code(HttpStatusCode.Created) {
                             description = "Expense created"
-                            body<Int>()
+                            body<IdResponse>()
                         }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid payload" }
                     }
                 }) {
-                    val dto = call.receive<NewOperationalExpenseDTO>()
-                    try {
-                        val id = expenseService.addExpense(dto)
-                        call.respond(HttpStatusCode.Created, mapOf("id" to id))
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            mapOf("error" to (e.message ?: "Failed to add expense"))
-                        )
-                    }
+                    val id = expenseService.addExpense(call.receive<NewOperationalExpenseDTO>())
+                    call.respond(HttpStatusCode.Created, IdResponse(id))
                 }
                 put({
                     description = "Update an operational expense"
                     operationId = "updateExpense"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
+                        ErrorCode.EXPENSE_NOT_FOUND, ErrorCode.EXPENSE_ALREADY_GENERATED
+                    )
                     request { body<UpdateOperationalExpenseDTO> { description = "Expense update payload" } }
-                    response {
-                        code(HttpStatusCode.OK) { description = "Expense updated" }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid update data" }
-                    }
+                    response { code(HttpStatusCode.NoContent) { description = "Expense updated" } }
                 }) {
-                    val dto = call.receive<UpdateOperationalExpenseDTO>()
-                    try {
-                        expenseService.updateExpense(dto)
-                        call.respond(HttpStatusCode.OK)
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            mapOf("error" to (e.message ?: "Failed to update expense"))
-                        )
-                    }
+                    expenseService.updateExpense(call.receive<UpdateOperationalExpenseDTO>())
+                    call.respond(HttpStatusCode.NoContent)
+                }
+                post("/confirm", {
+                    description = "Confirm an operational expense as paid"
+                    operationId = "confirmExpense"
+                    errors(
+                        ErrorCode.VALIDATION_FAILED, ErrorCode.INVALID_PAYLOAD,
+                        ErrorCode.EXPENSE_NOT_FOUND, ErrorCode.EXPENSE_NOT_CONFIRMABLE
+                    )
+                    request { body<ExpenseConfirmationDTO> { description = "Expense confirmation payload" } }
+                    response { code(HttpStatusCode.NoContent) { description = "Expense confirmed" } }
+                }) {
+                    expenseService.confirmExpense(call.receive<ExpenseConfirmationDTO>())
+                    call.respond(HttpStatusCode.NoContent)
                 }
                 post("/generate", {
                     description = "Generate monthly expenses based on templates"
                     operationId = "generateExpensesFromTemplates"
+                    errors(ErrorCode.VALIDATION_FAILED)
                     request {
                         queryParameter<String>("yearMonth") {
                             description = "Year and month in format YYYY-MM"
                             required = true
                         }
                     }
-                    response {
-                        code(HttpStatusCode.OK) { description = "Expenses generated" }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid or missing parameters" }
-                    }
+                    response { code(HttpStatusCode.NoContent) { description = "Expenses generated" } }
                 }) {
-                    val yearMonth = call.request.queryParameters["yearMonth"]
-                    if (yearMonth.isNullOrBlank()) {
-                        call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing yearMonth (YYYY-MM)"))
-                        return@post
-                    }
-
-                    try {
-                        expenseService.generateMonthlyExpenses(yearMonth)
-                        call.respond(
-                            HttpStatusCode.OK
-                        )
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            mapOf("error" to (e.message ?: "Failed to generate expenses"))
-                        )
-                    }
+                    expenseService.generateMonthlyExpenses(call.yearMonthQuery().value)
+                    call.respond(HttpStatusCode.NoContent)
                 }
 
                 delete("/{id}", {
                     description = "Delete an operational expense"
                     operationId = "deleteExpense"
+                    errors(ErrorCode.VALIDATION_FAILED, ErrorCode.EXPENSE_NOT_FOUND)
                     request { pathParameter<Int>("id") { description = "Expense id" } }
-                    response {
-                        code(HttpStatusCode.OK) { description = "Expense deleted" }
-                        code(HttpStatusCode.BadRequest) { description = "Invalid id" }
-                    }
+                    response { code(HttpStatusCode.NoContent) { description = "Expense deleted" } }
                 }) {
-                    val id = call.parameters["id"]?.toIntOrNull()
-                    if (id == null) {
-                        call.respond(HttpStatusCode.BadRequest, "Param 'id' is required")
-                        return@delete
-                    }
-                    try {
-                        expenseService.deleteExpense(id)
-                        call.respond(HttpStatusCode.OK)
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            mapOf("error" to (e.message ?: "Failed to delete expense"))
-                        )
-                    }
+                    expenseService.deleteExpense(call.intParam("id"))
+                    call.respond(HttpStatusCode.NoContent)
                 }
             }
         }

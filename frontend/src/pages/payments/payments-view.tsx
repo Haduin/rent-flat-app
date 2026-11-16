@@ -7,6 +7,7 @@ const IncomePaymentsView = React.lazy(() => import('./income/income-payments-vie
 const ExpensePaymentsView = React.lazy(() => import('./expense/expenses-payments-view/expenses-payments-view.tsx'));
 
 
+/** @deprecated Legacy UI view, no longer routed — replaced by new_ui/features/payments-income and payments-expense. Kept only until the legacy UI is deleted; do not import. */
 const PaymentsView = () => {
     const [paymentType, setPaymentType] = useState<PaymentType>()
 

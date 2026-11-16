@@ -15,11 +15,20 @@
 
 import * as runtime from '../runtime';
 import type {
+  ApiError,
+  ExpenseConfirmationDTO,
+  IdResponse,
   NewOperationalExpenseDTO,
   OperationalExpenseDTO,
   UpdateOperationalExpenseDTO,
 } from '../models/index';
 import {
+    ApiErrorFromJSON,
+    ApiErrorToJSON,
+    ExpenseConfirmationDTOFromJSON,
+    ExpenseConfirmationDTOToJSON,
+    IdResponseFromJSON,
+    IdResponseToJSON,
     NewOperationalExpenseDTOFromJSON,
     NewOperationalExpenseDTOToJSON,
     OperationalExpenseDTOFromJSON,
@@ -27,6 +36,10 @@ import {
     UpdateOperationalExpenseDTOFromJSON,
     UpdateOperationalExpenseDTOToJSON,
 } from '../models/index';
+
+export interface ConfirmExpenseRequest {
+    expenseConfirmationDTO?: ExpenseConfirmationDTO;
+}
 
 export interface CreateExpenseRequest {
     newOperationalExpenseDTO?: NewOperationalExpenseDTO;
@@ -56,9 +69,37 @@ export interface UpdateExpenseRequest {
 export class ExpensesApi extends runtime.BaseAPI {
 
     /**
+     * Confirm an operational expense as paid
+     */
+    async confirmExpenseRaw(requestParameters: ConfirmExpenseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/expenses/confirm`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ExpenseConfirmationDTOToJSON(requestParameters['expenseConfirmationDTO']),
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Confirm an operational expense as paid
+     */
+    async confirmExpense(requestParameters: ConfirmExpenseRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.confirmExpenseRaw(requestParameters, initOverrides);
+    }
+
+    /**
      * Create a new operational expense
      */
-    async createExpenseRaw(requestParameters: CreateExpenseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<number>> {
+    async createExpenseRaw(requestParameters: CreateExpenseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<IdResponse>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -73,17 +114,13 @@ export class ExpensesApi extends runtime.BaseAPI {
             body: NewOperationalExpenseDTOToJSON(requestParameters['newOperationalExpenseDTO']),
         }, initOverrides);
 
-        if (this.isJsonMime(response.headers.get('content-type'))) {
-            return new runtime.JSONApiResponse<number>(response);
-        } else {
-            return new runtime.TextApiResponse(response) as any;
-        }
+        return new runtime.JSONApiResponse(response, (jsonValue) => IdResponseFromJSON(jsonValue));
     }
 
     /**
      * Create a new operational expense
      */
-    async createExpense(requestParameters: CreateExpenseRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<number> {
+    async createExpense(requestParameters: CreateExpenseRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<IdResponse> {
         const response = await this.createExpenseRaw(requestParameters, initOverrides);
         return await response.value();
     }

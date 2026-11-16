@@ -4,6 +4,7 @@ import {client} from "../../../../api/client.ts";
 import {PaymentConfirmationDTO, PaymentSplitDTO, type PaymentEdit} from "../../../../api/generated";
 import {PAYMENTS_MUTATIONS_KEYS} from "../../../../api/keys/payments.ts";
 import {useToast} from "../../../../components/commons/ToastProvider.tsx";
+import {apiErrorMessage} from "../../../../utils/api-error.ts";
 import {dateToStringWithYearMonth} from "../../../../components/commons/dateFormatter.ts";
 import {PaymentSortableField} from "../income-payments-view/income-payments.model.ts";
 import {SortOrder} from "primereact/api";
@@ -22,8 +23,8 @@ export const useConfirmPayment = () => {
                 })
                 showToast('success', 'Pomyślnie potwierdzono płatność');
             },
-            onError: (error: Error) => {
-                showToast('error', `Nie udało sie potwierdzić płatności: ${error.message}`);
+            onError: async (error) => {
+                showToast('error', 'Nie udało sie potwierdzić płatności', await apiErrorMessage(error));
             }
         }
     )
@@ -48,7 +49,7 @@ export const usePaymentsQuery = (
             const newSortOrder = SortOrder.ASC === sortOrder ? SortOrderEnum.Asc : SortOrderEnum.Desc;
 
             return client.paymentsApi.getPaymentsForMonth({
-                mouth: dateToStringWithYearMonth(dateSelected),
+                month: dateToStringWithYearMonth(dateSelected),
                 sortField: sortField,
                 sortOrder: newSortOrder,
             });
@@ -74,8 +75,8 @@ export const useGenerateNewMonthPayments = (dateSelected?: Date) => {
             });
             showToast('success', 'Pomyślnie wygenerowano płatności');
         },
-        onError: (error) => {
-            showToast('error', `Nie udało się wygenerować płatności ${error.message}`);
+        onError: async (error) => {
+            showToast('error', 'Nie udało się wygenerować płatności', await apiErrorMessage(error));
         }
     });
 }
@@ -95,8 +96,8 @@ export const useSplitPayment = () => {
                 })
                 showToast('success', 'Pomyślnie zapisano częściową wpłatę');
             },
-            onError: (error: Error) => {
-                showToast('error', `Nie udało się zapisać częściowej wpłaty: ${error.message}`);
+            onError: async (error) => {
+                showToast('error', 'Nie udało się zapisać częściowej wpłaty', await apiErrorMessage(error));
             }
         }
     )
@@ -120,8 +121,8 @@ export const useEditPayment = () => {
             })
             showToast('success', 'Pomyślnie zaktualizowano płatność')
         },
-        onError: () => {
-            showToast('error', 'Nie udało sie zakutalizować płatności')
+        onError: async (error) => {
+            showToast('error', 'Nie udało sie zakutalizować płatności', await apiErrorMessage(error))
         }
     })
 }

@@ -1,17 +1,13 @@
 import {useMemo, useState} from "react";
-import {DataTable} from "primereact/datatable";
-import {Column} from "primereact/column";
-import {InputText} from "primereact/inputtext";
-import {IconField} from "primereact/iconfield";
-import {InputIcon} from "primereact/inputicon";
-import {Checkbox} from "primereact/checkbox";
 import usePersonTable from "../../../src/pages/person/person-table/person-table.hook.tsx";
-import AddNewPersonDialog from "../../../src/pages/person/add-new-person-dialog/add-new-person-dialog.tsx";
-import EditPersonDialog from "../../../src/pages/person/edit-person-dialog/edit-person-dialog.tsx";
+import {PersonDialog} from "./PersonDialog.tsx";
 import type {Person} from "../../../src/pages/person/person-table/person-table.types.ts";
 import type {PersonDTO} from "../../../src/api/generated";
-import {PageHeader} from "../../components/ui/PageHeader.tsx";
-import {Card} from "../../components/ui/Card.tsx";
+import {Page} from "../../components/layout/Page.tsx";
+import {FilterBar} from "../../components/ui/FilterBar.tsx";
+import {SearchInput} from "../../components/ui/SearchInput.tsx";
+import {ToggleCheckbox} from "../../components/ui/ToggleCheckbox.tsx";
+import {DataTableCard, DataTableColumn} from "../../components/ui/DataTableCard.tsx";
 import {Button} from "../../components/ui/Button.tsx";
 import {Badge} from "../../components/ui/Badge.tsx";
 import {IconPlus} from "../../components/ui/icons.tsx";
@@ -28,7 +24,6 @@ const PersonsPage = () => {
         handleAddPerson,
         setIsNewPersonDialogVisible,
         setEditDialogVisible,
-        handleDeletePerson,
         showOnlyActivePeople,
         setShowOnlyActivePeople,
         showPeople,
@@ -49,79 +44,72 @@ const PersonsPage = () => {
 
     const statusBody = (person: PersonDTO) => (
         <Badge tone={"RESIDENT" === person.status ? "success" : "neutral"}>
-            {"RESIDENT" === person.status ? "Aktualny" : person.status}
+            {"RESIDENT" === person.status ? "Aktualny" : "Bez aktywnej umowy"}
         </Badge>
     );
 
-    const actionsBody = (person: PersonDTO) => (
-        <div style={{display: "flex", gap: 6, justifyContent: "flex-end"}}>
-            <Button variant="secondary" size="small" icon="pi pi-pencil" onClick={() => openEditDialog(person as Person)}/>
-            <Button variant="danger-outline" size="small" icon="pi pi-trash" disabled onClick={() => handleDeletePerson(person as Person)}/>
-        </div>
+    const rowActions = (person: PersonDTO) => (
+        <>
+            <Button variant="secondary" size="small" icon="pi pi-pencil" aria-label={`Edytuj ${person.firstName} ${person.lastName}`} onClick={() => openEditDialog(person as Person)}/>
+        </>
     );
 
+    const columns: DataTableColumn<PersonDTO>[] = [
+        {header: "Imię", field: "firstName", sortable: true},
+        {header: "Nazwisko", field: "lastName", sortable: true},
+        {header: "Numer dokumentu", field: "documentNumber", sortable: true},
+        {header: "Narodowość", field: "nationality", sortable: true},
+        {header: "Status", body: statusBody, sortable: true, field: "status"},
+    ];
+
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 20}}>
-            <PageHeader
-                title="Osoby"
-                actions={
-                    <Button variant="primary" icon={<IconPlus size={15}/>} onClick={handleAddNewPerson}>
-                        Dodaj najemcę
-                    </Button>
-                }
+        <Page
+            title="Osoby"
+            actions={
+                <Button variant="primary" icon={<IconPlus size={15}/>} onClick={handleAddNewPerson}>
+                    Dodaj najemcę
+                </Button>
+            }
+        >
+            <FilterBar>
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Szukaj osoby lub dokumentu…"
+                    ariaLabel="Szukaj po imieniu, nazwisku lub numerze dokumentu"
+                />
+                <ToggleCheckbox
+                    checked={showOnlyActivePeople}
+                    onChange={setShowOnlyActivePeople}
+                    label="Tylko z aktywną umową"
+                />
+            </FilterBar>
+
+            <DataTableCard
+                value={people}
+                columns={columns}
+                rowActions={rowActions}
+                loading={loading}
+                emptyMessage={search.trim() ? "Nikt nie pasuje do wyszukiwania" : "Brak osób w tym widoku"}
             />
 
-            <Card padding={20} style={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12}}>
-                <IconField iconPosition="left" className="ku-search-input">
-                    <InputIcon className="pi pi-search"/>
-                    <InputText
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Szukaj po imieniu, nazwisku, dokumencie..."
-                        style={{width: "100%"}}
-                    />
-                </IconField>
-                <label style={{display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 500, cursor: "pointer"}}>
-                    <Checkbox checked={showOnlyActivePeople} onChange={() => setShowOnlyActivePeople(!showOnlyActivePeople)}/>
-                    Pokaż tylko aktualnych
-                </label>
-            </Card>
-
-            <Card padding={0} style={{overflow: "hidden"}}>
-                <DataTable
-                    value={people}
-                    loading={loading}
-                    paginator
-                    rows={10}
-                    rowsPerPageOptions={[10, 20, 50]}
-                    stripedRows
-                    responsiveLayout="stack"
-                    breakpoint="860px"
-                    emptyMessage="Brak danych do wyświetlenia"
-                >
-                    <Column field="firstName" header="Imię" sortable/>
-                    <Column field="lastName" header="Nazwisko" sortable/>
-                    <Column field="documentNumber" header="Numer dokumentu" sortable/>
-                    <Column field="nationality" header="Narodowość" sortable/>
-                    <Column header="Status" body={statusBody} sortable field="status"/>
-                    <Column header="" body={actionsBody} style={{width: 110}}/>
-                </DataTable>
-            </Card>
-
-            <AddNewPersonDialog
-                visible={isNewPersonDialogVisible}
-                onSave={handleAddPerson}
-                onHide={() => setIsNewPersonDialogVisible(false)}
-            />
-            {selectedPerson && (
-                <EditPersonDialog
+            {isNewPersonDialogVisible && (
+                <PersonDialog
+                    person={null}
+                    saving={handleAddPerson.isPending}
+                    onSave={(values) => handleAddPerson.mutate(values, {onSuccess: () => setIsNewPersonDialogVisible(false)})}
+                    onHide={() => setIsNewPersonDialogVisible(false)}
+                />
+            )}
+            {selectedPerson && isEditDialogVisible && (
+                <PersonDialog
                     person={selectedPerson}
-                    visible={isEditDialogVisible}
-                    onSave={handleEditPerson}
+                    saving={handleEditPerson.isPending}
+                    onSave={(values) => handleEditPerson.mutate({...selectedPerson, ...values}, {onSuccess: () => setEditDialogVisible(false)})}
                     onHide={() => setEditDialogVisible(false)}
                 />
             )}
-        </div>
+        </Page>
     );
 };
 

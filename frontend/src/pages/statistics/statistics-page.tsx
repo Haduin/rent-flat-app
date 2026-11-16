@@ -4,6 +4,7 @@ import {useApartmentsStatistics} from "./api/statistics.api.ts";
 import {OverviewSummaryCards} from "./components/overview-summary-cards.tsx";
 import {ApartmentStatisticsCard} from "./components/apartment-statistics-card.tsx";
 
+/** @deprecated Legacy UI view, no longer routed — replaced by new_ui/features/dashboard/DashboardPage.tsx. Kept only until the legacy UI is deleted; do not import. */
 const StatisticsPage = () => {
     const {data, isLoading} = useApartmentsStatistics();
 

@@ -23,7 +23,15 @@ export const IconHome = ({size = 16, color = "currentColor", style}: IconProps) 
     </svg>
 );
 
-export const IconGrid = ({size = 16, color = "currentColor", style}: IconProps) => (
+export const IconBuilding = ({size = 16, color = "currentColor", style}: IconProps) => (
+    <svg {...base(size)} stroke={color} style={style}>
+        <rect x="4" y="2" width="16" height="20" rx="1"/>
+        <path d="M9 6h.01M15 6h.01M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/>
+        <path d="M10 22v-4h4v4"/>
+    </svg>
+);
+
+export const IconGrid =({size = 16, color = "currentColor", style}: IconProps) => (
     <svg {...base(size)} stroke={color} style={style}>
         <rect x="3" y="3" width="7" height="7" rx="1"/>
         <rect x="14" y="3" width="7" height="7" rx="1"/>

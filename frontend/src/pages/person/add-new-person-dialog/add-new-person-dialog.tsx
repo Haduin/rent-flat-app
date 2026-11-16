@@ -19,15 +19,13 @@ const AddNewPersonDialog: React.FC<AddPersonDialogProps> = ({visible, onSave, on
             firstName: '',
             lastName: '',
             documentNumber: '',
-            nationality: '',
-            numer: ''
+            nationality: ''
         },
         validationSchema: Yup.object({
             firstName: Yup.string().required('Imię jest wymagane'),
             lastName: Yup.string().required('Nazwisko jest wymagane'),
             documentNumber: Yup.string().required('Numer dokumentu jest wymagany'),
             nationality: Yup.string().required('Narodowość jest wymagana'),
-            numer: Yup.string().required('numer jest wymagana'),
         }),
         onSubmit: (values) => {
             onSave.mutate(values, {
@@ -47,7 +45,7 @@ const AddNewPersonDialog: React.FC<AddPersonDialogProps> = ({visible, onSave, on
 
     return (
         <Modal isOpen={visible}
-               title="Dodaj nowego najemce"
+               title="Dodaj nową osobę"
                onClose={handleOnClose}
                content={onSave.isPending ? (
                    <div className="flex justify-content-center align-items-center" style={{height: '200px'}}>
@@ -60,7 +58,6 @@ const AddNewPersonDialog: React.FC<AddPersonDialogProps> = ({visible, onSave, on
                            <TextField name="lastName" label="Nazwisko" formik={formik}/>
                            <TextField name="documentNumber" label="Numer dokumentu" formik={formik}/>
                            <TextField name="nationality" label="Narodowość" formik={formik}/>
-                           <TextField name="numer" label="numer" formik={formik}/>
                        </div>
                    </form>
                )}

@@ -35,7 +35,7 @@ const AddContractView = ({
                 startDate: dateToStringFullYearMouthDay(values.startDate!),
                 endDate: dateToStringFullYearMouthDay(values.endDate!),
                 amount: Number(values.amount),
-                deposit: Number(values.amount),
+                deposit: Number(values.deposit),
                 payedDate: Number(values.payedDate),
             }
             onSave(newContract)
