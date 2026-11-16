@@ -1,0 +1,4 @@
+# shell scripts run in bash (WSL, Git Bash, containers): with core.autocrlf=true they would be
+# checked out with CRLF and fail with "$'\r': command not found"
+*.sh text eol=lf
+gradlew text eol=lf
